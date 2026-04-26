@@ -1,26 +1,39 @@
 import { useCurrentProfile } from '../composables/useCurrentProfile'
+import { useCoordinatorPrivileges } from '../composables/useCoordinatorPrivileges'
 
 type UserRole = 'student' | 'coordinator'
+
+const redirectByRole = (role: UserRole) => {
+  if (role === 'coordinator') {
+    return navigateTo('/')
+  }
+
+  return navigateTo('/student')
+}
 
 export default defineNuxtRouteMiddleware(async (to) => {
   const demoAuthCookie = useCookie('intrabuddy_demo_auth')
   const demoRoleCookie = useCookie('intrabuddy_demo_role')
+  const demoSuperCookie = useCookie('intrabuddy_demo_super')
 
   if (to.path === '/login') {
     return
   }
 
   if (demoAuthCookie.value === '1') {
+    const demoRole = demoRoleCookie.value as UserRole
     const requiredRole = to.meta.requiredRole as UserRole | undefined
-    if (!requiredRole || requiredRole === (demoRoleCookie.value as UserRole)) {
-      return
+    const superCoordinatorOnly = Boolean(to.meta.superCoordinatorOnly)
+
+    if (requiredRole && requiredRole !== demoRole) {
+      return redirectByRole(demoRole)
     }
 
-    if (demoRoleCookie.value === 'coordinator') {
-      return navigateTo('/')
+    if (superCoordinatorOnly && demoRole === 'coordinator' && demoSuperCookie.value !== '1') {
+      return redirectByRole(demoRole)
     }
 
-    return navigateTo('/student')
+    return
   }
 
   const user = useSupabaseUser()
@@ -44,14 +57,21 @@ export default defineNuxtRouteMiddleware(async (to) => {
 
   const requiredRole = to.meta.requiredRole as UserRole | undefined
   if (!requiredRole) {
-    return
+    const superCoordinatorOnly = Boolean(to.meta.superCoordinatorOnly)
+    if (!superCoordinatorOnly) {
+      return
+    }
   }
 
-  if (role.value !== requiredRole) {
-    if (role.value === 'coordinator') {
-      return navigateTo('/')
-    }
+  if (requiredRole && role.value !== requiredRole) {
+    return redirectByRole(role.value)
+  }
 
-    return navigateTo('/student')
+  const superCoordinatorOnly = Boolean(to.meta.superCoordinatorOnly)
+  if (superCoordinatorOnly && role.value === 'coordinator') {
+    const { isSuperCoordinator } = useCoordinatorPrivileges()
+    if (!isSuperCoordinator.value) {
+      return redirectByRole(role.value)
+    }
   }
 })

@@ -31,6 +31,12 @@ export default defineNuxtConfig({
     redirect: false 
   },
 
+  runtimeConfig: {
+    public: {
+      superCoordinatorEmails: process.env.NUXT_PUBLIC_SUPER_COORDINATOR_EMAILS || 'coordinator@intrabuddy.local'
+    }
+  },
+
   devtools: { enabled: true },
   compatibilityDate: '2026-03-17'
 })

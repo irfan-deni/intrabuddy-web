@@ -59,6 +59,10 @@ const demoRoleCookie = useCookie('intrabuddy_demo_role', {
   default: () => '',
   sameSite: 'lax'
 })
+const demoSuperCookie = useCookie('intrabuddy_demo_super', {
+  default: () => '0',
+  sameSite: 'lax'
+})
 
 const DEMO_EMAIL = 'coordinator@intrabuddy.local'
 const DEMO_PASSWORD = 'IntraBuddy123!'
@@ -110,6 +114,7 @@ const signIn = async () => {
     if (form.value.email.trim().toLowerCase() === DEMO_EMAIL && form.value.password === DEMO_PASSWORD) {
       demoAuthCookie.value = '1'
       demoRoleCookie.value = 'coordinator'
+      demoSuperCookie.value = '1'
 
       const demoRole = useState<'student' | 'coordinator' | null>('current-role', () => null)
       const demoProfile = useState<Record<string, unknown> | null>('current-profile', () => null)

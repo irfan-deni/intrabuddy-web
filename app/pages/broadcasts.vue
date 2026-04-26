@@ -104,6 +104,8 @@ type BroadcastRow = Database['public']['Tables']['broadcast_notifications']['Row
 
 const supabase = useSupabaseClient<Database>()
 const user = useSupabaseUser()
+type RealtimeChannelRef = ReturnType<typeof supabase.channel>
+const realtimeChannel = ref<RealtimeChannelRef | null>(null)
 
 const broadcasts = ref<BroadcastRow[]>([])
 const isLoading = ref(false)
@@ -151,7 +153,7 @@ const createBroadcast = async () => {
       throw new Error('Title and message are required.')
     }
 
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('broadcast_notifications')
       .insert({
         title: form.value.title.trim(),
@@ -159,6 +161,8 @@ const createBroadcast = async () => {
         target_audience: form.value.target_audience,
         created_by: user.value.id
       })
+      .select('id')
+      .single()
 
     if (error) {
       throw error
@@ -168,6 +172,19 @@ const createBroadcast = async () => {
       title: '',
       message: '',
       target_audience: 'all_students'
+    }
+
+    if (data?.id) {
+      try {
+        await $fetch('/api/notifications/broadcast-dispatch', {
+          method: 'POST',
+          body: {
+            broadcastId: data.id
+          }
+        })
+      } catch {
+        // Dispatch runs best-effort until mobile push tables are fully provisioned.
+      }
     }
 
     await loadBroadcasts()
@@ -187,5 +204,23 @@ const formatDate = (value: string) => {
 
 onMounted(async () => {
   await loadBroadcasts()
+
+  realtimeChannel.value = supabase
+    .channel('broadcast-notifications-sync')
+    .on('postgres_changes', {
+      event: '*',
+      schema: 'public',
+      table: 'broadcast_notifications'
+    }, async () => {
+      await loadBroadcasts()
+    })
+    .subscribe()
+})
+
+onUnmounted(() => {
+  if (realtimeChannel.value) {
+    realtimeChannel.value.unsubscribe()
+    realtimeChannel.value = null
+  }
 })
 </script>

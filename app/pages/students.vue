@@ -238,7 +238,8 @@
 import type { Database } from '~/types/supabase'
 
 definePageMeta({
-  requiredRole: 'coordinator'
+  requiredRole: 'coordinator',
+  superCoordinatorOnly: true
 })
 
 const supabase = useSupabaseClient<Database>()

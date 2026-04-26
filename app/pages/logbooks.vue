@@ -102,6 +102,8 @@ type LogbookEntry = Database['public']['Tables']['logbook_compliance']['Row']
 type UserEntry = Database['public']['Tables']['users']['Row']
 
 const supabase = useSupabaseClient<Database>()
+type RealtimeChannelRef = ReturnType<typeof supabase.channel>
+const realtimeChannel = ref<RealtimeChannelRef | null>(null)
 
 const entries = ref<Array<LogbookEntry & { student_name: string; student_code: string }>>([])
 const isLoading = ref(false)
@@ -180,5 +182,23 @@ const statusClass = (status: LogbookEntry['submission_status']) => {
 
 onMounted(async () => {
   await loadLogbookCompliance()
+
+  realtimeChannel.value = supabase
+    .channel('logbook-compliance-sync')
+    .on('postgres_changes', {
+      event: '*',
+      schema: 'public',
+      table: 'logbook_compliance'
+    }, async () => {
+      await loadLogbookCompliance()
+    })
+    .subscribe()
+})
+
+onUnmounted(() => {
+  if (realtimeChannel.value) {
+    realtimeChannel.value.unsubscribe()
+    realtimeChannel.value = null
+  }
 })
 </script>

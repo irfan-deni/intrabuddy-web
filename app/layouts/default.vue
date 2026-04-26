@@ -66,12 +66,15 @@
 
 <script setup lang="ts">
 import { useCurrentProfile } from '../composables/useCurrentProfile'
+import { useCoordinatorPrivileges } from '../composables/useCoordinatorPrivileges'
 
 const supabase = useSupabaseClient()
 const { profile, role, clearProfile } = useCurrentProfile()
+const { isSuperCoordinator } = useCoordinatorPrivileges()
 const route = useRoute()
 const demoAuthCookie = useCookie('intrabuddy_demo_auth')
 const demoRoleCookie = useCookie('intrabuddy_demo_role')
+const demoSuperCookie = useCookie('intrabuddy_demo_super')
 
 const isAuthRoute = computed(() => route.path === '/login')
 
@@ -100,12 +103,17 @@ const profileLabel = computed(() => {
 })
 
 const roleLabel = computed(() => {
+  if (role.value === 'coordinator' && isSuperCoordinator.value) {
+    return 'super coordinator'
+  }
+
   return role.value || 'coordinator'
 })
 
 const signOut = async () => {
   demoAuthCookie.value = '0'
   demoRoleCookie.value = ''
+  demoSuperCookie.value = '0'
   await supabase.auth.signOut()
   clearProfile()
   await navigateTo('/login')
