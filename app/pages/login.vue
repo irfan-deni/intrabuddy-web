@@ -51,21 +51,6 @@
 const supabase = useSupabaseClient()
 const user = useSupabaseUser()
 const { role, loadProfile, clearProfile } = useCurrentProfile()
-const demoAuthCookie = useCookie('intrabuddy_demo_auth', {
-  default: () => '0',
-  sameSite: 'lax'
-})
-const demoRoleCookie = useCookie('intrabuddy_demo_role', {
-  default: () => '',
-  sameSite: 'lax'
-})
-const demoSuperCookie = useCookie('intrabuddy_demo_super', {
-  default: () => '0',
-  sameSite: 'lax'
-})
-
-const DEMO_EMAIL = 'coordinator@intrabuddy.local'
-const DEMO_PASSWORD = 'IntraBuddy123!'
 
 const form = ref({
   email: '',
@@ -110,30 +95,6 @@ const signIn = async () => {
   isLoading.value = true
 
   try {
-    // Temporary local demo bypass for offline UI testing.
-    if (form.value.email.trim().toLowerCase() === DEMO_EMAIL && form.value.password === DEMO_PASSWORD) {
-      demoAuthCookie.value = '1'
-      demoRoleCookie.value = 'coordinator'
-      demoSuperCookie.value = '1'
-
-      const demoRole = useState<'student' | 'coordinator' | null>('current-role', () => null)
-      const demoProfile = useState<Record<string, unknown> | null>('current-profile', () => null)
-      demoRole.value = 'coordinator'
-      demoProfile.value = {
-        id: 'demo-coordinator',
-        full_name: 'Demo Coordinator',
-        role: 'coordinator',
-        student_id: null,
-        internship_status: 'preparing',
-        is_active: true,
-        deleted_at: null,
-        created_at: new Date().toISOString()
-      }
-
-      await navigateTo('/')
-      return
-    }
-
     const { error } = await supabase.auth.signInWithPassword({
       email: form.value.email,
       password: form.value.password

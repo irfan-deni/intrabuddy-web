@@ -12,27 +12,7 @@ const redirectByRole = (role: UserRole) => {
 }
 
 export default defineNuxtRouteMiddleware(async (to) => {
-  const demoAuthCookie = useCookie('intrabuddy_demo_auth')
-  const demoRoleCookie = useCookie('intrabuddy_demo_role')
-  const demoSuperCookie = useCookie('intrabuddy_demo_super')
-
   if (to.path === '/login') {
-    return
-  }
-
-  if (demoAuthCookie.value === '1') {
-    const demoRole = demoRoleCookie.value as UserRole
-    const requiredRole = to.meta.requiredRole as UserRole | undefined
-    const superCoordinatorOnly = Boolean(to.meta.superCoordinatorOnly)
-
-    if (requiredRole && requiredRole !== demoRole) {
-      return redirectByRole(demoRole)
-    }
-
-    if (superCoordinatorOnly && demoRole === 'coordinator' && demoSuperCookie.value !== '1') {
-      return redirectByRole(demoRole)
-    }
-
     return
   }
 
@@ -75,3 +55,4 @@ export default defineNuxtRouteMiddleware(async (to) => {
     }
   }
 })
+
