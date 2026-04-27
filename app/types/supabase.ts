@@ -162,6 +162,76 @@ export type Database = {
         }
         Relationships: []
       }
+      mobile_device_tokens: {
+        Row: {
+          id: string
+          user_id: string
+          device_token: string
+          platform: 'android' | 'ios' | 'web'
+          app_version: string | null
+          is_active: boolean
+          last_seen_at: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          device_token: string
+          platform: 'android' | 'ios' | 'web'
+          app_version?: string | null
+          is_active?: boolean
+          last_seen_at?: string
+          created_at?: string
+        }
+        Update: {
+          user_id?: string
+          device_token?: string
+          platform?: 'android' | 'ios' | 'web'
+          app_version?: string | null
+          is_active?: boolean
+          last_seen_at?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
+      mobile_notification_outbox: {
+        Row: {
+          id: string
+          broadcast_id: string | null
+          user_id: string
+          channel: 'mobile_push'
+          status: 'queued' | 'sent' | 'failed'
+          payload: Json
+          queued_at: string
+          delivered_at: string | null
+          failure_reason: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          broadcast_id?: string | null
+          user_id: string
+          channel?: 'mobile_push'
+          status?: 'queued' | 'sent' | 'failed'
+          payload: Json
+          queued_at?: string
+          delivered_at?: string | null
+          failure_reason?: string | null
+          created_at?: string
+        }
+        Update: {
+          broadcast_id?: string | null
+          user_id?: string
+          channel?: 'mobile_push'
+          status?: 'queued' | 'sent' | 'failed'
+          payload?: Json
+          queued_at?: string
+          delivered_at?: string | null
+          failure_reason?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: Record<string, never>
     Functions: Record<string, never>

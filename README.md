@@ -32,7 +32,15 @@ INTRA Buddy is an enterprise-grade university web application designed to stream
    SUPABASE_KEY=your_supabase_anon_key
    ```
 
-3. **Run the Development Server:**
+3. **Apply Database Setup SQL (Supabase SQL Editor):**
+   - Apply `docs/core-database-setup.sql` first (core tables + RLS + auth trigger).
+   - Apply `docs/mobile-notifications-setup.sql` next if you want mobile notification APIs.
+
+4. **(Optional) Seed Demo Coordinator Auth User:**
+   Ensure the Auth user `coordinator@intrabuddy.local` exists in Supabase Auth.
+   The core SQL script will upsert a matching coordinator profile in `public.users`.
+
+5. **Run the Development Server:**
    ```bash
    npm run dev
    ```
