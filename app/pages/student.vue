@@ -257,6 +257,42 @@ const logbookForm = ref({
 })
 const isSavingLogbook = ref(false)
 
+const reloadApplications = async () => {
+  if (!user.value) {
+    return
+  }
+
+  const { data, error } = await supabase
+    .from('internship_applications')
+    .select('id, student_id, company_name, status, offer_letter_url')
+    .eq('student_id', user.value.id)
+    .order('company_name', { ascending: true })
+
+  if (error) {
+    throw error
+  }
+
+  applications.value = data || []
+}
+
+const reloadLogbookEntries = async () => {
+  if (!user.value) {
+    return
+  }
+
+  const { data, error } = await supabase
+    .from('logbook_compliance')
+    .select('id, student_id, week_number, submission_status, self_reported_at')
+    .eq('student_id', user.value.id)
+    .order('week_number', { ascending: true })
+
+  if (error) {
+    throw error
+  }
+
+  logbookEntries.value = data || []
+}
+
 const loadStudentData = async () => {
   if (!user.value) {
     return
@@ -266,32 +302,14 @@ const loadStudentData = async () => {
   errorMessage.value = ''
 
   try {
-    const [checklistResult, applicationsResult, logbookResult] = await Promise.all([
-      supabase
-        .from('pre_internship_checklists')
-        .select('id, student_id, resume_uploaded, university_forms_completed, is_ready_to_apply')
-        .eq('student_id', user.value.id)
-        .maybeSingle(),
-      supabase
-        .from('internship_applications')
-        .select('id, student_id, company_name, status, offer_letter_url')
-        .eq('student_id', user.value.id)
-        .order('company_name', { ascending: true }),
-      supabase
-        .from('logbook_compliance')
-        .select('id, student_id, week_number, submission_status, self_reported_at')
-        .eq('student_id', user.value.id)
-        .order('week_number', { ascending: true })
-    ])
+    const checklistResult = await supabase
+      .from('pre_internship_checklists')
+      .select('id, student_id, resume_uploaded, university_forms_completed, is_ready_to_apply')
+      .eq('student_id', user.value.id)
+      .maybeSingle()
 
-    const fetchErrors = [
-      checklistResult.error,
-      applicationsResult.error,
-      logbookResult.error
-    ].filter(Boolean)
-
-    if (fetchErrors.length > 0) {
-      throw fetchErrors[0]
+    if (checklistResult.error) {
+      throw checklistResult.error
     }
 
     if (checklistResult.data) {
@@ -306,8 +324,7 @@ const loadStudentData = async () => {
       }
     }
 
-    applications.value = applicationsResult.data || []
-    logbookEntries.value = logbookResult.data || []
+    await Promise.all([reloadApplications(), reloadLogbookEntries()])
   } catch (error: unknown) {
     errorMessage.value = error instanceof Error ? error.message : 'Unable to load student data.'
   } finally {
@@ -416,7 +433,7 @@ const saveApplication = async () => {
     }
 
     closeApplicationModal()
-    await loadStudentData()
+    await reloadApplications()
   } catch (error: unknown) {
     modalErrorMessage.value = error instanceof Error ? error.message : 'Unable to save application.'
   } finally {
@@ -442,7 +459,7 @@ const deleteApplication = async (id: string) => {
       throw error
     }
 
-    await loadStudentData()
+    await reloadApplications()
   } catch (error: unknown) {
     errorMessage.value = error instanceof Error ? error.message : 'Unable to delete application.'
   }
@@ -475,7 +492,7 @@ const submitLogbookWeek = async () => {
       throw error
     }
 
-    await loadStudentData()
+    await reloadLogbookEntries()
   } catch (error: unknown) {
     errorMessage.value = error instanceof Error ? error.message : 'Unable to save logbook week.'
   } finally {

@@ -66,14 +66,14 @@
             </tr>
           </tbody>
 
-          <tbody v-else-if="filteredEntries.length === 0">
+          <tbody v-else-if="entries.length === 0">
             <tr>
               <td colspan="5" class="py-8 text-center text-slate-400">No entries matched this filter.</td>
             </tr>
           </tbody>
 
           <tbody v-else>
-            <tr v-for="entry in filteredEntries" :key="entry.id" class="border-b border-slate-100">
+            <tr v-for="entry in entries" :key="entry.id" class="border-b border-slate-100">
               <td class="py-2 font-medium text-slate-900">{{ entry.student_name }}</td>
               <td class="py-2 text-slate-600">{{ entry.student_code }}</td>
               <td class="py-2">{{ entry.week_number }}</td>
@@ -99,7 +99,7 @@ definePageMeta({
 })
 
 type LogbookEntry = Database['public']['Tables']['logbook_compliance']['Row']
-type UserEntry = Database['public']['Tables']['users']['Row']
+type LogbookStudentRow = Pick<Database['public']['Tables']['users']['Row'], 'id' | 'full_name' | 'student_id'>
 
 const supabase = useSupabaseClient<Database>()
 type RealtimeChannelRef = ReturnType<typeof supabase.channel>
@@ -111,27 +111,31 @@ const errorMessage = ref('')
 const weekFilter = ref<number | null>(null)
 const statusFilter = ref<'all' | 'pending' | 'submitted' | 'overdue'>('all')
 
-const filteredEntries = computed(() => {
-  return entries.value.filter((entry) => {
-    const weekMatches = !weekFilter.value || entry.week_number === weekFilter.value
-    const statusMatches = statusFilter.value === 'all' || entry.submission_status === statusFilter.value
-    return weekMatches && statusMatches
-  })
-})
+let logbookFilterDebounce: ReturnType<typeof setTimeout> | null = null
 
 const loadLogbookCompliance = async () => {
   isLoading.value = true
   errorMessage.value = ''
 
   try {
+    let logbookQuery = supabase
+      .from('logbook_compliance')
+      .select('id, student_id, week_number, submission_status, self_reported_at')
+      .order('week_number', { ascending: false })
+
+    if (weekFilter.value !== null && weekFilter.value >= 1) {
+      logbookQuery = logbookQuery.eq('week_number', weekFilter.value)
+    }
+
+    if (statusFilter.value !== 'all') {
+      logbookQuery = logbookQuery.eq('submission_status', statusFilter.value)
+    }
+
     const [logbookResult, studentsResult] = await Promise.all([
-      supabase
-        .from('logbook_compliance')
-        .select('id, student_id, week_number, submission_status, self_reported_at')
-        .order('week_number', { ascending: false }),
+      logbookQuery,
       supabase
         .from('users')
-        .select('id, full_name, student_id, role, internship_status, is_active, deleted_at, created_at')
+        .select('id, full_name, student_id')
         .eq('role', 'student')
         .eq('is_active', true)
     ])
@@ -141,7 +145,7 @@ const loadLogbookCompliance = async () => {
       throw loadErrors[0]
     }
 
-    const studentsById = new Map<string, UserEntry>()
+    const studentsById = new Map<string, LogbookStudentRow>()
     for (const student of studentsResult.data || []) {
       studentsById.set(student.id, student)
     }
@@ -180,6 +184,30 @@ const statusClass = (status: LogbookEntry['submission_status']) => {
   return 'bg-slate-100 text-slate-700'
 }
 
+let logbookRealtimeDebounce: ReturnType<typeof setTimeout> | null = null
+
+const scheduleLogbookReload = () => {
+  if (logbookRealtimeDebounce) {
+    clearTimeout(logbookRealtimeDebounce)
+  }
+
+  logbookRealtimeDebounce = setTimeout(() => {
+    logbookRealtimeDebounce = null
+    void loadLogbookCompliance()
+  }, 500)
+}
+
+watch([weekFilter, statusFilter], () => {
+  if (logbookFilterDebounce) {
+    clearTimeout(logbookFilterDebounce)
+  }
+
+  logbookFilterDebounce = setTimeout(() => {
+    logbookFilterDebounce = null
+    void loadLogbookCompliance()
+  }, 300)
+})
+
 onMounted(async () => {
   await loadLogbookCompliance()
 
@@ -189,13 +217,23 @@ onMounted(async () => {
       event: '*',
       schema: 'public',
       table: 'logbook_compliance'
-    }, async () => {
-      await loadLogbookCompliance()
+    }, () => {
+      scheduleLogbookReload()
     })
     .subscribe()
 })
 
 onUnmounted(() => {
+  if (logbookFilterDebounce) {
+    clearTimeout(logbookFilterDebounce)
+    logbookFilterDebounce = null
+  }
+
+  if (logbookRealtimeDebounce) {
+    clearTimeout(logbookRealtimeDebounce)
+    logbookRealtimeDebounce = null
+  }
+
   if (realtimeChannel.value) {
     realtimeChannel.value.unsubscribe()
     realtimeChannel.value = null

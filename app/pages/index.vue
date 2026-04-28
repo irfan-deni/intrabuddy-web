@@ -106,13 +106,24 @@
 </template>
 
 <script setup lang="ts">
-import type { Database } from '~/types/supabase'
-
 definePageMeta({
   requiredRole: 'coordinator'
 })
 
-const supabase = useSupabaseClient<Database>()
+type TrendPoint = {
+  label: string
+  value: number
+  height: number
+}
+
+type DashboardResponse = {
+  totalStudents: number
+  placedStudents: number
+  searchingStudents: number
+  actionRequired: number
+  completedStudents: number
+  monthlyPlacedTrend: TrendPoint[]
+}
 
 const totalStudents = ref(0)
 const placedStudents = ref(0)
@@ -121,12 +132,6 @@ const actionRequired = ref(0)
 const completedStudents = ref(0)
 const isLoading = ref(false)
 const errorMessage = ref('')
-
-type TrendPoint = {
-  label: string
-  value: number
-  height: number
-}
 
 type StatusSegment = {
   label: string
@@ -168,119 +173,18 @@ const statusMix = computed<StatusSegment[]>(() => {
   ]
 })
 
-const buildLastSixMonthLabels = () => {
-  const labels: string[] = []
-
-  for (let index = 5; index >= 0; index -= 1) {
-    const date = new Date()
-    date.setMonth(date.getMonth() - index)
-    labels.push(
-      date.toLocaleString('en-US', { month: 'short', year: '2-digit' })
-    )
-  }
-
-  return labels
-}
-
 const fetchDashboardData = async () => {
   isLoading.value = true
   errorMessage.value = ''
 
   try {
-    const [
-      totalResult,
-      placedResult,
-      searchingResult,
-      preparingResult,
-      completedResult,
-      placedStudentsRows
-    ] = await Promise.all([
-      supabase
-        .from('users')
-        .select('*', { count: 'exact', head: true })
-        .eq('role', 'student')
-        .eq('is_active', true),
-      supabase
-        .from('users')
-        .select('*', { count: 'exact', head: true })
-        .eq('role', 'student')
-        .eq('internship_status', 'placed')
-        .eq('is_active', true),
-      supabase
-        .from('users')
-        .select('*', { count: 'exact', head: true })
-        .eq('role', 'student')
-        .eq('internship_status', 'searching')
-        .eq('is_active', true),
-      supabase
-        .from('users')
-        .select('*', { count: 'exact', head: true })
-        .eq('role', 'student')
-        .eq('internship_status', 'preparing')
-        .eq('is_active', true),
-      supabase
-        .from('users')
-        .select('*', { count: 'exact', head: true })
-        .eq('role', 'student')
-        .eq('internship_status', 'completed')
-        .eq('is_active', true),
-      supabase
-        .from('users')
-        .select('created_at')
-        .eq('role', 'student')
-        .eq('internship_status', 'placed')
-        .eq('is_active', true)
-    ])
-
-    const queryErrors = [
-      totalResult.error,
-      placedResult.error,
-      searchingResult.error,
-      preparingResult.error,
-      completedResult.error,
-      placedStudentsRows.error
-    ].filter(Boolean)
-
-    if (queryErrors.length > 0) {
-      throw queryErrors[0]
-    }
-
-    totalStudents.value = totalResult.count || 0
-    placedStudents.value = placedResult.count || 0
-    searchingStudents.value = searchingResult.count || 0
-    actionRequired.value = preparingResult.count || 0
-    completedStudents.value = completedResult.count || 0
-
-    const labels = buildLastSixMonthLabels()
-    const monthlyCounts = new Map(labels.map((label) => [label, 0]))
-
-    for (const student of placedStudentsRows.data || []) {
-      const createdAt = student.created_at
-      if (!createdAt) {
-        continue
-      }
-
-      const label = new Date(createdAt).toLocaleString('en-US', {
-        month: 'short',
-        year: '2-digit'
-      })
-
-      if (monthlyCounts.has(label)) {
-        monthlyCounts.set(label, (monthlyCounts.get(label) || 0) + 1)
-      }
-    }
-
-    const maxCount = Math.max(...Array.from(monthlyCounts.values()), 1)
-    monthlyPlacedTrend.value = labels.map((label) => {
-      const value = monthlyCounts.get(label) || 0
-      const scaledHeight = Math.max(Math.round((value / maxCount) * 180), value > 0 ? 20 : 4)
-
-      return {
-        label,
-        value,
-        height: scaledHeight
-      }
-    })
+    const data = await $fetch<DashboardResponse>('/api/dashboard')
+    totalStudents.value = data.totalStudents
+    placedStudents.value = data.placedStudents
+    searchingStudents.value = data.searchingStudents
+    actionRequired.value = data.actionRequired
+    completedStudents.value = data.completedStudents
+    monthlyPlacedTrend.value = data.monthlyPlacedTrend
   } catch (error: unknown) {
     errorMessage.value = error instanceof Error ? error.message : 'Unable to load dashboard data.'
   } finally {

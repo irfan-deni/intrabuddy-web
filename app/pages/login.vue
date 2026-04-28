@@ -43,6 +43,12 @@
           <span>{{ isLoading ? 'Signing in...' : 'Sign in' }}</span>
         </button>
       </form>
+      <div v-if="showLoginDebug" class="mt-4">
+        <details>
+          <summary class="text-sm text-slate-500">Debug: last raw error (dev only)</summary>
+          <pre class="whitespace-pre-wrap bg-slate-50 border p-2 text-xs text-slate-700">{{ JSON.stringify(lastErrorRaw, null, 2) }}</pre>
+        </details>
+      </div>
     </div>
   </section>
 </template>
@@ -56,9 +62,48 @@ const form = ref({
   email: '',
   password: ''
 })
+const DEMO_COORDINATOR_EMAIL = 'coordinator@intrabuddy.local'
 const isLoading = ref(false)
 const errorMessage = ref('')
 const isCheckingSession = ref(false)
+const lastErrorRaw = useState<unknown>('login-last-error', () => null)
+const showLoginDebug = import.meta.dev
+
+const isInvalidCredentialsError = (message: string) => {
+  return message.toLowerCase().includes('invalid login credentials')
+}
+
+const isEmailNotConfirmedError = (message: string) => {
+  return message.toLowerCase().includes('email not confirmed')
+}
+
+const maybeProvisionDemoCoordinator = async () => {
+  const email = form.value.email.trim().toLowerCase()
+  if (email !== DEMO_COORDINATOR_EMAIL) {
+    return false
+  }
+
+  const { error } = await supabase.auth.signUp({
+    email,
+    password: form.value.password,
+    options: {
+      data: {
+        full_name: 'Demo Coordinator'
+      }
+    }
+  })
+
+  if (!error) {
+    return true
+  }
+
+  const normalized = error.message.toLowerCase()
+  if (normalized.includes('already') || normalized.includes('exists')) {
+    return true
+  }
+
+  throw error
+}
 
 const handleExistingSession = async () => {
   if (!user.value || isCheckingSession.value) {
@@ -106,7 +151,46 @@ const signIn = async () => {
 
     await navigateTo('/')
   } catch (error: unknown) {
-    errorMessage.value = error instanceof Error ? error.message : 'Unable to sign in. Please try again.'
+    if (showLoginDebug) {
+      lastErrorRaw.value = error
+    }
+    const message = error instanceof Error ? error.message : 'Unable to sign in. Please try again.'
+
+    if (!isInvalidCredentialsError(message)) {
+      errorMessage.value = message
+      return
+    }
+
+    try {
+      const created = await maybeProvisionDemoCoordinator()
+      if (!created) {
+        errorMessage.value = 'Invalid login credentials. Check email/password or create the account in Supabase Auth.'
+        return
+      }
+
+      const { error: retryError } = await supabase.auth.signInWithPassword({
+        email: form.value.email,
+        password: form.value.password
+      })
+
+      if (retryError) {
+        if (isEmailNotConfirmedError(retryError.message)) {
+          errorMessage.value = 'Demo account created, but email confirmation is required. Confirm the user in Supabase Auth and try again.'
+          return
+        }
+
+        throw retryError
+      }
+
+      await navigateTo('/')
+    } catch (provisionError: unknown) {
+      const provisionMessage = provisionError instanceof Error ? provisionError.message : ''
+      if (provisionMessage.toLowerCase().includes('signup')) {
+        errorMessage.value = 'Demo account auto-creation is blocked by Supabase Auth settings. Create coordinator@intrabuddy.local manually in Supabase Auth.'
+      } else {
+        errorMessage.value = provisionMessage || 'Unable to create demo account automatically. Create it manually in Supabase Auth.'
+      }
+    }
   } finally {
     isLoading.value = false
   }

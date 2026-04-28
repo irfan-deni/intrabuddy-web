@@ -9,6 +9,10 @@
       {{ errorMessage }}
     </p>
 
+    <p v-if="embeddingNotice" class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+      {{ embeddingNotice }}
+    </p>
+
     <article class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
       <div class="mb-4 flex items-center justify-between">
         <h2 class="text-lg font-semibold text-slate-900">FAQ Entries</h2>
@@ -113,14 +117,16 @@ definePageMeta({
 })
 
 type FaqRow = Database['public']['Tables']['faqs']['Row']
+type FaqListRow = Omit<FaqRow, 'embedding'>
 
 const supabase = useSupabaseClient<Database>()
 const user = useSupabaseUser()
 
-const faqs = ref<FaqRow[]>([])
+const faqs = ref<FaqListRow[]>([])
 const isLoading = ref(false)
 const isSaving = ref(false)
 const errorMessage = ref('')
+const embeddingNotice = ref('')
 const modalErrorMessage = ref('')
 
 const isModalOpen = ref(false)
@@ -138,7 +144,7 @@ const loadFaqs = async () => {
   try {
     const { data, error } = await supabase
       .from('faqs')
-      .select('id, question, answer, last_updated_by, updated_at, embedding')
+      .select('id, question, answer, last_updated_by, updated_at')
       .order('updated_at', { ascending: false })
 
     if (error) {
@@ -153,7 +159,7 @@ const loadFaqs = async () => {
   }
 }
 
-const openModal = (faq: FaqRow | null) => {
+const openModal = (faq: FaqListRow | null) => {
   modalErrorMessage.value = ''
   if (!faq) {
     editingFaqId.value = null
@@ -191,6 +197,7 @@ const saveFaq = async () => {
   }
 
   modalErrorMessage.value = ''
+  embeddingNotice.value = ''
   isSaving.value = true
 
   try {
@@ -230,11 +237,17 @@ const saveFaq = async () => {
       savedFaqId = data.id
     }
 
-    if (savedFaqId) {
-      await triggerEmbeddingUpdate(savedFaqId, payload.question, payload.answer)
+    closeModal()
+
+    try {
+      if (savedFaqId) {
+        await triggerEmbeddingUpdate(savedFaqId, payload.question, payload.answer)
+      }
+    } catch (embedError: unknown) {
+      const embedMessage = embedError instanceof Error ? embedError.message : 'Embedding update failed.'
+      embeddingNotice.value = `FAQ was saved, but the search embedding could not be updated: ${embedMessage}`
     }
 
-    closeModal()
     await loadFaqs()
   } catch (error: unknown) {
     modalErrorMessage.value = error instanceof Error ? error.message : 'Unable to save FAQ.'

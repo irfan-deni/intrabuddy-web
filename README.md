@@ -48,9 +48,13 @@ INTRA Buddy is an enterprise-grade university web application designed to stream
 
 ## 🔑 Demo Credentials
 
-To access the coordinator dashboard during local development, you can use the hardcoded demo credentials:
+To access the coordinator dashboard during local development, use:
 - **Email:** `coordinator@intrabuddy.local`
 - **Password:** `IntraBuddy123!`
+
+Important setup note:
+- This account must exist in **Supabase Auth** first. If it does not exist, login will fail with `Invalid login credentials`.
+- After creating the Auth user, run `docs/core-database-setup.sql` again once to ensure the `public.users` profile row is present and assigned as `coordinator`.
 
 ## 🏗 Documentation
 

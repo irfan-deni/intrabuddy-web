@@ -71,7 +71,7 @@
             </tr>
           </tbody>
 
-          <tbody v-else-if="paginatedStudents.length === 0">
+          <tbody v-else-if="students.length === 0">
             <tr>
               <td colspan="4" class="px-6 py-12 text-center text-slate-400">
                 <i class="pi pi-inbox text-3xl mb-2"></i>
@@ -82,7 +82,7 @@
 
           <tbody v-else>
             <tr
-              v-for="student in paginatedStudents"
+              v-for="student in students"
               :key="student.id"
               class="border-b border-slate-100 hover:bg-slate-50 transition-colors"
             >
@@ -121,13 +121,16 @@
 
       <footer class="flex items-center justify-between border-t border-slate-200 bg-white px-5 py-3 text-sm text-slate-600">
         <p>
-          Showing {{ pageStart + 1 }}-{{ pageEnd }} of {{ filteredStudents.length }}
+          <span v-if="totalCount === 0">No students to show.</span>
+          <span v-else>
+            Showing {{ pageStart + 1 }}-{{ pageStart + students.length }} of {{ totalCount }}
+          </span>
         </p>
         <div class="flex items-center gap-2">
           <button
             class="rounded-md border border-slate-300 px-3 py-1.5 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40"
             :disabled="currentPage === 1"
-            @click="currentPage -= 1"
+            @click="goToPreviousPage"
           >
             Previous
           </button>
@@ -135,7 +138,7 @@
           <button
             class="rounded-md border border-slate-300 px-3 py-1.5 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40"
             :disabled="currentPage >= totalPages"
-            @click="currentPage += 1"
+            @click="goToNextPage"
           >
             Next
           </button>
@@ -252,6 +255,7 @@ type StudentRow = {
 }
 
 const students = ref<StudentRow[]>([])
+const totalCount = ref(0)
 const isLoading = ref(true)
 const isSaving = ref(false)
 const isDeleting = ref(false)
@@ -274,47 +278,45 @@ const form = ref({
 const pageSize = 10
 const currentPage = ref(1)
 
-const filteredStudents = computed(() => {
-  const search = searchQuery.value.trim().toLowerCase()
-
-  return students.value.filter((student) => {
-    const statusMatches =
-      statusFilter.value === 'all' || student.internship_status === statusFilter.value
-
-    const searchMatches =
-      search.length === 0 ||
-      student.full_name.toLowerCase().includes(search) ||
-      (student.student_id || '').toLowerCase().includes(search)
-
-    return statusMatches && searchMatches
-  })
-})
-
 const totalPages = computed(() => {
-  return Math.max(Math.ceil(filteredStudents.value.length / pageSize), 1)
+  return Math.max(Math.ceil(totalCount.value / pageSize), 1)
 })
 
 const pageStart = computed(() => {
   return (currentPage.value - 1) * pageSize
 })
 
-const pageEnd = computed(() => {
-  return Math.min(pageStart.value + pageSize, filteredStudents.value.length)
-})
-
-const paginatedStudents = computed(() => {
-  return filteredStudents.value.slice(pageStart.value, pageEnd.value)
-})
+let searchDebounce: ReturnType<typeof setTimeout> | null = null
 
 watch([searchQuery, statusFilter], () => {
   currentPage.value = 1
+  if (searchDebounce) {
+    clearTimeout(searchDebounce)
+  }
+
+  searchDebounce = setTimeout(() => {
+    searchDebounce = null
+    void fetchStudents()
+  }, 300)
 })
 
-watch(filteredStudents, () => {
-  if (currentPage.value > totalPages.value) {
-    currentPage.value = totalPages.value
+const goToPreviousPage = async () => {
+  if (currentPage.value <= 1) {
+    return
   }
-})
+
+  currentPage.value -= 1
+  await fetchStudents()
+}
+
+const goToNextPage = async () => {
+  if (currentPage.value >= totalPages.value) {
+    return
+  }
+
+  currentPage.value += 1
+  await fetchStudents()
+}
 
 const resetForm = () => {
   form.value = {
@@ -349,20 +351,47 @@ const closeModal = () => {
   resetForm()
 }
 
+const escapeIlikePattern = (value: string) => {
+  return value.replace(/[%_\\]/g, (char) => `\\${char}`)
+}
+
 const fetchStudents = async () => {
   isLoading.value = true
   errorMessage.value = ''
 
   try {
-    const { data, error } = await supabase
+    const search = searchQuery.value.trim().replaceAll(',', ' ')
+    const from = (currentPage.value - 1) * pageSize
+    const to = from + pageSize - 1
+
+    let query = supabase
       .from('users')
-      .select('id, full_name, student_id, internship_status')
+      .select('id, full_name, student_id, internship_status', { count: 'exact' })
       .eq('role', 'student')
       .eq('is_active', true)
-      .order('full_name', { ascending: true })
+
+    if (statusFilter.value !== 'all') {
+      query = query.eq('internship_status', statusFilter.value)
+    }
+
+    if (search.length > 0) {
+      const pattern = `%${escapeIlikePattern(search)}%`
+      query = query.or(`full_name.ilike.${pattern},student_id.ilike.${pattern}`)
+    }
+
+    const { data, error, count } = await query.order('full_name', { ascending: true }).range(from, to)
 
     if (error) {
       throw error
+    }
+
+    totalCount.value = count ?? 0
+
+    const pages = Math.max(Math.ceil(totalCount.value / pageSize), 1)
+    if (currentPage.value > pages) {
+      currentPage.value = pages
+      await fetchStudents()
+      return
     }
 
     students.value = (data || []) as StudentRow[]
@@ -454,5 +483,12 @@ const softDeleteStudent = async () => {
 
 onMounted(async () => {
   await fetchStudents()
+})
+
+onUnmounted(() => {
+  if (searchDebounce) {
+    clearTimeout(searchDebounce)
+    searchDebounce = null
+  }
 })
 </script>

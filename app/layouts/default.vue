@@ -75,7 +75,7 @@ const route = useRoute()
 
 const isAuthRoute = computed(() => route.path === '/login')
 
-const coordinatorNavigation = [
+const coordinatorNavigationBase = [
   { to: '/', label: 'Dashboard', icon: 'pi pi-home' },
   { to: '/students', label: 'Student Directory', icon: 'pi pi-users' },
   { to: '/logbooks', label: 'Logbooks', icon: 'pi pi-book' },
@@ -88,7 +88,17 @@ const studentNavigation = [
 ]
 
 const navigation = computed(() => {
-  return role.value === 'student' ? studentNavigation : coordinatorNavigation
+  if (role.value === 'student') {
+    return studentNavigation
+  }
+
+  return coordinatorNavigationBase.filter((item) => {
+    if (item.to === '/students') {
+      return isSuperCoordinator.value
+    }
+
+    return true
+  })
 })
 
 const profileInitial = computed(() => {

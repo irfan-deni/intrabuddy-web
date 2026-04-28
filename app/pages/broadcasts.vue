@@ -9,6 +9,14 @@
       {{ errorMessage }}
     </p>
 
+    <p
+      v-if="dispatchNotice"
+      class="rounded-lg border px-4 py-3 text-sm"
+      :class="dispatchNoticeClasses"
+    >
+      {{ dispatchNotice.message }}
+    </p>
+
     <article class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
       <h2 class="mb-4 text-lg font-semibold text-slate-900">Compose Broadcast</h2>
 
@@ -112,6 +120,29 @@ const isLoading = ref(false)
 const isSaving = ref(false)
 const errorMessage = ref('')
 
+type DispatchNotice = {
+  variant: 'success' | 'warning' | 'error'
+  message: string
+}
+
+const dispatchNotice = ref<DispatchNotice | null>(null)
+
+const dispatchNoticeClasses = computed(() => {
+  if (!dispatchNotice.value) {
+    return ''
+  }
+
+  if (dispatchNotice.value.variant === 'success') {
+    return 'border-emerald-200 bg-emerald-50 text-emerald-800'
+  }
+
+  if (dispatchNotice.value.variant === 'warning') {
+    return 'border-amber-200 bg-amber-50 text-amber-900'
+  }
+
+  return 'border-red-200 bg-red-50 text-red-800'
+})
+
 const form = ref({
   title: '',
   message: '',
@@ -140,6 +171,32 @@ const loadBroadcasts = async () => {
   }
 }
 
+type DispatchResponse = {
+  ok: boolean
+  queued?: number
+  reason?: string
+  requiresSetup?: boolean
+  message?: string
+}
+
+const parseDispatchFailureMessage = (error: unknown) => {
+  if (error && typeof error === 'object' && 'data' in error) {
+    const data = (error as { data?: { message?: string; statusMessage?: string } }).data
+    if (data?.message) {
+      return data.message
+    }
+    if (data?.statusMessage) {
+      return data.statusMessage
+    }
+  }
+
+  if (error instanceof Error) {
+    return error.message
+  }
+
+  return 'Dispatch failed. The broadcast was still saved.'
+}
+
 const createBroadcast = async () => {
   if (!user.value) {
     return
@@ -147,6 +204,7 @@ const createBroadcast = async () => {
 
   isSaving.value = true
   errorMessage.value = ''
+  dispatchNotice.value = null
 
   try {
     if (!form.value.title.trim() || !form.value.message.trim()) {
@@ -176,14 +234,36 @@ const createBroadcast = async () => {
 
     if (data?.id) {
       try {
-        await $fetch('/api/notifications/broadcast-dispatch', {
+        const result = await $fetch<DispatchResponse>('/api/notifications/broadcast-dispatch', {
           method: 'POST',
           body: {
             broadcastId: data.id
           }
         })
-      } catch {
-        // Dispatch runs best-effort until mobile push tables are fully provisioned.
+
+        if (result.requiresSetup) {
+          dispatchNotice.value = {
+            variant: 'warning',
+            message: result.message || 'Mobile notification tables are not set up. Apply docs/mobile-notifications-setup.sql to enable push queueing.'
+          }
+        } else if (result.ok && typeof result.queued === 'number') {
+          if (result.queued === 0 && result.reason) {
+            dispatchNotice.value = {
+              variant: 'warning',
+              message: `Broadcast saved. ${result.reason}`
+            }
+          } else {
+            dispatchNotice.value = {
+              variant: 'success',
+              message: `Broadcast saved. Queued ${result.queued} mobile notification(s).`
+            }
+          }
+        }
+      } catch (dispatchError: unknown) {
+        dispatchNotice.value = {
+          variant: 'error',
+          message: parseDispatchFailureMessage(dispatchError)
+        }
       }
     }
 
@@ -202,6 +282,19 @@ const formatDate = (value: string) => {
   })
 }
 
+let broadcastRealtimeDebounce: ReturnType<typeof setTimeout> | null = null
+
+const scheduleBroadcastReload = () => {
+  if (broadcastRealtimeDebounce) {
+    clearTimeout(broadcastRealtimeDebounce)
+  }
+
+  broadcastRealtimeDebounce = setTimeout(() => {
+    broadcastRealtimeDebounce = null
+    void loadBroadcasts()
+  }, 500)
+}
+
 onMounted(async () => {
   await loadBroadcasts()
 
@@ -211,13 +304,18 @@ onMounted(async () => {
       event: '*',
       schema: 'public',
       table: 'broadcast_notifications'
-    }, async () => {
-      await loadBroadcasts()
+    }, () => {
+      scheduleBroadcastReload()
     })
     .subscribe()
 })
 
 onUnmounted(() => {
+  if (broadcastRealtimeDebounce) {
+    clearTimeout(broadcastRealtimeDebounce)
+    broadcastRealtimeDebounce = null
+  }
+
   if (realtimeChannel.value) {
     realtimeChannel.value.unsubscribe()
     realtimeChannel.value = null
