@@ -13,5 +13,24 @@
       "skillPath": "skills/supabase-postgres-best-practices/SKILL.md",
       "computedHash": "d606a1146be6d54fb9e73f718b5320b9acac5ff2ba2d7230a555df4b5a923b4a"
     }
+    ,
+    "intra-buddy-supabase": {
+      "source": ".agents/skills/intra-buddy-supabase",
+      "sourceType": "local",
+      "skillPath": ".agents/skills/intra-buddy-supabase/SKILL.md",
+      "computedHash": ""
+    },
+    "intra-buddy-ui-components": {
+      "source": ".agents/skills/intra-buddy-ui-components",
+      "sourceType": "local",
+      "skillPath": ".agents/skills/intra-buddy-ui-components/SKILL.md",
+      "computedHash": ""
+    },
+    "intra-buddy-web-dashboard": {
+      "source": ".agents/skills/intra-buddy-web-dashboard",
+      "sourceType": "local",
+      "skillPath": ".agents/skills/intra-buddy-web-dashboard/SKILL.md",
+      "computedHash": ""
+    }
   }
 }
