@@ -1,20 +1,5 @@
 import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server'
-
-type TrendPoint = {
-  label: string
-  value: number
-  height: number
-}
-
-const buildLastSixMonthLabels = () => {
-  const labels: string[] = []
-  for (let index = 5; index >= 0; index -= 1) {
-    const date = new Date()
-    date.setMonth(date.getMonth() - index)
-    labels.push(date.toLocaleString('en-US', { month: 'short', year: '2-digit' }))
-  }
-  return labels
-}
+import type { Database } from '~/types/supabase'
 
 export default defineEventHandler(async (event) => {
   const user = await serverSupabaseUser(event)
@@ -22,13 +7,12 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
   }
 
-  const supabase = await serverSupabaseClient(event)
+  const supabase = await serverSupabaseClient<Database>(event)
 
   const { data: actor, error: actorError } = await supabase
     .from('users')
-    .select('role, is_active')
+    .select('role')
     .eq('id', user.id)
-    .eq('is_active', true)
     .single()
 
   if (actorError) {
@@ -39,94 +23,74 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 403, statusMessage: 'Only coordinators can load dashboard data.' })
   }
 
-  const [
-    totalResult,
-    placedResult,
-    searchingResult,
-    preparingResult,
-    completedResult,
-    placedStudentsRows
-  ] = await Promise.all([
-    supabase
-      .from('users')
-      .select('id', { count: 'exact', head: true })
-      .eq('role', 'student')
-      .eq('is_active', true),
-    supabase
-      .from('users')
-      .select('id', { count: 'exact', head: true })
-      .eq('role', 'student')
-      .eq('internship_status', 'placed')
-      .eq('is_active', true),
-    supabase
-      .from('users')
-      .select('id', { count: 'exact', head: true })
-      .eq('role', 'student')
-      .eq('internship_status', 'searching')
-      .eq('is_active', true),
-    supabase
-      .from('users')
-      .select('id', { count: 'exact', head: true })
-      .eq('role', 'student')
-      .eq('internship_status', 'preparing')
-      .eq('is_active', true),
-    supabase
-      .from('users')
-      .select('id', { count: 'exact', head: true })
-      .eq('role', 'student')
-      .eq('internship_status', 'completed')
-      .eq('is_active', true),
-    supabase
-      .from('users')
-      .select('created_at')
-      .eq('role', 'student')
-      .eq('internship_status', 'placed')
-      .eq('is_active', true)
-  ])
+  // Find the active cohort
+  const { data: activeCohort, error: cohortError } = await supabase
+    .from('cohorts')
+    .select('id, name')
+    .eq('is_active', true)
+    .single()
 
-  const queryErrors = [
-    totalResult.error,
-    placedResult.error,
-    searchingResult.error,
-    preparingResult.error,
-    completedResult.error,
-    placedStudentsRows.error
-  ].filter(Boolean)
-
-  if (queryErrors.length > 0) {
-    throw createError({ statusCode: 500, statusMessage: queryErrors[0]?.message || 'Dashboard query failed.' })
+  if (cohortError) {
+    // If no active cohort is found, it throws an error (PGRST116).
+    // Let's just return 0s if no active cohort exists.
+    if (cohortError.code === 'PGRST116') {
+      return {
+        cohortName: 'No Active Cohort',
+        totalStudents: 0,
+        placedStudents: 0,
+        unplacedStudents: 0,
+        placementPercentage: 0
+      }
+    }
+    throw createError({ statusCode: 500, statusMessage: cohortError.message })
   }
 
-  const labels = buildLastSixMonthLabels()
-  const monthlyCounts = new Map(labels.map((label) => [label, 0]))
+  // Get all students enrolled in the active cohort
+  const { data: enrolledStudents, error: enrolledError } = await supabase
+    .from('student_cohorts')
+    .select('student_id')
+    .eq('cohort_id', activeCohort.id)
 
-  for (const student of placedStudentsRows.data || []) {
-    const createdAt = student.created_at
-    if (!createdAt) {
-      continue
-    }
-    const label = new Date(createdAt).toLocaleString('en-US', {
-      month: 'short',
-      year: '2-digit'
-    })
-    if (monthlyCounts.has(label)) {
-      monthlyCounts.set(label, (monthlyCounts.get(label) || 0) + 1)
+  if (enrolledError) {
+    throw createError({ statusCode: 500, statusMessage: enrolledError.message })
+  }
+
+  const totalStudents = enrolledStudents ? enrolledStudents.length : 0
+
+  if (totalStudents === 0) {
+    return {
+      cohortName: activeCohort.name,
+      totalStudents: 0,
+      placedStudents: 0,
+      unplacedStudents: 0,
+      placementPercentage: 0
     }
   }
 
-  const maxCount = Math.max(...Array.from(monthlyCounts.values()), 1)
-  const monthlyPlacedTrend: TrendPoint[] = labels.map((label) => {
-    const value = monthlyCounts.get(label) || 0
-    const scaledHeight = Math.max(Math.round((value / maxCount) * 180), value > 0 ? 20 : 4)
-    return { label, value, height: scaledHeight }
-  })
+  const studentIds = enrolledStudents.map(s => s.student_id).filter(id => id !== null) as string[]
+
+  // Fetch job applications for these students to determine placement status
+  const { data: applications, error: appsError } = await supabase
+    .from('job_applications')
+    .select('student_id, status')
+    .in('student_id', studentIds)
+    .eq('status', 'Accepted')
+
+  if (appsError) {
+    throw createError({ statusCode: 500, statusMessage: appsError.message })
+  }
+
+  // Count unique students with at least one 'Accepted' application
+  const placedStudentIds = new Set(applications?.map(app => app.student_id))
+  const placedStudents = placedStudentIds.size
+  const unplacedStudents = totalStudents - placedStudents
+  const placementPercentage = Math.round((placedStudents / totalStudents) * 100)
 
   return {
-    totalStudents: totalResult.count || 0,
-    placedStudents: placedResult.count || 0,
-    searchingStudents: searchingResult.count || 0,
-    actionRequired: preparingResult.count || 0,
-    completedStudents: completedResult.count || 0,
-    monthlyPlacedTrend
+    cohortName: activeCohort.name,
+    totalStudents,
+    placedStudents,
+    unplacedStudents,
+    placementPercentage
   }
 })

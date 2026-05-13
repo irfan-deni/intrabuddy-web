@@ -23,9 +23,8 @@ export function useCurrentProfile() {
     try {
       const { data, error } = await supabase
         .from('users')
-        .select('id, full_name, role, student_id, internship_status, is_active, deleted_at, created_at')
+        .select('id, full_name, role, student_id, phone_number, avatar_url')
         .eq('id', user.value.id)
-        .eq('is_active', true)
         .single()
 
       if (error) {

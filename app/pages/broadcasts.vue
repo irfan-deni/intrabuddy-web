@@ -2,7 +2,7 @@
   <section class="space-y-6 p-8">
     <header>
       <h1 class="text-3xl font-bold text-slate-900">Broadcast Notifications</h1>
-      <p class="mt-1 text-slate-500">Send targeted announcements to student cohorts.</p>
+      <p class="mt-1 text-slate-500">Send targeted announcements to students.</p>
     </header>
 
     <p v-if="errorMessage" class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
@@ -32,9 +32,9 @@
         </label>
 
         <label class="block text-sm font-medium text-slate-700">
-          Message
+          Message Body
           <textarea
-            v-model="form.message"
+            v-model="form.body"
             rows="4"
             required
             class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
@@ -42,13 +42,12 @@
         </label>
 
         <label class="block text-sm font-medium text-slate-700">
-          Target Audience
+          Target Role
           <select
-            v-model="form.target_audience"
+            v-model="form.targetRole"
             class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
           >
-            <option value="all_students">All Students</option>
-            <option value="unplaced_students">Unplaced Students</option>
+            <option value="student">All Students</option>
           </select>
         </label>
 
@@ -84,12 +83,12 @@
           <div class="mb-1 flex items-center justify-between gap-3">
             <h3 class="font-semibold text-slate-900">{{ broadcast.title }}</h3>
             <span class="rounded-full bg-slate-100 px-2 py-1 text-xs uppercase tracking-wide text-slate-600">
-              {{ broadcast.target_audience.replaceAll('_', ' ') }}
+              {{ broadcast.target_roles?.join(', ') || 'None' }}
             </span>
           </div>
-          <p class="text-sm text-slate-700">{{ broadcast.message }}</p>
+          <p class="text-sm text-slate-700">{{ broadcast.body }}</p>
           <p class="mt-2 text-xs text-slate-500">
-            {{ broadcast.created_at ? formatDate(broadcast.created_at) : 'Unknown time' }}
+            {{ broadcast.sent_at ? formatDate(broadcast.sent_at) : 'Unknown time' }}
           </p>
         </li>
       </ul>
@@ -108,12 +107,9 @@ definePageMeta({
   requiredRole: 'coordinator'
 })
 
-type BroadcastRow = Database['public']['Tables']['broadcast_notifications']['Row']
+type BroadcastRow = Database['public']['Tables']['broadcast_messages']['Row']
 
 const supabase = useSupabaseClient<Database>()
-const user = useSupabaseUser()
-type RealtimeChannelRef = ReturnType<typeof supabase.channel>
-const realtimeChannel = ref<RealtimeChannelRef | null>(null)
 
 const broadcasts = ref<BroadcastRow[]>([])
 const isLoading = ref(false)
@@ -128,25 +124,16 @@ type DispatchNotice = {
 const dispatchNotice = ref<DispatchNotice | null>(null)
 
 const dispatchNoticeClasses = computed(() => {
-  if (!dispatchNotice.value) {
-    return ''
-  }
-
-  if (dispatchNotice.value.variant === 'success') {
-    return 'border-emerald-200 bg-emerald-50 text-emerald-800'
-  }
-
-  if (dispatchNotice.value.variant === 'warning') {
-    return 'border-amber-200 bg-amber-50 text-amber-900'
-  }
-
+  if (!dispatchNotice.value) return ''
+  if (dispatchNotice.value.variant === 'success') return 'border-emerald-200 bg-emerald-50 text-emerald-800'
+  if (dispatchNotice.value.variant === 'warning') return 'border-amber-200 bg-amber-50 text-amber-900'
   return 'border-red-200 bg-red-50 text-red-800'
 })
 
 const form = ref({
   title: '',
-  message: '',
-  target_audience: 'all_students' as BroadcastRow['target_audience']
+  body: '',
+  targetRole: 'student'
 })
 
 const loadBroadcasts = async () => {
@@ -155,13 +142,11 @@ const loadBroadcasts = async () => {
 
   try {
     const { data, error } = await supabase
-      .from('broadcast_notifications')
-      .select('id, title, message, target_audience, created_by, created_at')
-      .order('created_at', { ascending: false })
+      .from('broadcast_messages')
+      .select('*')
+      .order('sent_at', { ascending: false })
 
-    if (error) {
-      throw error
-    }
+    if (error) throw error
 
     broadcasts.value = data || []
   } catch (error: unknown) {
@@ -171,105 +156,38 @@ const loadBroadcasts = async () => {
   }
 }
 
-type DispatchResponse = {
-  ok: boolean
-  queued?: number
-  reason?: string
-  requiresSetup?: boolean
-  message?: string
-}
-
-const parseDispatchFailureMessage = (error: unknown) => {
-  if (error && typeof error === 'object' && 'data' in error) {
-    const data = (error as { data?: { message?: string; statusMessage?: string } }).data
-    if (data?.message) {
-      return data.message
-    }
-    if (data?.statusMessage) {
-      return data.statusMessage
-    }
-  }
-
-  if (error instanceof Error) {
-    return error.message
-  }
-
-  return 'Dispatch failed. The broadcast was still saved.'
-}
-
 const createBroadcast = async () => {
-  if (!user.value) {
-    return
-  }
-
   isSaving.value = true
   errorMessage.value = ''
   dispatchNotice.value = null
 
   try {
-    if (!form.value.title.trim() || !form.value.message.trim()) {
+    if (!form.value.title.trim() || !form.value.body.trim()) {
       throw new Error('Title and message are required.')
     }
 
-    const { data, error } = await supabase
-      .from('broadcast_notifications')
-      .insert({
+    const result = await $fetch<{ success: boolean; queued: number }>('/api/broadcasts', {
+      method: 'POST',
+      body: {
         title: form.value.title.trim(),
-        message: form.value.message.trim(),
-        target_audience: form.value.target_audience,
-        created_by: user.value.id
-      })
-      .select('id')
-      .single()
-
-    if (error) {
-      throw error
-    }
-
-    form.value = {
-      title: '',
-      message: '',
-      target_audience: 'all_students'
-    }
-
-    if (data?.id) {
-      try {
-        const result = await $fetch<DispatchResponse>('/api/notifications/broadcast-dispatch', {
-          method: 'POST',
-          body: {
-            broadcastId: data.id
-          }
-        })
-
-        if (result.requiresSetup) {
-          dispatchNotice.value = {
-            variant: 'warning',
-            message: result.message || 'Mobile notification tables are not set up. Apply docs/mobile-notifications-setup.sql to enable push queueing.'
-          }
-        } else if (result.ok && typeof result.queued === 'number') {
-          if (result.queued === 0 && result.reason) {
-            dispatchNotice.value = {
-              variant: 'warning',
-              message: `Broadcast saved. ${result.reason}`
-            }
-          } else {
-            dispatchNotice.value = {
-              variant: 'success',
-              message: `Broadcast saved. Queued ${result.queued} mobile notification(s).`
-            }
-          }
-        }
-      } catch (dispatchError: unknown) {
-        dispatchNotice.value = {
-          variant: 'error',
-          message: parseDispatchFailureMessage(dispatchError)
-        }
+        body: form.value.body.trim(),
+        target_roles: [form.value.targetRole]
       }
+    })
+
+    if (result.success) {
+      dispatchNotice.value = {
+        variant: 'success',
+        message: `Broadcast saved and queued to ${result.queued} recipients.`
+      }
+      form.value.title = ''
+      form.value.body = ''
     }
 
     await loadBroadcasts()
   } catch (error: unknown) {
-    errorMessage.value = error instanceof Error ? error.message : 'Unable to send broadcast.'
+    const msg = error instanceof Error ? error.message : 'Unable to send broadcast.'
+    dispatchNotice.value = { variant: 'error', message: msg }
   } finally {
     isSaving.value = false
   }
@@ -282,43 +200,7 @@ const formatDate = (value: string) => {
   })
 }
 
-let broadcastRealtimeDebounce: ReturnType<typeof setTimeout> | null = null
-
-const scheduleBroadcastReload = () => {
-  if (broadcastRealtimeDebounce) {
-    clearTimeout(broadcastRealtimeDebounce)
-  }
-
-  broadcastRealtimeDebounce = setTimeout(() => {
-    broadcastRealtimeDebounce = null
-    void loadBroadcasts()
-  }, 500)
-}
-
 onMounted(async () => {
   await loadBroadcasts()
-
-  realtimeChannel.value = supabase
-    .channel('broadcast-notifications-sync')
-    .on('postgres_changes', {
-      event: '*',
-      schema: 'public',
-      table: 'broadcast_notifications'
-    }, () => {
-      scheduleBroadcastReload()
-    })
-    .subscribe()
-})
-
-onUnmounted(() => {
-  if (broadcastRealtimeDebounce) {
-    clearTimeout(broadcastRealtimeDebounce)
-    broadcastRealtimeDebounce = null
-  }
-
-  if (realtimeChannel.value) {
-    realtimeChannel.value.unsubscribe()
-    realtimeChannel.value = null
-  }
 })
 </script>

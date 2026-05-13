@@ -12,225 +12,518 @@ export type Database = {
       users: {
         Row: {
           id: string
-          role: 'student' | 'coordinator'
+          email: string | null
           full_name: string
           student_id: string | null
-          internship_status: 'preparing' | 'searching' | 'placed' | 'completed'
-          is_active: boolean
-          deleted_at: string | null
+          phone_number: string | null
+          role: 'student' | 'coordinator'
+          avatar_url: string | null
           created_at: string | null
+          updated_at: string | null
         }
         Insert: {
-          id?: string
-          role: 'student' | 'coordinator'
+          id: string
+          email?: string | null
           full_name: string
           student_id?: string | null
-          internship_status?: 'preparing' | 'searching' | 'placed' | 'completed'
-          is_active?: boolean
-          deleted_at?: string | null
+          phone_number?: string | null
+          role: 'student' | 'coordinator'
+          avatar_url?: string | null
           created_at?: string | null
+          updated_at?: string | null
         }
         Update: {
-          role?: 'student' | 'coordinator'
+          id?: string
+          email?: string | null
           full_name?: string
           student_id?: string | null
-          internship_status?: 'preparing' | 'searching' | 'placed' | 'completed'
-          is_active?: boolean
-          deleted_at?: string | null
+          phone_number?: string | null
+          role?: 'student' | 'coordinator'
+          avatar_url?: string | null
           created_at?: string | null
+          updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "users_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
       }
-      pre_internship_checklists: {
+      cohorts: {
         Row: {
-          id: string
-          student_id: string
-          resume_uploaded: boolean
-          university_forms_completed: boolean
-          is_ready_to_apply: boolean
-        }
-        Insert: {
-          id?: string
-          student_id: string
-          resume_uploaded?: boolean
-          university_forms_completed?: boolean
-          is_ready_to_apply?: boolean
-        }
-        Update: {
-          student_id?: string
-          resume_uploaded?: boolean
-          university_forms_completed?: boolean
-          is_ready_to_apply?: boolean
-        }
-        Relationships: []
-      }
-      internship_applications: {
-        Row: {
-          id: string
-          student_id: string
-          company_name: string
-          status: 'pending' | 'interviewing' | 'rejected' | 'offer_accepted'
-          offer_letter_url: string | null
-        }
-        Insert: {
-          id?: string
-          student_id: string
-          company_name: string
-          status?: 'pending' | 'interviewing' | 'rejected' | 'offer_accepted'
-          offer_letter_url?: string | null
-        }
-        Update: {
-          student_id?: string
-          company_name?: string
-          status?: 'pending' | 'interviewing' | 'rejected' | 'offer_accepted'
-          offer_letter_url?: string | null
-        }
-        Relationships: []
-      }
-      logbook_compliance: {
-        Row: {
-          id: string
-          student_id: string
-          week_number: number
-          submission_status: 'pending' | 'submitted' | 'overdue'
-          self_reported_at: string | null
-        }
-        Insert: {
-          id?: string
-          student_id: string
-          week_number: number
-          submission_status?: 'pending' | 'submitted' | 'overdue'
-          self_reported_at?: string | null
-        }
-        Update: {
-          student_id?: string
-          week_number?: number
-          submission_status?: 'pending' | 'submitted' | 'overdue'
-          self_reported_at?: string | null
-        }
-        Relationships: []
-      }
-      broadcast_notifications: {
-        Row: {
-          id: string
-          title: string
-          message: string
-          target_audience: 'all_students' | 'unplaced_students'
-          created_by: string | null
+          id: number
+          name: string
+          start_date: string
+          end_date: string
+          is_active: boolean | null
           created_at: string | null
         }
         Insert: {
-          id?: string
-          title: string
-          message: string
-          target_audience: 'all_students' | 'unplaced_students'
-          created_by?: string | null
+          id?: number
+          name: string
+          start_date: string
+          end_date: string
+          is_active?: boolean | null
           created_at?: string | null
         }
         Update: {
-          title?: string
-          message?: string
-          target_audience?: 'all_students' | 'unplaced_students'
-          created_by?: string | null
+          id?: number
+          name?: string
+          start_date?: string
+          end_date?: string
+          is_active?: boolean | null
           created_at?: string | null
+        }
+        Relationships: []
+      }
+      student_cohorts: {
+        Row: {
+          id: number
+          student_id: string | null
+          cohort_id: number | null
+          enrolled_at: string | null
+        }
+        Insert: {
+          id?: number
+          student_id?: string | null
+          cohort_id?: number | null
+          enrolled_at?: string | null
+        }
+        Update: {
+          id?: number
+          student_id?: string | null
+          cohort_id?: number | null
+          enrolled_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_cohorts_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_cohorts_cohort_id_fkey"
+            columns: ["cohort_id"]
+            isOneToOne: false
+            referencedRelation: "cohorts"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      checklist_templates: {
+        Row: {
+          id: number
+          title: string
+          description: string | null
+          due_offset_days: number | null
+          required: boolean | null
+          display_order: number | null
+          cohort_id: number | null
+          created_at: string | null
+        }
+        Insert: {
+          id?: number
+          title: string
+          description?: string | null
+          due_offset_days?: number | null
+          required?: boolean | null
+          display_order?: number | null
+          cohort_id?: number | null
+          created_at?: string | null
+        }
+        Update: {
+          id?: number
+          title?: string
+          description?: string | null
+          due_offset_days?: number | null
+          required?: boolean | null
+          display_order?: number | null
+          cohort_id?: number | null
+          created_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checklist_templates_cohort_id_fkey"
+            columns: ["cohort_id"]
+            isOneToOne: false
+            referencedRelation: "cohorts"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      student_checklists: {
+        Row: {
+          id: number
+          student_id: string | null
+          checklist_item_id: number | null
+          is_completed: boolean | null
+          completed_at: string | null
+          due_date: string | null
+          notes: string | null
+        }
+        Insert: {
+          id?: number
+          student_id?: string | null
+          checklist_item_id?: number | null
+          is_completed?: boolean | null
+          completed_at?: string | null
+          due_date?: string | null
+          notes?: string | null
+        }
+        Update: {
+          id?: number
+          student_id?: string | null
+          checklist_item_id?: number | null
+          is_completed?: boolean | null
+          completed_at?: string | null
+          due_date?: string | null
+          notes?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_checklists_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_checklists_checklist_item_id_fkey"
+            columns: ["checklist_item_id"]
+            isOneToOne: false
+            referencedRelation: "checklist_templates"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      job_applications: {
+        Row: {
+          id: number
+          student_id: string | null
+          company_name: string
+          position: string | null
+          application_date: string | null
+          status: 'Pending' | 'Interview' | 'Accepted' | 'Rejected' | 'Offer Declined' | string | null
+          notes: string | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: number
+          student_id?: string | null
+          company_name: string
+          position?: string | null
+          application_date?: string | null
+          status?: 'Pending' | 'Interview' | 'Accepted' | 'Rejected' | 'Offer Declined' | string | null
+          notes?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: number
+          student_id?: string | null
+          company_name?: string
+          position?: string | null
+          application_date?: string | null
+          status?: 'Pending' | 'Interview' | 'Accepted' | 'Rejected' | 'Offer Declined' | string | null
+          notes?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_applications_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      digital_wallet_items: {
+        Row: {
+          id: number
+          student_id: string | null
+          item_name: string
+          file_path: string
+          file_type: string | null
+          uploaded_at: string | null
+          notes: string | null
+        }
+        Insert: {
+          id?: number
+          student_id?: string | null
+          item_name: string
+          file_path: string
+          file_type?: string | null
+          uploaded_at?: string | null
+          notes?: string | null
+        }
+        Update: {
+          id?: number
+          student_id?: string | null
+          item_name?: string
+          file_path?: string
+          file_type?: string | null
+          uploaded_at?: string | null
+          notes?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "digital_wallet_items_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      broadcast_messages: {
+        Row: {
+          id: number
+          coordinator_id: string | null
+          title: string | null
+          body: string | null
+          target_roles: string[] | null
+          sent_at: string | null
+        }
+        Insert: {
+          id?: number
+          coordinator_id?: string | null
+          title?: string | null
+          body?: string | null
+          target_roles?: string[] | null
+          sent_at?: string | null
+        }
+        Update: {
+          id?: number
+          coordinator_id?: string | null
+          title?: string | null
+          body?: string | null
+          target_roles?: string[] | null
+          sent_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "broadcast_messages_coordinator_id_fkey"
+            columns: ["coordinator_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      notifications: {
+        Row: {
+          id: number
+          recipient_id: string | null
+          title: string
+          body: string
+          type: string | null
+          is_read: boolean | null
+          created_at: string | null
+          scheduled_for: string | null
+        }
+        Insert: {
+          id?: number
+          recipient_id?: string | null
+          title: string
+          body: string
+          type?: string | null
+          is_read?: boolean | null
+          created_at?: string | null
+          scheduled_for?: string | null
+        }
+        Update: {
+          id?: number
+          recipient_id?: string | null
+          title?: string
+          body?: string
+          type?: string | null
+          is_read?: boolean | null
+          created_at?: string | null
+          scheduled_for?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      faq_categories: {
+        Row: {
+          id: number
+          name: string
+          description: string | null
+          display_order: number | null
+        }
+        Insert: {
+          id?: number
+          name: string
+          description?: string | null
+          display_order?: number | null
+        }
+        Update: {
+          id?: number
+          name?: string
+          description?: string | null
+          display_order?: number | null
         }
         Relationships: []
       }
       faqs: {
         Row: {
-          id: string
+          id: number
+          category_id: number | null
           question: string
           answer: string
-          last_updated_by: string | null
+          keywords: string[] | null
+          is_published: boolean | null
+          created_by: string | null
           updated_at: string | null
-          embedding: string | null
         }
         Insert: {
-          id?: string
+          id?: number
+          category_id?: number | null
           question: string
           answer: string
-          last_updated_by?: string | null
+          keywords?: string[] | null
+          is_published?: boolean | null
+          created_by?: string | null
           updated_at?: string | null
-          embedding?: string | null
         }
         Update: {
+          id?: number
+          category_id?: number | null
           question?: string
           answer?: string
-          last_updated_by?: string | null
+          keywords?: string[] | null
+          is_published?: boolean | null
+          created_by?: string | null
           updated_at?: string | null
-          embedding?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "faqs_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "faq_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "faqs_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
       }
-      mobile_device_tokens: {
+      weekly_logbook_tracking: {
         Row: {
-          id: string
-          user_id: string
-          device_token: string
-          platform: 'android' | 'ios' | 'web'
-          app_version: string | null
-          is_active: boolean
-          last_seen_at: string
-          created_at: string
+          id: number
+          student_id: string | null
+          cohort_id: number | null
+          week_number: number
+          week_end_date: string
+          is_submitted: boolean | null
+          submitted_at: string | null
+          reminder_sent: boolean | null
+          created_at: string | null
+          updated_at: string | null
         }
         Insert: {
-          id?: string
-          user_id: string
-          device_token: string
-          platform: 'android' | 'ios' | 'web'
-          app_version?: string | null
-          is_active?: boolean
-          last_seen_at?: string
-          created_at?: string
+          id?: number
+          student_id?: string | null
+          cohort_id?: number | null
+          week_number: number
+          week_end_date: string
+          is_submitted?: boolean | null
+          submitted_at?: string | null
+          reminder_sent?: boolean | null
+          created_at?: string | null
+          updated_at?: string | null
         }
         Update: {
-          user_id?: string
-          device_token?: string
-          platform?: 'android' | 'ios' | 'web'
-          app_version?: string | null
-          is_active?: boolean
-          last_seen_at?: string
-          created_at?: string
+          id?: number
+          student_id?: string | null
+          cohort_id?: number | null
+          week_number?: number
+          week_end_date?: string
+          is_submitted?: boolean | null
+          submitted_at?: string | null
+          reminder_sent?: boolean | null
+          created_at?: string | null
+          updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "weekly_logbook_tracking_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "weekly_logbook_tracking_cohort_id_fkey"
+            columns: ["cohort_id"]
+            isOneToOne: false
+            referencedRelation: "cohorts"
+            referencedColumns: ["id"]
+          }
+        ]
       }
-      mobile_notification_outbox: {
+      chatbot_conversations: {
         Row: {
-          id: string
-          broadcast_id: string | null
-          user_id: string
-          channel: 'mobile_push'
-          status: 'queued' | 'sent' | 'failed'
-          payload: Json
-          queued_at: string
-          delivered_at: string | null
-          failure_reason: string | null
-          created_at: string
+          id: number
+          student_id: string | null
+          question: string | null
+          answer: string | null
+          matched_faq_id: number | null
+          created_at: string | null
         }
         Insert: {
-          id?: string
-          broadcast_id?: string | null
-          user_id: string
-          channel?: 'mobile_push'
-          status?: 'queued' | 'sent' | 'failed'
-          payload: Json
-          queued_at?: string
-          delivered_at?: string | null
-          failure_reason?: string | null
-          created_at?: string
+          id?: number
+          student_id?: string | null
+          question?: string | null
+          answer?: string | null
+          matched_faq_id?: number | null
+          created_at?: string | null
         }
         Update: {
-          broadcast_id?: string | null
-          user_id?: string
-          channel?: 'mobile_push'
-          status?: 'queued' | 'sent' | 'failed'
-          payload?: Json
-          queued_at?: string
-          delivered_at?: string | null
-          failure_reason?: string | null
-          created_at?: string
+          id?: number
+          student_id?: string | null
+          question?: string | null
+          answer?: string | null
+          matched_faq_id?: number | null
+          created_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "chatbot_conversations_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chatbot_conversations_matched_faq_id_fkey"
+            columns: ["matched_faq_id"]
+            isOneToOne: false
+            referencedRelation: "faqs"
+            referencedColumns: ["id"]
+          }
+        ]
       }
     }
     Views: Record<string, never>

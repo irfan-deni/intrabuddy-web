@@ -4,7 +4,10 @@
   <div v-else class="flex h-screen overflow-hidden bg-slate-50 font-sans text-slate-900">
     <aside class="z-20 flex w-64 flex-shrink-0 flex-col bg-slate-900 text-slate-300 shadow-xl">
       <div class="h-16 flex items-center px-6 border-b border-slate-800">
-        <span class="font-bold text-xl text-white tracking-wider">INTRA Buddy</span>
+        <NuxtLink to="/" class="flex items-center gap-3">
+          <img src="/icons/icon-48.png" alt="INTRA Buddy" class="h-10 w-10 object-contain" />
+          <span class="font-bold text-xl text-white tracking-wider">INTRA Buddy</span>
+        </NuxtLink>
       </div>
 
       <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">

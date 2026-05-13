@@ -31,9 +31,20 @@ export default defineNuxtConfig({
     redirect: false 
   },
 
+  app: {
+    head: {
+      link: [
+        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
+        { rel: 'apple-touch-icon', sizes: '180x180', href: '/icons/icon-180.png' },
+        { rel: 'icon', sizes: '192x192', href: '/icons/icon-192.png' },
+        { rel: 'icon', sizes: '32x32', href: '/icons/icon-32.png' }
+      ]
+    }
+  },
+
   runtimeConfig: {
     public: {
-      superCoordinatorEmails: process.env.NUXT_PUBLIC_SUPER_COORDINATOR_EMAILS || 'coordinator@intrabuddy.local'
+      superCoordinatorEmails: process.env.NUXT_PUBLIC_SUPER_COORDINATOR_EMAILS || 'coordinator@intrabuddy.my'
     }
   },
 

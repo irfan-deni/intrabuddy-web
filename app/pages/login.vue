@@ -62,7 +62,8 @@ const form = ref({
   email: '',
   password: ''
 })
-const DEMO_COORDINATOR_EMAIL = 'coordinator@intrabuddy.local'
+/** Must match seeded Auth email in your Supabase project (`coordinator@intrabuddy.my`). Avoid `.local` — Supabase Auth rejects it as invalid. */
+const DEMO_COORDINATOR_EMAIL = 'coordinator@intrabuddy.my'
 const isLoading = ref(false)
 const errorMessage = ref('')
 const isCheckingSession = ref(false)
@@ -140,8 +141,10 @@ const signIn = async () => {
   isLoading.value = true
 
   try {
+    const emailTrimmed = form.value.email.trim()
+
     const { error } = await supabase.auth.signInWithPassword({
-      email: form.value.email,
+      email: emailTrimmed,
       password: form.value.password
     })
 
@@ -169,7 +172,7 @@ const signIn = async () => {
       }
 
       const { error: retryError } = await supabase.auth.signInWithPassword({
-        email: form.value.email,
+        email: form.value.email.trim(),
         password: form.value.password
       })
 
@@ -186,7 +189,7 @@ const signIn = async () => {
     } catch (provisionError: unknown) {
       const provisionMessage = provisionError instanceof Error ? provisionError.message : ''
       if (provisionMessage.toLowerCase().includes('signup')) {
-        errorMessage.value = 'Demo account auto-creation is blocked by Supabase Auth settings. Create coordinator@intrabuddy.local manually in Supabase Auth.'
+        errorMessage.value = 'Demo account auto-creation is blocked by Supabase Auth settings. Create coordinator@intrabuddy.my manually in Supabase Auth.'
       } else {
         errorMessage.value = provisionMessage || 'Unable to create demo account automatically. Create it manually in Supabase Auth.'
       }

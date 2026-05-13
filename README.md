@@ -37,7 +37,7 @@ INTRA Buddy is an enterprise-grade university web application designed to stream
    - Apply `docs/mobile-notifications-setup.sql` next if you want mobile notification APIs.
 
 4. **(Optional) Seed Demo Coordinator Auth User:**
-   Ensure the Auth user `coordinator@intrabuddy.local` exists in Supabase Auth.
+   Ensure the Auth user `coordinator@intrabuddy.my` exists in Supabase Auth.
    The core SQL script will upsert a matching coordinator profile in `public.users`.
 
 5. **Run the Development Server:**
@@ -49,7 +49,7 @@ INTRA Buddy is an enterprise-grade university web application designed to stream
 ## 🔑 Demo Credentials
 
 To access the coordinator dashboard during local development, use:
-- **Email:** `coordinator@intrabuddy.local`
+- **Email:** `coordinator@intrabuddy.my`
 - **Password:** `IntraBuddy123!`
 
 Important setup note:
@@ -65,3 +65,15 @@ For detailed system architecture, database schema, and functional requirements, 
 
 ---
 *Built for modern university internship management.*
+
+## 🎨 Branding Assets
+
+Place the provided logo PNG at `public/icons/logo.png` (source PNG). To generate the common icon sizes and a favicon, run:
+
+```bash
+# install dev deps if needed
+npm install
+npm run generate:icons
+```
+
+The generated icons will be written to `public/icons/icon-<size>.png` and `public/favicon.ico`. The app already references these files in `nuxt.config.ts`.
