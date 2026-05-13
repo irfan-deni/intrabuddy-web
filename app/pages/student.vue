@@ -14,16 +14,17 @@
     </div>
 
     <div v-else class="grid grid-cols-1 gap-6 lg:grid-cols-3">
-      <article class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm lg:col-span-1">
-        <h2 class="mb-4 text-lg font-semibold text-slate-900">Pre-Internship Checklist</h2>
-        <div v-if="isLoading" class="text-slate-400 text-sm">Loading...</div>
-        <div v-else class="space-y-3">
-          <label v-for="item in checklists" :key="item.id" class="flex items-center gap-3 text-sm text-slate-700">
-            <input type="checkbox" :checked="item.is_completed || false" disabled class="h-4 w-4 opacity-70">
-            {{ item.title }}
-          </label>
-        </div>
-      </article>
+          <article class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm lg:col-span-1">
+            <h2 class="mb-4 text-lg font-semibold text-slate-900">Pre-Internship Checklist</h2>
+            <ProgressBar :value="checklistCompletion" class="mb-4" />
+            <div v-if="isLoading" class="text-slate-400 text-sm">Loading...</div>
+            <div v-else class="space-y-3">
+              <label v-for="item in checklists" :key="item.id" class="flex items-center gap-3 text-sm text-slate-700">
+                <input type="checkbox" :checked="item.is_completed || false" disabled class="h-4 w-4 opacity-70">
+                {{ item.title }}
+              </label>
+            </div>
+          </article>
 
       <article class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm lg:col-span-2">
         <div class="mb-4 flex items-center justify-between">
@@ -44,7 +45,9 @@
             <div class="flex items-center justify-between gap-4">
               <div>
                 <p class="font-semibold text-slate-900">{{ application.company_name }}</p>
-                <p class="text-xs uppercase tracking-wide text-slate-500">{{ application.status }}</p>
+                <div class="mt-1">
+                  <StatusBadge :status="application.status" />
+                </div>
               </div>
             </div>
           </li>
@@ -76,8 +79,7 @@
               <td class="py-2">{{ entry.week_number }}</td>
               <td class="py-2">{{ entry.week_end_date }}</td>
               <td class="py-2">
-                <span v-if="entry.is_submitted" class="text-green-600 font-medium">Yes</span>
-                <span v-else class="text-red-600 font-medium">No</span>
+                <StatusBadge :positive="entry.is_submitted" />
               </td>
             </tr>
           </tbody>
@@ -111,9 +113,18 @@ const studentId = computed(() => route.query.id as string || null)
 const isLoading = ref(false)
 const errorMessage = ref('')
 
+import StatusBadge from '~/components/StatusBadge.vue'
+import ProgressBar from '~/components/ProgressBar.vue'
+
 const checklists = ref<ChecklistItem[]>([])
 const applications = ref<ApplicationRow[]>([])
 const logbookEntries = ref<LogbookRow[]>([])
+
+const checklistCompletion = computed(() => {
+  if (!checklists.value.length) return 0
+  const done = checklists.value.filter(c => c.is_completed).length
+  return Math.round((done / checklists.value.length) * 100)
+})
 
 const loadStudentData = async () => {
   if (!studentId.value) return

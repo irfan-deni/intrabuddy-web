@@ -1,22 +1,23 @@
 <template>
-  <section class="space-y-6 p-8">
-    <header>
-      <h1 class="text-3xl font-bold text-slate-900">Weekly Logbook Status</h1>
-      <p class="mt-1 text-slate-500">Monitor cohort logbook compliance and send reminders.</p>
+  <section class="space-y-6 p-8 lg:p-10">
+    <header class="space-y-2">
+      <p class="text-xs font-semibold uppercase tracking-[0.35em] text-brand-blue">Logbook Review</p>
+      <h1 class="text-4xl font-black tracking-tight text-brand-navy">Weekly Logbook Status</h1>
+      <p class="text-slate-500">Monitor cohort logbook compliance and send reminders.</p>
     </header>
 
-    <p v-if="errorMessage" class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+    <p v-if="errorMessage" class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
       {{ errorMessage }}
     </p>
 
-    <article class="rounded-xl border border-slate-200 bg-white shadow-sm">
-      <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 bg-slate-50/50 p-5">
-        <h2 class="text-lg font-semibold text-slate-900">Logbook Submissions</h2>
+    <article class="rounded-[2rem] border border-slate-200 bg-white shadow-[0_24px_70px_rgba(15,23,42,0.06)]">
+      <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 bg-slate-50/60 p-5">
+        <h2 class="text-lg font-semibold text-brand-navy">Logbook Submissions</h2>
 
         <div class="flex items-center gap-3">
           <select
             v-model="statusFilter"
-            class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+            class="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-700 outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20"
           >
             <option value="all">All Statuses</option>
             <option value="Submitted">Submitted</option>
@@ -25,7 +26,7 @@
           </select>
 
           <button
-            class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+            class="rounded-2xl border border-brand-blue/15 bg-white px-4 py-2.5 text-sm font-semibold text-brand-navy transition hover:bg-brand-bg"
             :disabled="isLoading"
             @click="loadLogbooks"
           >
@@ -37,7 +38,7 @@
       <div class="overflow-x-auto">
         <table class="w-full border-collapse text-left text-sm">
           <thead>
-            <tr class="bg-slate-50 border-b border-slate-200 text-slate-500">
+            <tr class="border-b border-slate-200 bg-slate-50 text-slate-500">
               <th class="px-6 py-4 font-medium">Student</th>
               <th class="px-6 py-4 font-medium">Week</th>
               <th class="px-6 py-4 font-medium">End Date</th>
@@ -58,33 +59,25 @@
           <tbody v-else-if="logbooks.length === 0">
             <tr>
               <td colspan="5" class="px-6 py-12 text-center text-slate-400">
-                <i class="pi pi-inbox text-3xl mb-2"></i>
+                <i class="pi pi-inbox mb-2 text-3xl"></i>
                 <p>No logbook records found for the active cohort.</p>
               </td>
             </tr>
           </tbody>
 
           <tbody v-else>
-            <tr v-for="entry in logbooks" :key="entry.id" class="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+            <tr v-for="entry in logbooks" :key="entry.id" class="border-b border-slate-100 transition-colors hover:bg-brand-bg">
               <td class="px-6 py-4">
-                <div class="font-medium text-slate-900">{{ entry.studentName }}</div>
+                <div class="font-semibold text-brand-navy">{{ entry.studentName }}</div>
                 <div class="text-xs text-slate-500 mt-1">{{ entry.studentMatric || 'No ID' }}</div>
               </td>
               <td class="px-6 py-4">Week {{ entry.weekNumber }}</td>
               <td class="px-6 py-4 text-slate-600">{{ entry.weekEndDate }}</td>
               <td class="px-6 py-4">
-                <span v-if="entry.statusLabel === 'Submitted'" class="rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-700">
-                  Submitted
-                </span>
-                <span v-else-if="entry.statusLabel === 'Late'" class="rounded-full bg-red-100 px-2 py-1 text-xs font-medium text-red-700">
-                  Late
-                </span>
-                <span v-else class="rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600">
-                  Not Submitted
-                </span>
+                <StatusBadge :status="entry.statusLabel" :positive="entry.statusLabel === 'Submitted'" />
 
-                <div v-if="entry.isStale" class="mt-2 flex items-center gap-1 text-xs text-amber-600 font-medium" title="Record hasn't been updated in over 24 hours">
-                  <i class="pi pi-exclamation-triangle text-[10px]"></i> Stale Record
+                <div v-if="entry.isStale" class="mt-2 flex items-center gap-1 text-xs font-medium text-amber-700" title="Record hasn't been updated in over 24 hours">
+                  <i class="pi pi-exclamation-triangle text-[10px]" /> Stale Record
                 </div>
               </td>
               <td class="px-6 py-4 text-right text-slate-500">
@@ -102,6 +95,8 @@
 definePageMeta({
   requiredRole: 'coordinator'
 })
+
+import StatusBadge from '~/components/StatusBadge.vue'
 
 type LogbookEntry = {
   id: number

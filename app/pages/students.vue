@@ -1,31 +1,32 @@
 <template>
-  <div class="p-8">
-    <header class="mb-8 flex items-center justify-between">
+  <div class="p-8 lg:p-10">
+    <header class="mb-8 flex items-end justify-between gap-4">
       <div>
-        <h1 class="text-3xl font-bold text-slate-900">Student Directory</h1>
-        <p class="text-slate-500 mt-1">Manage and track your active cohort's milestone progress.</p>
+        <p class="text-xs font-semibold uppercase tracking-[0.35em] text-brand-blue">Directory</p>
+        <h1 class="mt-2 text-4xl font-black tracking-tight text-brand-navy">Student Directory</h1>
+        <p class="mt-2 text-slate-500">Manage and track your active cohort's milestone progress.</p>
       </div>
     </header>
 
-    <p v-if="errorMessage" class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+    <p v-if="errorMessage" class="mb-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
       {{ errorMessage }}
     </p>
 
-    <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-      <div class="flex flex-wrap gap-4 border-b border-slate-200 bg-slate-50/50 p-5">
+    <div class="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_24px_70px_rgba(15,23,42,0.06)]">
+      <div class="flex flex-wrap gap-4 border-b border-slate-200 bg-slate-50/60 p-5">
         <div class="relative flex-1 max-w-md">
-          <i class="pi pi-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+          <i class="pi pi-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
             v-model="searchQuery"
             type="text"
             placeholder="Search by name or student ID..."
-            class="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm text-slate-700"
+            class="w-full rounded-2xl border border-slate-200 pl-10 pr-4 py-2.5 text-sm text-slate-700 outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20"
           >
         </div>
 
         <select
           v-model="statusFilter"
-          class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+          class="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-700 outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20"
         >
           <option value="all">All Statuses</option>
           <option value="Searching">Searching</option>
@@ -35,7 +36,7 @@
         </select>
 
         <button
-          class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+          class="rounded-2xl border border-brand-blue/15 bg-white px-4 py-2.5 text-sm font-semibold text-brand-navy transition hover:bg-brand-bg"
           :disabled="isLoading"
           @click="fetchStudents"
         >
@@ -46,7 +47,7 @@
       <div class="overflow-x-auto">
         <table class="w-full text-left border-collapse">
           <thead>
-            <tr class="bg-slate-50 border-b border-slate-200 text-slate-500 text-sm">
+            <tr class="border-b border-slate-200 bg-slate-50 text-sm text-slate-500">
               <th class="px-6 py-4 font-medium">Student Name</th>
               <th class="px-6 py-4 font-medium">Milestone Progress</th>
               <th class="px-6 py-4 font-medium">Placement Status</th>
@@ -57,7 +58,7 @@
           <tbody v-if="isLoading">
             <tr>
               <td colspan="4" class="px-6 py-12 text-center text-slate-400">
-                <i class="pi pi-spinner pi-spin text-2xl mb-2"></i>
+                <i class="pi pi-spinner pi-spin mb-2 text-2xl"></i>
                 <p>Loading directory...</p>
               </td>
             </tr>
@@ -66,7 +67,7 @@
           <tbody v-else-if="students.length === 0">
             <tr>
               <td colspan="4" class="px-6 py-12 text-center text-slate-400">
-                <i class="pi pi-inbox text-3xl mb-2"></i>
+                <i class="pi pi-inbox mb-2 text-3xl"></i>
                 <p>No matching students found in active cohort.</p>
               </td>
             </tr>
@@ -76,36 +77,22 @@
             <tr
               v-for="student in paginatedStudents"
               :key="student.id"
-              class="border-b border-slate-100 hover:bg-slate-50 transition-colors"
+              class="border-b border-slate-100 transition-colors hover:bg-brand-bg"
             >
               <td class="px-6 py-4">
-                <div class="font-medium text-slate-900">{{ student.full_name }}</div>
+                <div class="font-semibold text-brand-navy">{{ student.full_name }}</div>
                 <div class="text-xs text-slate-500 mt-1">{{ student.student_id || 'No ID' }}</div>
               </td>
               <td class="px-6 py-4">
                 <div class="flex items-center gap-3">
-                  <div class="h-2 flex-1 rounded bg-slate-200 max-w-[120px]">
-                    <div
-                      class="h-2 rounded bg-blue-500"
-                      :style="{ width: `${student.completionPercent}%` }"
-                    />
+                  <div class="max-w-[140px] w-full">
+                    <ProgressBar :value="student.completionPercent" />
                   </div>
                   <span class="text-xs font-medium text-slate-600">{{ student.completionPercent }}%</span>
                 </div>
               </td>
               <td class="px-6 py-4">
-                <span v-if="student.placementStatus === 'Accepted'" class="px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700 border border-green-200">
-                  Accepted
-                </span>
-                <span v-else-if="student.placementStatus === 'Interview'" class="px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 border border-blue-200">
-                  Interview
-                </span>
-                <span v-else-if="student.placementStatus === 'Pending'" class="px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700 border border-orange-200">
-                  Pending
-                </span>
-                <span v-else class="px-3 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200">
-                  {{ student.placementStatus }}
-                </span>
+                <StatusBadge :status="student.placementStatus" />
               </td>
               <td class="px-6 py-4 text-right text-slate-600 font-medium">
                 {{ student.documentCount }}
@@ -124,7 +111,7 @@
         </p>
         <div class="flex items-center gap-2">
           <button
-            class="rounded-md border border-slate-300 px-3 py-1.5 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40"
+            class="rounded-xl border border-slate-200 px-3 py-1.5 transition hover:bg-brand-bg disabled:cursor-not-allowed disabled:opacity-40"
             :disabled="currentPage === 1"
             @click="goToPreviousPage"
           >
@@ -132,7 +119,7 @@
           </button>
           <span class="px-2">Page {{ currentPage }} / {{ totalPages }}</span>
           <button
-            class="rounded-md border border-slate-300 px-3 py-1.5 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40"
+            class="rounded-xl border border-slate-200 px-3 py-1.5 transition hover:bg-brand-bg disabled:cursor-not-allowed disabled:opacity-40"
             :disabled="currentPage >= totalPages"
             @click="goToNextPage"
           >
@@ -148,6 +135,9 @@
 definePageMeta({
   requiredRole: 'coordinator'
 })
+
+import StatusBadge from '~/components/StatusBadge.vue'
+import ProgressBar from '~/components/ProgressBar.vue'
 
 type StudentRow = {
   id: string

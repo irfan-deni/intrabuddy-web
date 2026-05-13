@@ -6,16 +6,18 @@ export default defineNuxtConfig({
     '@nuxtjs/supabase'
   ],
 
-  // 1. THIS FIXES THE MISSING ICONS
   css: [
-    'primeicons/primeicons.css'
+    'primeicons/primeicons.css',
+    '~/assets/css/main.css'
   ],
 
-  // 2. THIS TELLS TAILWIND TO SCAN YOUR NEW 'app' FOLDER FOR STYLES
   tailwindcss: {
     config: {
       content: [
-        './app/**/*.{vue,js,ts}'
+        './app/**/*.{vue,js,ts}',
+        './components/**/*.{vue,js,ts}',
+        './layouts/**/*.{vue,js,ts}',
+        './pages/**/*.{vue,js,ts}'
       ]
     }
   },

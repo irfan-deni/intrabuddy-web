@@ -1,19 +1,27 @@
 <template>
-  <section class="space-y-6 p-8">
-    <header>
-      <h1 class="text-3xl font-bold text-slate-900">Knowledge Base</h1>
-      <p class="mt-1 text-slate-500">Manage FAQ content and guidelines.</p>
+  <section class="space-y-6 p-8 lg:p-10">
+    <header class="space-y-2">
+      <div class="flex items-center gap-3">
+        <div class="rounded-2xl bg-brand-teal/10 p-3">
+          <i class="pi pi-book text-2xl text-brand-teal"></i>
+        </div>
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-[0.35em] text-brand-blue">Knowledge Base</p>
+          <h1 class="text-4xl font-black tracking-tight text-brand-navy">Manage FAQs</h1>
+        </div>
+      </div>
+      <p class="text-slate-500">Manage FAQ content and guidelines.</p>
     </header>
 
-    <p v-if="errorMessage" class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+    <p v-if="errorMessage" class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
       {{ errorMessage }}
     </p>
 
-    <article class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+    <article class="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-[0_24px_70px_rgba(15,23,42,0.06)]">
       <div class="mb-4 flex items-center justify-between">
-        <h2 class="text-lg font-semibold text-slate-900">FAQ Categories</h2>
+        <h2 class="text-lg font-semibold text-brand-navy">FAQ Categories</h2>
         <button
-          class="rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-blue-700"
+          class="rounded-2xl bg-gradient-to-r from-brand-blue to-brand-teal px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-brand-blue/20 transition hover:opacity-95"
           @click="openModal(null)"
         >
           Add FAQ
@@ -27,31 +35,25 @@
 
       <div v-else-if="groupedFaqs.length > 0" class="space-y-8">
         <div v-for="group in groupedFaqs" :key="group.category.id || 'uncategorized'">
-          <h3 class="mb-3 border-b border-slate-100 pb-2 text-lg font-bold text-slate-800">
+          <h3 class="mb-3 border-b border-slate-100 pb-2 text-lg font-bold text-brand-navy">
             {{ group.category.name }}
           </h3>
           <ul class="space-y-3">
-            <li v-for="faq in group.faqs" :key="faq.id" class="rounded-lg border border-slate-200 p-4">
-              <div class="mb-2 flex items-center justify-between gap-3">
-                <h4 class="font-semibold text-slate-900">{{ faq.question }}</h4>
-                <div class="flex items-center gap-2">
-                  <span v-if="faq.is_published" class="rounded-full bg-green-100 px-2 py-1 text-xs text-green-700">Published</span>
-                  <span v-else class="rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-600">Draft</span>
-                  
-                  <button class="ml-2 rounded-md border border-slate-300 px-2 py-1 text-xs text-slate-700 hover:bg-slate-100" @click="openModal(faq)">
-                    Edit
-                  </button>
-                  <button class="rounded-md border border-red-300 px-2 py-1 text-xs text-red-700 hover:bg-red-50" @click="deleteFaq(faq.id)">
-                    Delete
-                  </button>
+            <li v-for="faq in group.faqs" :key="faq.id" class="group rounded-2xl border border-slate-200 bg-white p-5 transition hover:border-brand-blue/30 hover:bg-brand-bg/30 hover:shadow-md">
+              <div class="mb-2 flex items-start justify-between gap-3">
+                <div class="flex-1">
+                  <div class="flex items-center gap-2 mb-1">
+                    <i class="pi pi-question-circle text-brand-blue"></i>
+                    <h4 class="font-semibold text-brand-navy">{{ faq.question }}</h4>
+                  </div>
+                  <p class="text-sm text-slate-700">{{ faq.answer }}</p>
                 </div>
+                <StatusBadge :status="faq.is_published ? 'accepted' : 'pending'" :label="faq.is_published ? 'Published' : 'Draft'" />
               </div>
-
-              <p class="text-sm text-slate-700">{{ faq.answer }}</p>
               
-              <div class="mt-3 flex items-center justify-between">
-                <div class="flex gap-1">
-                  <span v-for="kw in faq.keywords" :key="kw" class="rounded bg-slate-100 px-1.5 py-0.5 text-xs text-slate-500">
+              <div class="mt-4 flex items-center justify-between">
+                <div v-if="faq.keywords && faq.keywords.length > 0" class="flex flex-wrap gap-1.5">
+                  <span v-for="kw in faq.keywords" :key="kw" class="rounded-lg bg-brand-blue/5 px-2 py-1 text-xs font-medium text-brand-blue border border-brand-blue/10">
                     {{ kw }}
                   </span>
                 </div>
@@ -59,23 +61,36 @@
                   Updated: {{ faq.updated_at ? formatDate(faq.updated_at) : 'N/A' }}
                 </p>
               </div>
+              
+              <div class="mt-4 flex items-center justify-end gap-2 border-t border-slate-100 pt-3 opacity-0 transition group-hover:opacity-100">
+                <button class="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-brand-navy hover:bg-brand-bg transition" @click="openModal(faq)">
+                  <i class="pi pi-pencil text-xs mr-1"></i>Edit
+                </button>
+                <button class="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-50 transition" @click="deleteFaq(faq.id)">
+                  <i class="pi pi-trash text-xs mr-1"></i>Delete
+                </button>
+              </div>
             </li>
           </ul>
         </div>
       </div>
 
-      <p v-else class="rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
-        No FAQ entries yet.
-      </p>
+      <div v-else class="rounded-2xl border border-dashed border-slate-300 bg-slate-50/50 p-8 text-center">
+        <div class="flex justify-center mb-3">
+          <i class="pi pi-book text-4xl text-slate-300"></i>
+        </div>
+        <p class="text-sm font-medium text-slate-600">No FAQ entries yet.</p>
+        <p class="text-xs text-slate-500 mt-1">Click "Add FAQ" above to create your first entry.</p>
+      </div>
     </article>
 
-    <div v-if="isModalOpen" class="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/50 p-4">
-      <div class="w-full max-w-xl rounded-xl border border-slate-200 bg-white p-6 shadow-xl">
+    <div v-if="isModalOpen" class="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm">
+      <div class="w-full max-w-xl rounded-[2rem] border border-slate-200 bg-white p-6 shadow-[0_30px_90px_rgba(15,23,42,0.18)]">
         <header class="mb-4 flex items-center justify-between">
-          <h2 class="text-xl font-semibold text-slate-900">
+          <h2 class="text-xl font-semibold text-brand-navy">
             {{ editingFaqId ? 'Edit FAQ' : 'Add FAQ' }}
           </h2>
-          <button class="rounded-md p-2 text-slate-500 transition hover:bg-slate-100" @click="closeModal">
+          <button class="rounded-xl p-2 text-slate-500 transition hover:bg-slate-100" @click="closeModal">
             <i class="pi pi-times" />
           </button>
         </header>
@@ -86,7 +101,7 @@
             <select
               v-model.number="form.category_id"
               required
-              class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+              class="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20"
             >
               <option disabled value="0">Select a category</option>
               <option v-for="cat in categories" :key="cat.id" :value="cat.id">
@@ -101,7 +116,7 @@
               v-model="form.question"
               type="text"
               required
-              class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+              class="mt-1 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20"
             >
           </label>
 
@@ -111,7 +126,7 @@
               v-model="form.answer"
               rows="4"
               required
-              class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+              class="mt-1 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20"
             ></textarea>
           </label>
 
@@ -120,7 +135,7 @@
             <input
               v-model="form.keywords"
               type="text"
-              class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+              class="mt-1 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20"
             >
           </label>
 
@@ -134,13 +149,13 @@
           </p>
 
           <div class="flex items-center justify-end gap-2 pt-2">
-            <button type="button" class="rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-700 hover:bg-slate-100" @click="closeModal">
+            <button type="button" class="rounded-2xl border border-slate-200 px-4 py-2.5 text-sm text-slate-700 hover:bg-brand-bg" @click="closeModal">
               Cancel
             </button>
             <button
               type="submit"
               :disabled="isSaving"
-              class="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+              class="rounded-2xl bg-gradient-to-r from-brand-blue to-brand-teal px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-brand-blue/20 transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {{ isSaving ? 'Saving...' : 'Save FAQ' }}
             </button>
@@ -213,8 +228,8 @@ const loadData = async () => {
     if (catRes.error) throw catRes.error
     if (faqRes.error) throw faqRes.error
 
-    categories.value = catRes.data || []
-    faqs.value = faqRes.data || []
+    categories.value = (catRes.data as CategoryRow[]) || []
+    faqs.value = (faqRes.data as FaqRow[]) || []
   } catch (error: unknown) {
     errorMessage.value = error instanceof Error ? error.message : 'Unable to load FAQs.'
   } finally {
@@ -227,7 +242,7 @@ const openModal = (faq: FaqRow | null) => {
   if (!faq) {
     editingFaqId.value = null
     form.value = {
-      category_id: categories.value.length > 0 ? categories.value[0].id : 0,
+      category_id: categories.value[0]?.id ?? 0,
       question: '',
       answer: '',
       keywords: '',

@@ -1,53 +1,106 @@
 <template>
-  <section class="mx-auto flex min-h-screen w-full max-w-md items-center px-6">
-    <div class="w-full rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
-      <header class="mb-8">
-        <p class="mb-2 text-xs uppercase tracking-[0.3em] text-slate-500">INTRA Buddy</p>
-        <h1 class="text-2xl font-bold text-slate-900">Sign in</h1>
-        <p class="mt-2 text-sm text-slate-600">Use your registered account to access the dashboard.</p>
-      </header>
+  <section class="relative min-h-screen overflow-hidden bg-brand-bg px-6 py-10">
+    <div class="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,_rgba(30,79,216,0.15),_transparent_32%),radial-gradient(circle_at_bottom_right,_rgba(0,194,203,0.16),_transparent_28%)]" />
 
-      <form class="space-y-4" @submit.prevent="signIn">
-        <label class="block text-sm font-medium text-slate-700">
-          Email
-          <input
-            v-model="form.email"
-            type="email"
-            autocomplete="email"
-            required
-            class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-          >
-        </label>
+    <div class="mx-auto flex min-h-[calc(100vh-5rem)] w-full max-w-6xl items-center justify-center">
+      <div class="grid w-full items-center gap-8 lg:grid-cols-[1.05fr_0.95fr]">
+        <div class="hidden rounded-[2rem] border border-white/60 bg-white/75 p-10 shadow-[0_24px_80px_rgba(15,23,42,0.08)] backdrop-blur lg:block">
+          <div class="flex items-center gap-4">
+            <img src="/icons/icon-96.png" alt="INTRA Buddy" class="h-16 w-16 rounded-2xl bg-white object-contain p-2 shadow-sm" />
+            <div>
+              <p class="text-3xl font-black tracking-tight text-brand-navy">
+                <span>INTRA</span>
+                <span class="text-brand-teal"> Buddy</span>
+              </p>
+              <p class="text-sm font-semibold uppercase tracking-[0.35em] text-slate-500">Guide · Support · Grow</p>
+            </div>
+          </div>
 
-        <label class="block text-sm font-medium text-slate-700">
-          Password
-          <input
-            v-model="form.password"
-            type="password"
-            autocomplete="current-password"
-            required
-            class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-          >
-        </label>
+          <div class="mt-10 space-y-4">
+            <h2 class="text-4xl font-black leading-tight text-brand-navy">Coordinator Portal · UniKL MIIT</h2>
+            <p class="max-w-lg text-base leading-7 text-slate-600">
+              Manage student placements, logbook compliance, broadcasts, and knowledge base content from one branded dashboard.
+            </p>
+          </div>
 
-        <p v-if="errorMessage" class="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-          {{ errorMessage }}
-        </p>
+          <div class="mt-10 grid grid-cols-3 gap-4 text-sm">
+            <div class="rounded-2xl border border-slate-200 bg-white p-4">
+              <p class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">Brand</p>
+              <p class="mt-2 font-semibold text-brand-navy">Navy + Teal</p>
+            </div>
+            <div class="rounded-2xl border border-slate-200 bg-white p-4">
+              <p class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">Portal</p>
+              <p class="mt-2 font-semibold text-brand-navy">Coordinator</p>
+            </div>
+            <div class="rounded-2xl border border-slate-200 bg-white p-4">
+              <p class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">Support</p>
+              <p class="mt-2 font-semibold text-brand-navy">Guide · Grow</p>
+            </div>
+          </div>
+        </div>
 
-        <button
-          type="submit"
-          :disabled="isLoading"
-          class="flex w-full items-center justify-center gap-2 rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          <i v-if="isLoading" class="pi pi-spin pi-spinner" />
-          <span>{{ isLoading ? 'Signing in...' : 'Sign in' }}</span>
-        </button>
-      </form>
-      <div v-if="showLoginDebug" class="mt-4">
-        <details>
-          <summary class="text-sm text-slate-500">Debug: last raw error (dev only)</summary>
-          <pre class="whitespace-pre-wrap bg-slate-50 border p-2 text-xs text-slate-700">{{ JSON.stringify(lastErrorRaw, null, 2) }}</pre>
-        </details>
+        <div class="mx-auto w-full max-w-md rounded-[2rem] border border-white/70 bg-white/90 p-8 shadow-[0_30px_90px_rgba(15,23,42,0.12)] backdrop-blur">
+          <header class="mb-8 text-center">
+            <div class="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-blue to-brand-teal p-2 shadow-lg shadow-brand-blue/20">
+              <img src="/icons/icon-96.png" alt="INTRA Buddy" class="h-12 w-12 object-contain" />
+            </div>
+            <p class="text-xs font-semibold uppercase tracking-[0.35em] text-brand-blue">INTRA Buddy</p>
+            <h1 class="mt-2 text-3xl font-black tracking-tight text-brand-navy">
+              <span>INTRA</span>
+              <span class="text-brand-teal"> Buddy</span>
+            </h1>
+            <p class="mt-2 text-sm font-medium uppercase tracking-[0.24em] text-slate-500">Guide · Support · Grow</p>
+            <p class="mt-3 text-sm text-slate-600">Coordinator Portal · UniKL MIIT</p>
+          </header>
+
+          <form class="space-y-4" @submit.prevent="signIn">
+            <label class="block text-sm font-medium text-slate-700">
+              Email
+              <input
+                v-model="form.email"
+                type="email"
+                autocomplete="email"
+                :aria-invalid="Boolean(fieldErrors.email)"
+                class="mt-1 w-full rounded-2xl border px-4 py-3 text-sm text-slate-900 outline-none transition focus:ring-2"
+                :class="fieldErrors.email ? 'border-red-300 focus:border-red-400 focus:ring-red-200' : 'border-slate-200 focus:border-brand-blue focus:ring-brand-blue/20'"
+              >
+            </label>
+            <p v-if="fieldErrors.email" class="-mt-2 text-xs font-medium text-red-600">{{ fieldErrors.email }}</p>
+
+            <label class="block text-sm font-medium text-slate-700">
+              Password
+              <input
+                v-model="form.password"
+                type="password"
+                autocomplete="current-password"
+                :aria-invalid="Boolean(fieldErrors.password)"
+                class="mt-1 w-full rounded-2xl border px-4 py-3 text-sm text-slate-900 outline-none transition focus:ring-2"
+                :class="fieldErrors.password ? 'border-red-300 focus:border-red-400 focus:ring-red-200' : 'border-slate-200 focus:border-brand-blue focus:ring-brand-blue/20'"
+              >
+            </label>
+            <p v-if="fieldErrors.password" class="-mt-2 text-xs font-medium text-red-600">{{ fieldErrors.password }}</p>
+
+            <p v-if="errorMessage" class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {{ errorMessage }}
+            </p>
+
+            <button
+              type="submit"
+              :disabled="isLoading"
+              class="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-brand-blue to-brand-teal px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-brand-blue/20 transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <i v-if="isLoading" class="pi pi-spin pi-spinner" />
+              <span>{{ isLoading ? 'Signing in...' : 'Sign in' }}</span>
+            </button>
+          </form>
+
+          <div v-if="showLoginDebug" class="mt-4">
+            <details>
+              <summary class="cursor-pointer text-sm text-slate-500">Debug: last raw error (dev only)</summary>
+              <pre class="mt-2 whitespace-pre-wrap rounded-2xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">{{ JSON.stringify(lastErrorRaw, null, 2) }}</pre>
+            </details>
+          </div>
+        </div>
       </div>
     </div>
   </section>
@@ -62,48 +115,27 @@ const form = ref({
   email: '',
   password: ''
 })
-/** Must match seeded Auth email in your Supabase project (`coordinator@intrabuddy.my`). Avoid `.local` — Supabase Auth rejects it as invalid. */
-const DEMO_COORDINATOR_EMAIL = 'coordinator@intrabuddy.my'
+
 const isLoading = ref(false)
 const errorMessage = ref('')
+const fieldErrors = ref<{ email?: string; password?: string }>({})
 const isCheckingSession = ref(false)
 const lastErrorRaw = useState<unknown>('login-last-error', () => null)
 const showLoginDebug = import.meta.dev
 
-const isInvalidCredentialsError = (message: string) => {
-  return message.toLowerCase().includes('invalid login credentials')
-}
+const validateForm = () => {
+  const nextErrors: { email?: string; password?: string } = {}
 
-const isEmailNotConfirmedError = (message: string) => {
-  return message.toLowerCase().includes('email not confirmed')
-}
-
-const maybeProvisionDemoCoordinator = async () => {
-  const email = form.value.email.trim().toLowerCase()
-  if (email !== DEMO_COORDINATOR_EMAIL) {
-    return false
+  if (!form.value.email.trim()) {
+    nextErrors.email = 'Email is required.'
   }
 
-  const { error } = await supabase.auth.signUp({
-    email,
-    password: form.value.password,
-    options: {
-      data: {
-        full_name: 'Demo Coordinator'
-      }
-    }
-  })
-
-  if (!error) {
-    return true
+  if (!form.value.password.trim()) {
+    nextErrors.password = 'Password is required.'
   }
 
-  const normalized = error.message.toLowerCase()
-  if (normalized.includes('already') || normalized.includes('exists')) {
-    return true
-  }
-
-  throw error
+  fieldErrors.value = nextErrors
+  return Object.keys(nextErrors).length === 0
 }
 
 const handleExistingSession = async () => {
@@ -117,24 +149,16 @@ const handleExistingSession = async () => {
   try {
     await loadProfile()
 
-    if (role.value) {
+    if (role.value === 'coordinator') {
       await navigateTo('/')
       return
     }
 
-    throw new Error('Profile record not found in users table.')
-  } catch (error: unknown) {
-    if (showLoginDebug) {
-      lastErrorRaw.value = {
-        error,
-        userObject: user.value,
-        userId: user.value?.id,
-        userType: typeof user.value
-      }
-    }
+    throw new Error('Access denied. This portal is for coordinators only.')
+  } catch {
     await supabase.auth.signOut()
     clearProfile()
-    errorMessage.value = 'Account profile missing. Ask admin to add your user record in public.users.'
+    errorMessage.value = 'Access denied. This portal is for coordinators only.'
   } finally {
     isCheckingSession.value = false
   }
@@ -146,13 +170,17 @@ watch(user, async () => {
 
 const signIn = async () => {
   errorMessage.value = ''
+  fieldErrors.value = {}
   isLoading.value = true
 
-  try {
-    const emailTrimmed = form.value.email.trim()
+  if (!validateForm()) {
+    isLoading.value = false
+    return
+  }
 
+  try {
     const { error } = await supabase.auth.signInWithPassword({
-      email: emailTrimmed,
+      email: form.value.email,
       password: form.value.password
     })
 
@@ -160,48 +188,25 @@ const signIn = async () => {
       throw error
     }
 
+    await loadProfile()
+
+    if (role.value !== 'coordinator') {
+      await supabase.auth.signOut()
+      clearProfile()
+      errorMessage.value = 'Access denied. This portal is for coordinators only.'
+      return
+    }
+
     await navigateTo('/')
   } catch (error: unknown) {
     if (showLoginDebug) {
       lastErrorRaw.value = error
     }
+
     const message = error instanceof Error ? error.message : 'Unable to sign in. Please try again.'
-
-    if (!isInvalidCredentialsError(message)) {
-      errorMessage.value = message
-      return
-    }
-
-    try {
-      const created = await maybeProvisionDemoCoordinator()
-      if (!created) {
-        errorMessage.value = 'Invalid login credentials. Check email/password or create the account in Supabase Auth.'
-        return
-      }
-
-      const { error: retryError } = await supabase.auth.signInWithPassword({
-        email: form.value.email.trim(),
-        password: form.value.password
-      })
-
-      if (retryError) {
-        if (isEmailNotConfirmedError(retryError.message)) {
-          errorMessage.value = 'Demo account created, but email confirmation is required. Confirm the user in Supabase Auth and try again.'
-          return
-        }
-
-        throw retryError
-      }
-
-      await navigateTo('/')
-    } catch (provisionError: unknown) {
-      const provisionMessage = provisionError instanceof Error ? provisionError.message : ''
-      if (provisionMessage.toLowerCase().includes('signup')) {
-        errorMessage.value = 'Demo account auto-creation is blocked by Supabase Auth settings. Create coordinator@intrabuddy.my manually in Supabase Auth.'
-      } else {
-        errorMessage.value = provisionMessage || 'Unable to create demo account automatically. Create it manually in Supabase Auth.'
-      }
-    }
+    errorMessage.value = message.toLowerCase().includes('invalid login credentials')
+      ? 'Invalid email or password.'
+      : message
   } finally {
     isLoading.value = false
   }
