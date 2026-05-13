@@ -1,0 +1,40 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── INTRA Buddy Brand Variables ─────────────────────────────── */
+:root {
+  --brand-navy:    #0A1628;
+  --brand-blue:    #1E4FD8;
+  --brand-teal:    #00C2CB;
+  --brand-mid:     #1A73E8;
+  --brand-bg:      #F4F6FB;
+  --brand-muted:   #8A96A8;
+  --brand-gradient: linear-gradient(135deg, #1E4FD8 0%, #00C2CB 100%);
+}
+
+/* ── Base ────────────────────────────────────────────────────── */
+body {
+  background-color: var(--brand-bg);
+  color: var(--brand-navy);
+  font-family: Inter, system-ui, sans-serif;
+}
+
+/* ── Scrollbar (sidebar) ─────────────────────────────────────── */
+.sidebar-scroll::-webkit-scrollbar { width: 4px; }
+.sidebar-scroll::-webkit-scrollbar-track { background: transparent; }
+.sidebar-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.15);
+  border-radius: 9999px;
+}
+
+/* ── Brand gradient utility ──────────────────────────────────── */
+.brand-gradient {
+  background: var(--brand-gradient);
+}
+.brand-gradient-text {
+  background: var(--brand-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}

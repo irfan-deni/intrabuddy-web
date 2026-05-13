@@ -1,23 +1,24 @@
-import { serverSupabaseClient, serverSupabaseSession } from '#supabase/server'
+import { serverSupabaseClient } from '#supabase/server'
 import type { Database } from '~/types/supabase'
 
 export default defineEventHandler(async (event) => {
   try {
-    const session = await serverSupabaseSession(event)
-    if (!session) {
-      throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
-    }
-
     const body = await readBody<{ title: string; body: string; target_roles: string[] }>(event)
     if (!body.title || !body.body) {
       throw createError({ statusCode: 400, statusMessage: 'Title and body are required.' })
     }
 
     const supabase = await serverSupabaseClient<Database>(event)
-    
-    const userId = session.user?.id || (session as any).sub || (session as any).user?.sub
+
+    const { data: userData, error: userError } = await supabase.auth.getUser()
+    const userId = userData.user?.id
+
+    if (userError) {
+      throw createError({ statusCode: 500, statusMessage: `Failed to read auth user: ${userError.message}` })
+    }
+
     if (!userId) {
-      throw createError({ statusCode: 500, statusMessage: 'Session has no user ID' })
+      throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
     }
 
     const { data: actor, error: actorError } = await supabase
