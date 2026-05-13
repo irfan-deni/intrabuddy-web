@@ -26,25 +26,32 @@ export default defineEventHandler(async (event) => {
       .eq('id', userId)
       .single()
 
-    if (actorError || actor.role !== 'coordinator') {
+    if (actorError) {
+      throw createError({ statusCode: 500, statusMessage: `Failed to fetch user: ${actorError.message}` })
+    }
+
+    if (!actor || actor.role !== 'coordinator') {
       throw createError({ statusCode: 403, statusMessage: 'Only coordinators can dispatch broadcasts.' })
     }
 
-    // Map target roles to target audience values
-    const targetAudience = body.target_roles?.[0] === 'student' ? 'all_students' : 'all_students'
-
-    // 1. Insert into broadcast_notifications
-    const { error: broadcastError } = await supabase
-      .from('broadcast_notifications')
+    // 1. Insert into broadcast_messages
+    const { error: broadcastError, data } = await supabase
+      .from('broadcast_messages')
       .insert({
+        coordinator_id: userId,
         title: body.title,
-        message: body.body,
-        target_audience: targetAudience,
-        created_by: userId
+        body: body.body,
+        target_roles: body.target_roles || ['student'],
+        sent_at: new Date().toISOString()
       })
+      .select()
 
     if (broadcastError) {
-      throw createError({ statusCode: 500, statusMessage: `Broadcast Insert Error: ${broadcastError.message}` })
+      console.error('[Broadcasts API] Insert error:', broadcastError)
+      throw createError({ 
+        statusCode: 500, 
+        statusMessage: `Broadcast Insert Error: ${broadcastError.message} (Code: ${broadcastError.code})` 
+      })
     }
 
     return { success: true, queued: 1 }

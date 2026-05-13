@@ -83,12 +83,12 @@
           <div class="mb-1 flex items-center justify-between gap-3">
             <h3 class="font-semibold text-slate-900">{{ broadcast.title }}</h3>
             <span class="rounded-full bg-slate-100 px-2 py-1 text-xs uppercase tracking-wide text-slate-600">
-              {{ broadcast.target_audience || 'None' }}
+              {{ broadcast.target_roles?.join(', ') || 'None' }}
             </span>
           </div>
-          <p class="text-sm text-slate-700">{{ broadcast.message }}</p>
+          <p class="text-sm text-slate-700">{{ broadcast.body }}</p>
           <p class="mt-2 text-xs text-slate-500">
-            {{ broadcast.created_at ? formatDate(broadcast.created_at) : 'Unknown time' }}
+            {{ broadcast.sent_at ? formatDate(broadcast.sent_at) : 'Unknown time' }}
           </p>
         </li>
       </ul>
@@ -107,7 +107,7 @@ definePageMeta({
   requiredRole: 'coordinator'
 })
 
-type BroadcastRow = Database['public']['Tables']['broadcast_notifications']['Row']
+type BroadcastRow = Database['public']['Tables']['broadcast_messages']['Row']
 
 const supabase = useSupabaseClient<Database>()
 
@@ -142,9 +142,9 @@ const loadBroadcasts = async () => {
 
   try {
     const { data, error } = await supabase
-      .from('broadcast_notifications')
+      .from('broadcast_messages')
       .select('*')
-      .order('created_at', { ascending: false })
+      .order('sent_at', { ascending: false })
 
     if (error) throw error
 
