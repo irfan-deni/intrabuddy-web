@@ -1,23 +1,29 @@
-import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server'
+import { serverSupabaseClient, serverSupabaseSession } from '#supabase/server'
 import type { Database } from '~/types/supabase'
 
 export default defineEventHandler(async (event) => {
-  const user = await serverSupabaseUser(event)
-  if (!user) {
-    throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
-  }
+  try {
+    const session = await serverSupabaseSession(event)
+    if (!session) {
+      throw createError({ statusCode: 401, statusMessage: 'Unauthorized - serverSupabaseSession returned null. Cookie is missing.' })
+    }
 
-  const supabase = await serverSupabaseClient<Database>(event)
+    const supabase = await serverSupabaseClient<Database>(event)
 
-  const { data: actor, error: actorError } = await supabase
-    .from('users')
-    .select('role')
-    .eq('id', user.id)
-    .single()
+    const userId = session.user?.id || (session as any).sub || (session as any).user?.sub
+    if (!userId) {
+      throw createError({ statusCode: 500, statusMessage: `Session has no user ID: ${JSON.stringify(session)}` })
+    }
 
-  if (actorError) {
-    throw createError({ statusCode: 500, statusMessage: actorError.message })
-  }
+    const { data: actor, error: actorError } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', userId)
+      .single()
+
+    if (actorError) {
+      throw createError({ statusCode: 500, statusMessage: `Actor error: ${actorError.message} (userId: ${userId})` })
+    }
 
   if (actor.role !== 'coordinator') {
     throw createError({ statusCode: 403, statusMessage: 'Only coordinators can load dashboard data.' })
@@ -86,11 +92,15 @@ export default defineEventHandler(async (event) => {
   const unplacedStudents = totalStudents - placedStudents
   const placementPercentage = Math.round((placedStudents / totalStudents) * 100)
 
-  return {
-    cohortName: activeCohort.name,
-    totalStudents,
-    placedStudents,
-    unplacedStudents,
-    placementPercentage
+    return {
+      cohortName: activeCohort.name,
+      totalStudents,
+      placedStudents,
+      unplacedStudents,
+      placementPercentage
+    }
+  } catch (error: any) {
+    if (error.statusCode) throw error
+    throw createError({ statusCode: 500, statusMessage: `Unexpected error: ${error.message || String(error)}` })
   }
 })

@@ -123,7 +123,15 @@ const handleExistingSession = async () => {
     }
 
     throw new Error('Profile record not found in users table.')
-  } catch {
+  } catch (error: unknown) {
+    if (showLoginDebug) {
+      lastErrorRaw.value = {
+        error,
+        userObject: user.value,
+        userId: user.value?.id,
+        userType: typeof user.value
+      }
+    }
     await supabase.auth.signOut()
     clearProfile()
     errorMessage.value = 'Account profile missing. Ask admin to add your user record in public.users.'
