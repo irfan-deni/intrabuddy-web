@@ -79,8 +79,9 @@ const fetchDashboardData = async () => {
     placedStudents.value = data.placedStudents
     unplacedStudents.value = data.unplacedStudents
     placementPercentage.value = data.placementPercentage
-  } catch (error: unknown) {
-    errorMessage.value = error instanceof Error ? error.message : 'Unable to load dashboard data.'
+  } catch (error: any) {
+    const serverMessage = error.data?.statusMessage || error.data?.message
+    errorMessage.value = serverMessage ? `Server Error: ${serverMessage}` : (error.message || 'Unable to load dashboard data.')
   } finally {
     isLoading.value = false
   }
