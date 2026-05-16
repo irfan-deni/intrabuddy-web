@@ -71,11 +71,12 @@
               <th class="px-10 py-6">Message Identifier</th>
               <th class="px-10 py-6">Recipients</th>
               <th class="px-10 py-6 text-right">Timestamp</th>
+              <th class="px-10 py-6 text-right w-20">Actions</th>
             </tr>
           </thead>
           <tbody class="text-xs divide-y divide-slate-50">
             <tr v-if="broadcasts.length === 0" class="text-center">
-              <td colspan="3" class="px-10 py-20 text-[10px] font-black text-text-veryMuted uppercase tracking-widest">No previous transmissions recorded</td>
+              <td colspan="4" class="px-10 py-20 text-[10px] font-black text-text-veryMuted uppercase tracking-widest">No previous transmissions recorded</td>
             </tr>
             <tr v-for="msg in broadcasts" :key="msg.id" class="hover:bg-slate-50 transition-colors group">
               <td class="px-10 py-8">
@@ -93,6 +94,15 @@
               </td>
               <td class="px-10 py-8 text-right text-text-veryMuted font-black tabular-nums group-hover:text-brand-navy transition-colors uppercase">
                 {{ msg.sent_at ? new Date(msg.sent_at).toLocaleDateString() : 'Unknown' }}
+              </td>
+              <td class="px-10 py-8 text-right">
+                <button
+                  class="h-8 w-8 border border-red-400 text-red-400 hover:bg-red-500 hover:text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all"
+                  @click="deleteBroadcast(msg.id)"
+                  title="Delete transmission"
+                >
+                  <i class="pi pi-trash text-[10px]"></i>
+                </button>
               </td>
             </tr>
           </tbody>
@@ -139,6 +149,16 @@ const fetchBroadcasts = async () => {
     console.error('Failed to sync history')
   } finally {
     isLoading.value = false
+  }
+}
+
+const deleteBroadcast = async (id: number) => {
+  if (!confirm('Permanently delete this transmission record?')) return
+  try {
+    await $fetch(`/api/broadcasts/${id}`, { method: 'DELETE' })
+    await fetchBroadcasts()
+  } catch (error) {
+    alert('Delete failed')
   }
 }
 

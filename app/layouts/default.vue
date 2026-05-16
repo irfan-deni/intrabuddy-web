@@ -9,7 +9,7 @@
       <div class="mb-4" :class="collapsed ? 'p-5' : 'p-8'">
         <div class="flex items-center" :class="collapsed ? 'justify-center' : 'gap-3'">
           <div class="bg-white p-1.5 flex-shrink-0">
-            <i class="pi pi-shield text-brand-navy text-xl"></i>
+            <i class="pi pi-graduation-cap text-brand-navy text-xl"></i>
           </div>
           <Transition name="fade-text">
             <span v-if="!collapsed" class="text-lg font-black tracking-tighter uppercase text-white whitespace-nowrap">IntraBuddy</span>
