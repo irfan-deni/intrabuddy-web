@@ -15,7 +15,7 @@ export default <Partial<Config>>{
         brand: {
           navy: '#0A1628',
           blue: '#1E4FD8',
-          cyan: '#00C2CB',
+          cyan: '#0080FF',
           gold: '#F59E0B',
           bg: '#F4F6FB'
         },
