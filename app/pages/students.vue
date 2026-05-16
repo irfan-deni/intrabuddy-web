@@ -1,130 +1,133 @@
 <template>
-  <div class="p-8 lg:p-10">
-    <header class="mb-8 flex items-end justify-between gap-4">
+  <div class="space-y-8">
+    <header class="flex flex-col md:flex-row md:items-center justify-between gap-6">
       <div>
-        <p class="text-xs font-semibold uppercase tracking-[0.35em] text-brand-blue">Directory</p>
-        <h1 class="mt-2 text-4xl font-black tracking-tight text-brand-navy">Student Directory</h1>
-        <p class="mt-2 text-slate-500">Manage and track your active cohort's milestone progress.</p>
+        <h1 class="text-3xl font-bold text-slate-900 tracking-tight">Student Directory</h1>
+        <p class="text-slate-500 mt-1">Manage profiles and track progress for the current cohort.</p>
       </div>
-      <button
-        v-if="isSuperCoordinator"
-        class="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
-        @click="openAddModal"
-      >
-        <i class="pi pi-plus mr-2"></i> Add Student
-      </button>
+      <div class="flex items-center gap-3">
+        <button
+          v-if="isSuperCoordinator"
+          class="bg-slate-900 text-white px-5 py-2.5 rounded-xl font-semibold text-sm hover:bg-slate-800 transition-all shadow-lg shadow-slate-200 flex items-center gap-2"
+          @click="openAddModal"
+        >
+          <i class="pi pi-plus text-xs"></i>
+          Add Student
+        </button>
+      </div>
     </header>
 
-    <p v-if="errorMessage" class="mb-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+    <div v-if="errorMessage" class="p-4 rounded-xl bg-red-50 border border-red-100 text-red-700 text-sm flex items-center gap-3">
+      <i class="pi pi-exclamation-circle"></i>
       {{ errorMessage }}
-    </p>
+    </div>
 
-    <div class="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_24px_70px_rgba(15,23,42,0.06)]">
-      <div class="flex flex-wrap gap-4 border-b border-slate-200 bg-slate-50/60 p-5">
-        <div class="relative flex-1 max-w-md">
-          <i class="pi pi-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-          <input
-            v-model="searchQuery"
-            type="text"
-            placeholder="Search by name or student ID..."
-            class="w-full rounded-2xl border border-slate-200 pl-10 pr-4 py-2.5 text-sm text-slate-700 outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20"
-          >
-        </div>
-
-        <select
-          v-model="statusFilter"
-          class="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-700 outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20"
+    <!-- Modern Filters Bar -->
+    <div class="bg-white p-2 rounded-2xl border border-slate-200/60 shadow-sm flex flex-col md:flex-row items-center gap-2">
+      <div class="relative flex-1 w-full">
+        <i class="pi pi-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+        <input
+          v-model="searchQuery"
+          type="text"
+          placeholder="Search by name, ID or major..."
+          class="w-full pl-11 pr-4 py-3 bg-transparent border-none outline-none text-sm text-slate-900 placeholder:text-slate-400"
         >
+      </div>
+
+      <div class="h-8 w-px bg-slate-100 hidden md:block"></div>
+
+      <div class="flex items-center gap-2 px-2 w-full md:w-auto">
+        <select v-model="statusFilter" class="bg-slate-50 border-none rounded-xl px-4 py-2 text-sm font-medium text-slate-600 outline-none cursor-pointer hover:bg-slate-100 transition-colors w-full md:w-40">
           <option value="all">All Statuses</option>
           <option value="Searching">Searching</option>
           <option value="Pending">Pending</option>
           <option value="Interview">Interview</option>
           <option value="Accepted">Accepted</option>
         </select>
-
-        <button
-          class="rounded-2xl border border-brand-blue/15 bg-white px-4 py-2.5 text-sm font-semibold text-brand-navy transition hover:bg-brand-bg"
-          :disabled="isLoading"
-          @click="fetchStudents"
+        <button 
+          @click="fetchStudents" 
+          :disabled="isLoading" 
+          class="h-10 w-10 flex items-center justify-center bg-slate-50 rounded-xl hover:bg-slate-100 transition-all text-slate-500"
         >
-          Refresh
+          <i class="pi pi-refresh" :class="{ 'pi-spin': isLoading }"></i>
         </button>
       </div>
+    </div>
 
+    <!-- Students Table -->
+    <div class="bg-white rounded-3xl border border-slate-200/60 shadow-sm overflow-hidden">
       <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse">
+        <table class="w-full text-left">
           <thead>
-            <tr class="border-b border-slate-200 bg-slate-50 text-sm text-slate-500">
-              <th class="px-6 py-4 font-medium">Student Name</th>
-              <th class="px-6 py-4 font-medium">Milestone Progress</th>
-              <th class="px-6 py-4 font-medium">Placement Status</th>
-              <th class="px-6 py-4 font-medium text-right">Wallet Docs</th>
-              <th v-if="isSuperCoordinator" class="px-6 py-4 font-medium text-right">Actions</th>
+            <tr class="text-[11px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50/50">
+              <th class="px-8 py-5 font-bold">Student Identity</th>
+              <th class="px-8 py-5 font-bold">Progress</th>
+              <th class="px-8 py-5 font-bold text-center">Status</th>
+              <th class="px-8 py-5 font-bold text-right">Wallet</th>
+              <th v-if="isSuperCoordinator" class="px-8 py-5 font-bold text-right"></th>
             </tr>
           </thead>
           
-          <tbody v-if="isLoading">
-            <tr>
-              <td colspan="4" class="px-6 py-12 text-center text-slate-400">
-                <i class="pi pi-spinner pi-spin mb-2 text-2xl"></i>
-                <p>Loading directory...</p>
+          <tbody class="divide-y divide-slate-100">
+            <tr v-if="isLoading">
+              <td colspan="5" class="px-8 py-20 text-center text-slate-400">
+                <div class="flex flex-col items-center gap-3">
+                  <i class="pi pi-spin pi-spinner text-3xl text-slate-200"></i>
+                  <p class="text-sm">Accessing directory data...</p>
+                </div>
               </td>
             </tr>
-          </tbody>
-
-          <tbody v-else-if="students.length === 0">
-            <tr>
-              <td colspan="4" class="px-6 py-12 text-center text-slate-400">
-                <i class="pi pi-inbox mb-2 text-3xl"></i>
-                <p>No matching students found in active cohort.</p>
+            <tr v-else-if="students.length === 0">
+              <td colspan="5" class="px-8 py-20 text-center text-slate-400">
+                <i class="pi pi-users text-4xl mb-4 text-slate-100"></i>
+                <p class="text-sm font-medium">No students matched your search criteria.</p>
               </td>
             </tr>
-          </tbody>
-
-          <tbody v-else>
             <tr
               v-for="student in paginatedStudents"
               :key="student.id"
-<<<<<<< HEAD
-              class="border-b border-slate-100 transition-colors hover:bg-brand-bg"
-=======
-              class="border-b border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer"
+              class="hover:bg-slate-50/50 transition-all cursor-pointer group"
               @click="navigateTo(`/student?id=${student.id}`)"
->>>>>>> fb6c239 (feat: enhance UI with cyan color scheme, add Master Checklist page, and implement wallet document management for students)
             >
-              <td class="px-6 py-4">
-                <div class="font-semibold text-brand-navy">{{ student.full_name }}</div>
-                <div class="text-xs text-slate-500 mt-1">{{ student.student_id || 'No ID' }}</div>
-              </td>
-              <td class="px-6 py-4">
-                <div class="flex items-center gap-3">
-                  <div class="max-w-[140px] w-full">
-                    <ProgressBar :value="student.completionPercent" />
-                  </div>
-                  <span class="text-xs font-medium text-slate-600">{{ student.completionPercent }}%</span>
+              <td class="px-8 py-5">
+                <div class="flex flex-col">
+                  <span class="font-bold text-slate-900 group-hover:text-blue-600 transition-colors">{{ student.full_name }}</span>
+                  <span class="text-xs text-slate-500 font-medium tabular-nums">{{ student.student_id || '---' }}</span>
                 </div>
               </td>
-              <td class="px-6 py-4">
-                <StatusBadge :status="student.placementStatus" />
+              <td class="px-8 py-5">
+                <div class="flex items-center gap-4">
+                  <div class="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden max-w-[120px]">
+                    <div 
+                      class="h-full bg-slate-900 rounded-full transition-all duration-500" 
+                      :style="{ width: student.completionPercent + '%' }"
+                    ></div>
+                  </div>
+                  <span class="text-xs font-bold text-slate-400 tabular-nums">{{ student.completionPercent }}%</span>
+                </div>
               </td>
-              <td class="px-6 py-4 text-right text-slate-600 font-medium">
+              <td class="px-8 py-5">
+                <div class="flex justify-center">
+                  <span :class="[
+                    'px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider',
+                    student.placementStatus === 'Accepted' ? 'bg-emerald-100 text-emerald-700' : 
+                    student.placementStatus === 'Interview' ? 'bg-blue-100 text-blue-700' : 
+                    student.placementStatus === 'Pending' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-500'
+                  ]">
+                    {{ student.placementStatus }}
+                  </span>
+                </div>
+              </td>
+              <td class="px-8 py-5 text-right font-bold text-slate-400 tabular-nums">
                 {{ student.documentCount }}
               </td>
-              <td v-if="isSuperCoordinator" class="px-6 py-4 text-right" @click.stop>
-                <div class="flex items-center justify-end gap-2">
-                  <button
-                    class="rounded p-1.5 text-slate-400 hover:bg-slate-100 hover:text-blue-600 transition"
-                    title="Edit Student"
-                    @click="openEditModal(student)"
-                  >
-                    <i class="pi pi-pencil"></i>
+              <td v-if="isSuperCoordinator" class="px-8 py-5 text-right" @click.stop>
+                <div class="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                  <button class="h-8 w-8 flex items-center justify-center rounded-lg hover:bg-white hover:shadow-sm text-slate-400 hover:text-blue-600" @click="openEditModal(student)">
+                    <i class="pi pi-pencil text-xs"></i>
                   </button>
-                  <button
-                    class="rounded p-1.5 text-slate-400 hover:bg-slate-100 hover:text-red-600 transition"
-                    title="Delete Student"
-                    @click="openDeleteDialog(student)"
-                  >
-                    <i class="pi pi-trash"></i>
+                  <button class="h-8 w-8 flex items-center justify-center rounded-lg hover:bg-white hover:shadow-sm text-slate-400 hover:text-rose-600" @click="openDeleteDialog(student)">
+                    <i class="pi pi-trash text-xs"></i>
                   </button>
                 </div>
               </td>
@@ -133,31 +136,31 @@
         </table>
       </div>
 
-      <footer class="flex items-center justify-between border-t border-slate-200 bg-white px-5 py-3 text-sm text-slate-600">
-        <p>
-          <span v-if="totalCount === 0">No students to show.</span>
-          <span v-else>
-            Showing {{ pageStart + 1 }}-{{ Math.min(pageStart + pageSize, totalCount) }} of {{ totalCount }}
-          </span>
+      <!-- Modern Pagination Bar -->
+      <div class="px-8 py-5 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between">
+        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">
+          Showing {{ pageStart + 1 }} to {{ Math.min(pageStart + pageSize, totalCount) }} of {{ totalCount }}
         </p>
         <div class="flex items-center gap-2">
           <button
-            class="rounded-xl border border-slate-200 px-3 py-1.5 transition hover:bg-brand-bg disabled:cursor-not-allowed disabled:opacity-40"
             :disabled="currentPage === 1"
+            class="h-9 px-4 text-xs font-bold uppercase tracking-widest text-slate-500 hover:text-slate-900 bg-white border border-slate-200 rounded-xl disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm"
             @click="goToPreviousPage"
           >
-            Previous
+            Prev
           </button>
-          <span class="px-2">Page {{ currentPage }} / {{ totalPages }}</span>
+          <div class="h-9 w-9 flex items-center justify-center bg-slate-900 text-white rounded-xl text-xs font-bold shadow-lg shadow-slate-200">
+            {{ currentPage }}
+          </div>
           <button
-            class="rounded-xl border border-slate-200 px-3 py-1.5 transition hover:bg-brand-bg disabled:cursor-not-allowed disabled:opacity-40"
             :disabled="currentPage >= totalPages"
+            class="h-9 px-4 text-xs font-bold uppercase tracking-widest text-slate-500 hover:text-slate-900 bg-white border border-slate-200 rounded-xl disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm"
             @click="goToNextPage"
           >
             Next
           </button>
         </div>
-      </footer>
+      </div>
     </div>
   </div>
 </template>
@@ -168,9 +171,6 @@ import { useCoordinatorPrivileges } from '~/composables/useCoordinatorPrivileges
 definePageMeta({
   requiredRole: 'coordinator'
 })
-
-import StatusBadge from '~/components/StatusBadge.vue'
-import ProgressBar from '~/components/ProgressBar.vue'
 
 type StudentRow = {
   id: string
@@ -245,7 +245,7 @@ const fetchStudents = async () => {
     students.value = response.students
     totalCount.value = response.totalCount
   } catch (error: unknown) {
-    errorMessage.value = error instanceof Error ? error.message : 'Failed to fetch students.'
+    errorMessage.value = 'Failed to fetch student directory'
   } finally {
     isLoading.value = false
   }
@@ -262,18 +262,17 @@ onUnmounted(() => {
   }
 })
 
-// Modal Logic Mocks
 const openAddModal = () => {
-  alert('Add Student Modal (Super Coordinator Action)')
+  alert('Add Student Modal (Modern SaaS Style)')
 }
 
 const openEditModal = (student: StudentRow) => {
-  alert(`Edit Student: ${student.full_name}`)
+  alert(`Edit: ${student.full_name}`)
 }
 
 const openDeleteDialog = (student: StudentRow) => {
-  if (confirm(`Are you sure you want to delete ${student.full_name}?`)) {
-    alert(`Deleted ${student.full_name}`)
+  if (confirm(`Archive record for ${student.full_name}?`)) {
+    alert('Record Archived')
   }
 }
 </script>
