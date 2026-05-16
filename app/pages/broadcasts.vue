@@ -1,7 +1,7 @@
 <template>
-  <div class="space-y-12">
+  <div class="space-y-8 md:space-y-12">
     <!-- Top Half: Compose Broadcast -->
-    <section class="bg-white border border-slate-100 p-12 shadow-sm relative overflow-hidden">
+    <section class="bg-white border border-slate-100 p-4 sm:p-8 lg:p-12 shadow-sm relative overflow-hidden">
       <div class="absolute top-0 right-0 p-12 opacity-5 pointer-events-none">
         <i class="pi pi-megaphone text-[120px] text-black"></i>
       </div>
@@ -64,40 +64,40 @@
         <span class="text-[8px] font-black text-text-veryMuted uppercase tracking-widest tabular-nums">{{ broadcasts.length }} Logs Detected</span>
       </div>
 
-      <div class="bg-white border border-slate-100 overflow-hidden">
-        <table class="w-full text-left">
+      <div class="bg-white border border-slate-100 overflow-x-auto">
+        <table class="w-full text-left min-w-[600px]">
           <thead>
             <tr class="text-[9px] font-black text-text-veryMuted uppercase tracking-[0.2em] bg-slate-50/50">
-              <th class="px-10 py-6">Message Identifier</th>
-              <th class="px-10 py-6">Recipients</th>
-              <th class="px-10 py-6 text-right">Timestamp</th>
-              <th class="px-10 py-6 text-right w-20">Actions</th>
+              <th class="px-4 sm:px-10 py-4 sm:py-6">Message Identifier</th>
+              <th class="px-4 sm:px-10 py-4 sm:py-6">Recipients</th>
+              <th class="px-4 sm:px-10 py-4 sm:py-6 text-right">Timestamp</th>
+              <th class="px-4 sm:px-10 py-4 sm:py-6 text-right w-20">Actions</th>
             </tr>
           </thead>
           <tbody class="text-xs divide-y divide-slate-50">
             <tr v-if="broadcasts.length === 0" class="text-center">
-              <td colspan="4" class="px-10 py-20 text-[10px] font-black text-text-veryMuted uppercase tracking-widest">No previous transmissions recorded</td>
+              <td colspan="4" class="px-4 sm:px-10 py-12 sm:py-20 text-[10px] font-black text-text-veryMuted uppercase tracking-widest">No previous transmissions recorded</td>
             </tr>
             <tr v-for="msg in broadcasts" :key="msg.id" class="hover:bg-slate-50 transition-colors group">
-              <td class="px-10 py-8">
+              <td class="px-4 sm:px-10 py-4 sm:py-8">
                 <div class="flex flex-col gap-1">
-                  <span class="font-black text-brand-navy uppercase tracking-tight">{{ msg.title }}</span>
-                  <span class="text-[9px] text-text-veryMuted font-medium line-clamp-1 uppercase tracking-tighter">{{ msg.body }}</span>
+                  <span class="font-black text-brand-navy uppercase tracking-tight text-[11px] sm:text-xs">{{ msg.title }}</span>
+                  <span class="hidden sm:block text-[9px] text-text-veryMuted font-medium line-clamp-1 uppercase tracking-tighter">{{ msg.body }}</span>
                 </div>
               </td>
-              <td class="px-10 py-8">
+              <td class="px-4 sm:px-10 py-4 sm:py-8">
                 <div class="flex gap-2">
                   <span v-for="role in msg.target_roles" :key="role" class="px-2 py-0.5 bg-brand-navy text-white text-[8px] font-black uppercase tracking-tighter">
                     {{ role }}
                   </span>
                 </div>
               </td>
-              <td class="px-10 py-8 text-right text-text-veryMuted font-black tabular-nums group-hover:text-brand-navy transition-colors uppercase">
+              <td class="px-4 sm:px-10 py-4 sm:py-8 text-right text-text-veryMuted font-black tabular-nums group-hover:text-brand-navy transition-colors uppercase text-[10px] sm:text-xs">
                 {{ msg.sent_at ? new Date(msg.sent_at).toLocaleDateString() : 'Unknown' }}
               </td>
-              <td class="px-10 py-8 text-right">
+              <td class="px-4 sm:px-10 py-4 sm:py-8 text-right">
                 <button
-                  class="h-8 w-8 border border-red-400 text-red-400 hover:bg-red-500 hover:text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all"
+                  class="h-8 w-8 border border-red-400 text-red-400 hover:bg-red-500 hover:text-white flex items-center justify-center transition-all"
                   @click="deleteBroadcast(msg.id)"
                   title="Delete transmission"
                 >

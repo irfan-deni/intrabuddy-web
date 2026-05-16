@@ -37,47 +37,47 @@
       </div>
 
       <div class="overflow-x-auto">
-        <table class="w-full text-left">
+        <table class="w-full text-left min-w-[600px]">
           <thead>
             <tr class="text-[9px] font-black text-text-veryMuted uppercase tracking-[0.2em] bg-slate-50/50 border-b border-slate-100">
-              <th class="px-8 py-6">Student</th>
-              <th class="px-8 py-6">Week</th>
-              <th class="px-8 py-6">End Date</th>
-              <th class="px-8 py-6">Status</th>
-              <th class="px-8 py-6 text-right">Submitted At</th>
+              <th class="px-4 sm:px-8 py-4 sm:py-6">Student</th>
+              <th class="px-4 sm:px-8 py-4 sm:py-6">Week</th>
+              <th class="px-4 sm:px-8 py-4 sm:py-6">End Date</th>
+              <th class="px-4 sm:px-8 py-4 sm:py-6">Status</th>
+              <th class="px-4 sm:px-8 py-4 sm:py-6 text-right">Submitted At</th>
             </tr>
           </thead>
           
           <tbody class="text-xs divide-y divide-slate-50">
             <tr v-if="isLoading">
-              <td colspan="5" class="px-8 py-16 text-center text-text-veryMuted">
+              <td colspan="5" class="px-4 sm:px-8 py-12 sm:py-16 text-center text-text-veryMuted">
                 <i class="pi pi-spin pi-spinner text-xl text-brand-cyan mr-2" />
                 <span class="text-[10px] font-black uppercase tracking-widest">Loading logbooks...</span>
               </td>
             </tr>
 
             <tr v-else-if="logbooks.length === 0">
-              <td colspan="5" class="px-8 py-16 text-center text-text-veryMuted">
+              <td colspan="5" class="px-4 sm:px-8 py-12 sm:py-16 text-center text-text-veryMuted">
                 <i class="pi pi-inbox mb-2 text-3xl block"></i>
                 <span class="text-[10px] font-black uppercase tracking-widest">No logbook records found for the active cohort.</span>
               </td>
             </tr>
 
             <tr v-for="entry in logbooks" :key="entry.id" class="hover:bg-slate-50 transition-colors group">
-              <td class="px-8 py-6">
-                <div class="font-black text-brand-navy uppercase tracking-tight">{{ entry.studentName }}</div>
+              <td class="px-4 sm:px-8 py-4 sm:py-6">
+                <div class="font-black text-brand-navy uppercase tracking-tight text-[11px] sm:text-xs">{{ entry.studentName }}</div>
                 <div class="text-[9px] font-bold text-text-veryMuted mt-1">{{ entry.studentMatric || 'No ID' }}</div>
               </td>
-              <td class="px-8 py-6 font-black text-brand-navy tracking-tighter">Week {{ entry.weekNumber }}</td>
-              <td class="px-8 py-6 font-bold text-text-muted tabular-nums">{{ entry.weekEndDate }}</td>
-              <td class="px-8 py-6">
+              <td class="px-4 sm:px-8 py-4 sm:py-6 font-black text-brand-navy tracking-tighter text-[11px] sm:text-xs">Week {{ entry.weekNumber }}</td>
+              <td class="px-4 sm:px-8 py-4 sm:py-6 font-bold text-text-muted tabular-nums text-[11px] sm:text-xs">{{ entry.weekEndDate }}</td>
+              <td class="px-4 sm:px-8 py-4 sm:py-6">
                 <StatusBadge :status="entry.statusLabel" :positive="entry.statusLabel === 'Submitted'" />
 
                 <div v-if="entry.isStale" class="mt-2 flex items-center gap-1 text-[9px] font-black text-amber-700 uppercase tracking-wider">
                   <i class="pi pi-exclamation-triangle text-[10px]" /> Stale Record
                 </div>
               </td>
-              <td class="px-8 py-6 text-right text-text-veryMuted font-black tabular-nums text-[10px]">
+              <td class="px-4 sm:px-8 py-4 sm:py-6 text-right text-text-veryMuted font-black tabular-nums text-[10px]">
                 {{ entry.submittedAt ? formatDate(entry.submittedAt) : '-' }}
               </td>
             </tr>

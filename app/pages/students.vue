@@ -42,57 +42,57 @@
         </div>
 
         <div class="overflow-x-auto">
-          <table class="w-full text-left">
+          <table class="w-full text-left min-w-[700px]">
             <thead>
               <tr class="text-[9px] font-black text-text-veryMuted uppercase tracking-[0.2em] bg-slate-50/50 border-b border-slate-100">
-                <th class="px-10 py-6">Identity</th>
-                <th class="px-10 py-6">Placement Status</th>
-                <th class="px-10 py-6">Milestone Progress</th>
-                <th class="px-10 py-6">Documents</th>
-                <th class="px-10 py-6 text-right">Records</th>
+                <th class="px-4 sm:px-10 py-4 sm:py-6">Identity</th>
+                <th class="px-4 sm:px-10 py-4 sm:py-6">Placement Status</th>
+                <th class="px-4 sm:px-10 py-4 sm:py-6">Milestone Progress</th>
+                <th class="px-4 sm:px-10 py-4 sm:py-6">Documents</th>
+                <th class="px-4 sm:px-10 py-4 sm:py-6 text-right">Records</th>
               </tr>
             </thead>
             <tbody class="text-xs divide-y divide-slate-50">
               <tr v-if="filteredStudents.length === 0 && !isLoading" class="text-center">
-                <td colspan="5" class="px-10 py-24 text-[10px] font-black text-text-veryMuted uppercase tracking-widest">No matching records found</td>
+                <td colspan="5" class="px-4 sm:px-10 py-12 sm:py-24 text-[10px] font-black text-text-veryMuted uppercase tracking-widest">No matching records found</td>
               </tr>
               <tr v-for="student in filteredStudents" :key="student.id" class="group hover:bg-slate-50 transition-all cursor-pointer" @click="selectStudent(student)">
-                <td class="px-10 py-8">
-                  <div class="flex items-center gap-4">
-                    <div class="h-10 w-10 bg-slate-50 border border-slate-100 flex items-center justify-center font-black text-slate-300 group-hover:bg-brand-navy group-hover:text-white transition-all">
+                <td class="px-4 sm:px-10 py-4 sm:py-8">
+                  <div class="flex items-center gap-3 sm:gap-4">
+                    <div class="h-8 w-8 sm:h-10 sm:w-10 bg-slate-50 border border-slate-100 flex items-center justify-center font-black text-slate-300 group-hover:bg-brand-navy group-hover:text-white transition-all text-[10px] sm:text-xs">
                       {{ student.full_name.charAt(0) }}
                     </div>
-                    <div class="flex flex-col">
-                      <span class="font-black text-brand-navy uppercase tracking-tight group-hover:underline underline-offset-4 decoration-2">{{ student.full_name }}</span>
-                      <span class="text-[8px] font-bold text-text-veryMuted tabular-nums uppercase">{{ student.student_id || 'NOT_ASSIGNED' }}</span>
+                    <div class="flex flex-col min-w-0">
+                      <span class="font-black text-brand-navy uppercase tracking-tight group-hover:underline underline-offset-4 decoration-2 text-[11px] sm:text-xs truncate">{{ student.full_name }}</span>
+                      <span class="text-[8px] font-bold text-text-veryMuted tabular-nums uppercase truncate">{{ student.student_id || 'NOT_ASSIGNED' }}</span>
                     </div>
                   </div>
                 </td>
-                <td class="px-10 py-8">
+                <td class="px-4 sm:px-10 py-4 sm:py-8">
                   <span :class="[
-                    'px-3 py-1 text-[9px] font-black uppercase tracking-tighter border',
+                    'px-3 py-1 text-[9px] font-black uppercase tracking-tighter border whitespace-nowrap',
                     student.placementStatus === 'Accepted' ? 'bg-brand-navy text-white border-brand-navy' : 
                     student.placementStatus === 'Searching' ? 'bg-brand-gold text-black border-brand-gold' : 'bg-white text-text-veryMuted border-slate-100'
                   ]">
                     {{ student.placementStatus || 'Searching' }}
                   </span>
                 </td>
-                <td class="px-10 py-8">
-                  <div class="flex items-center gap-4">
-                    <div class="flex-1 h-1 bg-slate-100 max-w-[100px] overflow-hidden">
+                <td class="px-4 sm:px-10 py-4 sm:py-8">
+                  <div class="flex items-center gap-2 sm:gap-4">
+                    <div class="flex-1 h-1 bg-slate-100 max-w-[80px] sm:max-w-[100px] overflow-hidden">
                       <div class="h-full bg-brand-cyan transition-all duration-1000" :style="{ width: student.completionPercent + '%' }"></div>
                     </div>
                     <span class="text-[9px] font-black text-brand-navy tabular-nums">{{ student.completionPercent }}%</span>
                   </div>
                 </td>
-                <td class="px-10 py-8">
+                <td class="px-4 sm:px-10 py-4 sm:py-8">
                   <div class="flex items-center gap-2 text-text-veryMuted">
                     <i class="pi pi-file text-[10px]"></i>
                     <span class="text-[9px] font-black tabular-nums">{{ student.documentCount }} Items</span>
                   </div>
                 </td>
-                <td class="px-10 py-8 text-right">
-                  <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all" @click.stop>
+                <td class="px-4 sm:px-10 py-4 sm:py-8 text-right">
+                  <div class="flex items-center justify-end gap-2 transition-all" @click.stop>
                     <button v-if="isSuperCoordinator" class="h-8 w-8 bg-brand-navy text-white hover:brightness-150 flex items-center justify-center" @click="editStudent(student)">
                       <i class="pi pi-pencil text-[10px]"></i>
                     </button>
@@ -179,8 +179,8 @@
     <div v-if="selectedStudent" class="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-[90]" @click="selectedStudent = null"></div>
 
     <!-- Enrollment Modal -->
-    <div v-if="showModal" class="fixed inset-0 z-[110] flex items-center justify-center bg-brand-navy/90 p-6">
-      <div class="bg-white w-full max-w-lg p-12 shadow-2xl relative border border-slate-100">
+    <div v-if="showModal" class="fixed inset-0 z-[110] flex items-center justify-center bg-brand-navy/90 p-4 sm:p-6">
+      <div class="bg-white w-full max-w-lg p-6 sm:p-12 shadow-2xl relative border border-slate-100 mx-4 sm:mx-0">
         <button class="absolute top-8 right-8 text-slate-300 hover:text-brand-navy transition-colors" @click="closeModal">
           <i class="pi pi-times"></i>
         </button>

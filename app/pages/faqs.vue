@@ -102,8 +102,8 @@
     </div>
 
     <!-- Modal Form -->
-    <div v-if="showModal || editingId" class="fixed inset-0 z-50 flex items-center justify-center bg-brand-navy/80 backdrop-blur-sm p-6">
-      <div class="bg-white w-full max-w-lg p-10 border border-slate-100 shadow-2xl relative">
+    <div v-if="showModal || editingId" class="fixed inset-0 z-50 flex items-center justify-center bg-brand-navy/80 backdrop-blur-sm p-4 sm:p-6">
+      <div class="bg-white w-full max-w-lg p-6 sm:p-10 border border-slate-100 shadow-2xl relative mx-4 sm:mx-0">
         <button class="absolute top-6 right-6 text-slate-300 hover:text-brand-navy transition-colors" @click="closeModal">
           <i class="pi pi-times"></i>
         </button>

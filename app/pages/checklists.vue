@@ -29,31 +29,31 @@
       </div>
 
       <div class="overflow-x-auto">
-        <table class="w-full text-left">
+        <table class="w-full text-left min-w-[500px]">
           <thead>
             <tr class="text-[10px] font-black text-text-veryMuted uppercase tracking-[0.2em] bg-slate-50/50 border-b border-slate-100">
-              <th class="px-8 py-6">Order</th>
-              <th class="px-8 py-6">Requirement Title</th>
-              <th class="px-8 py-6">Mandatory</th>
-              <th v-if="isSuperCoordinator" class="px-8 py-6 text-right">Actions</th>
+              <th class="px-4 sm:px-8 py-4 sm:py-6">Order</th>
+              <th class="px-4 sm:px-8 py-4 sm:py-6">Requirement Title</th>
+              <th class="px-4 sm:px-8 py-4 sm:py-6">Mandatory</th>
+              <th v-if="isSuperCoordinator" class="px-4 sm:px-8 py-4 sm:py-6 text-right">Actions</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-50 text-xs">
             <tr v-if="templates.length === 0 && !isLoading">
-              <td colspan="4" class="px-8 py-20 text-center text-text-veryMuted font-black uppercase tracking-widest">No templates defined</td>
+              <td colspan="4" class="px-4 sm:px-8 py-12 sm:py-20 text-center text-text-veryMuted font-black uppercase tracking-widest">No templates defined</td>
             </tr>
             <tr v-for="item in templates" :key="item.id" class="hover:bg-slate-50 transition-all group">
-              <td class="px-8 py-6 font-black text-text-veryMuted tabular-nums">{{ item.display_order }}</td>
-              <td class="px-8 py-6">
-                <div class="font-black text-brand-navy uppercase tracking-tight">{{ item.title }}</div>
+              <td class="px-4 sm:px-8 py-4 sm:py-6 font-black text-text-veryMuted tabular-nums">{{ item.display_order }}</td>
+              <td class="px-4 sm:px-8 py-4 sm:py-6">
+                <div class="font-black text-brand-navy uppercase tracking-tight text-[11px] sm:text-xs">{{ item.title }}</div>
                 <div class="text-[9px] font-bold text-text-veryMuted uppercase tracking-tighter mt-1">{{ item.description || 'No additional details' }}</div>
               </td>
-              <td class="px-8 py-6">
+              <td class="px-4 sm:px-8 py-4 sm:py-6">
                 <span v-if="item.required" class="px-2 py-0.5 bg-brand-navy text-white text-[9px] font-black uppercase tracking-tighter">Required</span>
                 <span v-else class="text-text-veryMuted font-bold uppercase text-[9px]">Optional</span>
               </td>
-              <td v-if="isSuperCoordinator" class="px-8 py-6 text-right">
-                <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
+              <td v-if="isSuperCoordinator" class="px-4 sm:px-8 py-4 sm:py-6 text-right">
+                <div class="flex items-center justify-end gap-2 transition-all">
                   <button class="h-8 w-8 flex items-center justify-center bg-brand-navy text-white hover:brightness-150 transition-all" @click="openEditForm(item)">
                     <i class="pi pi-pencil text-[10px]"></i>
                   </button>
@@ -69,8 +69,8 @@
     </article>
 
     <!-- Modal Form -->
-    <div v-if="showForm" class="fixed inset-0 z-50 flex items-center justify-center bg-brand-navy/80 backdrop-blur-sm p-6">
-      <div class="bg-white w-full max-w-lg p-10 border border-slate-100 shadow-2xl relative">
+    <div v-if="showForm" class="fixed inset-0 z-50 flex items-center justify-center bg-brand-navy/80 backdrop-blur-sm p-4 sm:p-6">
+      <div class="bg-white w-full max-w-lg p-6 sm:p-10 border border-slate-100 shadow-2xl relative mx-4 sm:mx-0">
         <button class="absolute top-6 right-6 text-slate-300 hover:text-brand-navy transition-colors" @click="showForm = false">
           <i class="pi pi-times"></i>
         </button>

@@ -1,8 +1,8 @@
 <template>
-  <div class="space-y-12">
+  <div class="space-y-8 md:space-y-12">
     <!-- Row 1: Metric Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-      <div v-for="stat in stats" :key="stat.label" class="bg-white p-8 border border-slate-100 hover:border-brand-cyan transition-all group relative overflow-hidden">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
+      <div v-for="stat in stats" :key="stat.label" class="bg-white p-4 sm:p-8 border border-slate-100 hover:border-brand-cyan transition-all group relative overflow-hidden">
         <div class="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
           <i :class="[stat.icon, 'text-4xl text-brand-cyan']"></i>
         </div>
@@ -19,9 +19,9 @@
     </div>
 
     <!-- Row 2: Visuals & Secondary Stats -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-8">
       <!-- Doughnut Chart Section -->
-      <div class="lg:col-span-2 bg-white border border-slate-100 p-10 flex flex-col md:flex-row items-center gap-12">
+      <div class="lg:col-span-2 bg-white border border-slate-100 p-4 sm:p-10 flex flex-col md:flex-row items-center gap-6 md:gap-12">
         <div class="relative w-48 h-48 flex-shrink-0">
           <svg viewBox="0 0 36 36" class="w-full h-full transform -rotate-90">
             <circle cx="18" cy="18" r="16" fill="none" class="stroke-slate-100" stroke-width="3"></circle>
@@ -89,39 +89,41 @@
       </div>
 
       <div class="bg-white border border-slate-100 overflow-hidden">
-        <table class="w-full text-left">
-          <thead>
-            <tr class="text-[9px] font-black text-text-veryMuted uppercase tracking-[0.2em] bg-slate-50/50">
-              <th class="px-8 py-6">Student Identity</th>
-              <th class="px-8 py-6">Period</th>
-              <th class="px-8 py-6">Status</th>
-              <th class="px-8 py-6 text-right">Activity</th>
-            </tr>
-          </thead>
-          <tbody class="text-xs divide-y divide-slate-50">
-            <tr v-if="logbooks.length === 0" class="text-center">
-              <td colspan="4" class="px-8 py-20 text-[10px] font-black text-text-veryMuted uppercase tracking-widest">No activity data available</td>
-            </tr>
-            <tr v-for="entry in logbooks" :key="entry.id" class="hover:bg-slate-50 transition-colors group">
-              <td class="px-8 py-6">
-                <div class="flex flex-col">
-                  <span class="font-black text-brand-navy uppercase tracking-tight">{{ entry.studentName }}</span>
-                  <span class="text-[8px] font-bold text-text-veryMuted tabular-nums">{{ entry.studentMatric || 'MATRIC_PENDING' }}</span>
-                </div>
-              </td>
-              <td class="px-8 py-6">
-                <span class="font-black text-brand-navy tracking-tighter">WEEK {{ entry.weekNumber }}</span>
-              </td>
-              <td class="px-8 py-6">
-                <span v-if="entry.statusLabel === 'Submitted'" class="px-2 py-0.5 bg-brand-navy text-white text-[9px] font-black uppercase tracking-tighter">Approved</span>
-                <span v-else class="px-2 py-0.5 bg-brand-gold text-black text-[9px] font-black uppercase tracking-tighter">{{ entry.statusLabel }}</span>
-              </td>
-              <td class="px-8 py-6 text-right text-text-veryMuted font-bold tabular-nums group-hover:text-brand-navy transition-colors">
-                {{ entry.submittedAt ? new Date(entry.submittedAt).toLocaleDateString() : 'WAITING' }}
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left min-w-[600px]">
+            <thead>
+              <tr class="text-[9px] font-black text-text-veryMuted uppercase tracking-[0.2em] bg-slate-50/50">
+                <th class="px-4 sm:px-8 py-4 sm:py-6">Student Identity</th>
+                <th class="px-4 sm:px-8 py-4 sm:py-6">Period</th>
+                <th class="px-4 sm:px-8 py-4 sm:py-6">Status</th>
+                <th class="px-4 sm:px-8 py-4 sm:py-6 text-right">Activity</th>
+              </tr>
+            </thead>
+            <tbody class="text-xs divide-y divide-slate-50">
+              <tr v-if="logbooks.length === 0" class="text-center">
+                <td colspan="4" class="px-4 sm:px-8 py-12 sm:py-20 text-[10px] font-black text-text-veryMuted uppercase tracking-widest">No activity data available</td>
+              </tr>
+              <tr v-for="entry in logbooks" :key="entry.id" class="hover:bg-slate-50 transition-colors group">
+                <td class="px-4 sm:px-8 py-4 sm:py-6">
+                  <div class="flex flex-col">
+                    <span class="font-black text-brand-navy uppercase tracking-tight text-[11px] sm:text-xs">{{ entry.studentName }}</span>
+                    <span class="text-[8px] font-bold text-text-veryMuted tabular-nums">{{ entry.studentMatric || 'MATRIC_PENDING' }}</span>
+                  </div>
+                </td>
+                <td class="px-4 sm:px-8 py-4 sm:py-6">
+                  <span class="font-black text-brand-navy tracking-tighter text-[11px] sm:text-xs">WEEK {{ entry.weekNumber }}</span>
+                </td>
+                <td class="px-4 sm:px-8 py-4 sm:py-6">
+                  <span v-if="entry.statusLabel === 'Submitted'" class="px-2 py-0.5 bg-brand-navy text-white text-[9px] font-black uppercase tracking-tighter">Approved</span>
+                  <span v-else class="px-2 py-0.5 bg-brand-gold text-black text-[9px] font-black uppercase tracking-tighter">{{ entry.statusLabel }}</span>
+                </td>
+                <td class="px-4 sm:px-8 py-4 sm:py-6 text-right text-text-veryMuted font-bold tabular-nums group-hover:text-brand-navy transition-colors text-[10px] sm:text-xs">
+                  {{ entry.submittedAt ? new Date(entry.submittedAt).toLocaleDateString() : 'WAITING' }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </section>
   </div>
