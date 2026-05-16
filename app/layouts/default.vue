@@ -86,7 +86,6 @@ const isAuthRoute = computed(() => route.path === '/login')
 const coordinatorNavigationBase = [
   { to: '/', label: 'Dashboard', icon: 'pi pi-home' },
   { to: '/students', label: 'Student Directory', icon: 'pi pi-users' },
-  { to: '/logbooks', label: 'Logbooks', icon: 'pi pi-book' },
   { to: '/broadcasts', label: 'Broadcasts', icon: 'pi pi-send' },
   { to: '/faqs', label: 'Knowledge Base', icon: 'pi pi-question-circle' }
 ]
