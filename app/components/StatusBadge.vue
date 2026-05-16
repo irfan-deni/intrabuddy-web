@@ -21,18 +21,17 @@ const label = computed(() => {
 })
 
 const badgeClass = computed(() => {
-  // Pure B&W logic
-  const isPositive = props.positive === true || ['Accepted', 'Completed', 'YES', 'Submitted'].includes(props.status || '')
-  const isWarning = ['Interview', 'Pending', 'NO', 'Not Submitted', 'Late'].includes(props.status || '')
+  const isPositive = props.positive === true || ['Accepted', 'Completed', 'Placed', 'YES', 'Submitted'].includes(props.status || '')
+  const isWarning = ['Interview', 'Pending', 'NO', 'Not Submitted', 'Late', 'Searching'].includes(props.status || '')
 
   if (isPositive) {
-    return 'bg-black text-white border-black shadow-sm shadow-black/10'
-  }
-  
-  if (isWarning) {
-    return 'bg-white text-black border-black'
+    return 'bg-brand-navy text-white border-brand-navy shadow-sm shadow-black/10'
   }
 
-  return 'bg-white text-slate-300 border-slate-100'
+  if (isWarning) {
+    return 'bg-brand-gold text-black border-brand-gold'
+  }
+
+  return 'bg-white text-text-veryMuted border-slate-100'
 })
 </script>

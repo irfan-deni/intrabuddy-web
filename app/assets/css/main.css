@@ -4,11 +4,11 @@
 
 @layer base {
   html {
-    @apply bg-brand-bg text-slate-900;
+    @apply bg-brand-bg text-brand-navy;
   }
 
   body {
-    @apply min-h-screen bg-brand-bg text-slate-900 antialiased;
+    @apply min-h-screen bg-brand-bg text-brand-navy antialiased;
   }
 
   ::selection {
@@ -19,10 +19,30 @@
 
 @layer components {
   .brand-gradient {
-    @apply bg-gradient-to-r from-brand-blue to-brand-teal;
+    @apply bg-gradient-to-r from-brand-blue to-brand-cyan;
   }
 
   .brand-gradient-text {
-    @apply bg-gradient-to-r from-brand-blue to-brand-teal bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-brand-blue to-brand-cyan bg-clip-text text-transparent;
+  }
+
+  .btn-primary {
+    @apply bg-brand-cyan text-brand-navy font-black text-[10px] uppercase tracking-[0.2em] px-8 py-4 hover:brightness-110 transition-all flex items-center gap-3;
+  }
+
+  .btn-ghost {
+    @apply border border-brand-cyan text-brand-cyan font-black text-[10px] uppercase tracking-[0.2em] px-8 py-4 hover:bg-brand-cyan hover:text-brand-navy transition-all flex items-center gap-3;
+  }
+
+  .badge-positive {
+    @apply bg-brand-navy text-white border-brand-navy;
+  }
+
+  .badge-warning {
+    @apply bg-brand-gold text-black border-brand-gold;
+  }
+
+  .badge-neutral {
+    @apply bg-white text-text-veryMuted border-slate-100;
   }
 }

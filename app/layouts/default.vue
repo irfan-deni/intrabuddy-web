@@ -1,48 +1,85 @@
 <template>
-  <div class="min-h-screen bg-[#F8FAFC] flex font-sans selection:bg-black selection:text-white">
+  <div class="min-h-screen bg-[#F8FAFC] flex font-sans selection:bg-brand-blue selection:text-white">
     <!-- Fixed Sidebar -->
-    <aside class="w-72 bg-black text-white flex flex-col fixed h-screen z-50">
-      <div class="p-8 mb-4">
-        <div class="flex items-center gap-3">
-          <div class="bg-white p-1.5">
-            <i class="pi pi-shield text-black text-xl"></i>
+    <aside
+      class="bg-brand-navy text-white flex flex-col fixed h-screen z-50 transition-all duration-300 ease-in-out"
+      :class="collapsed ? 'w-20' : 'w-72'"
+    >
+      <!-- Brand / Logo -->
+      <div class="mb-4" :class="collapsed ? 'p-5' : 'p-8'">
+        <div class="flex items-center" :class="collapsed ? 'justify-center' : 'gap-3'">
+          <div class="bg-white p-1.5 flex-shrink-0">
+            <i class="pi pi-shield text-brand-navy text-xl"></i>
           </div>
-          <span class="text-lg font-black tracking-tighter uppercase">IntraBuddy</span>
+          <Transition name="fade-text">
+            <span v-if="!collapsed" class="text-lg font-black tracking-tighter uppercase text-white whitespace-nowrap">IntraBuddy</span>
+          </Transition>
         </div>
       </div>
 
+      <!-- Navigation -->
       <nav class="flex-1 px-4 space-y-1">
-        <NuxtLink 
-          v-for="item in navigation" 
+        <NuxtLink
+          v-for="item in navigation"
           :key="item.path"
           :to="item.path"
-          class="flex items-center gap-4 px-4 py-4 text-[10px] font-black uppercase tracking-[0.2em] transition-all group"
+          class="flex items-center gap-4 px-4 py-4 text-[10px] font-black uppercase tracking-[0.2em] transition-all group rounded-none"
           :class="[
-            route.path === item.path 
-              ? 'bg-white text-black translate-x-1 shadow-xl shadow-black/20' 
-              : 'text-slate-500 hover:text-white hover:translate-x-1'
+            collapsed ? 'justify-center' : '',
+            route.path === item.path
+              ? 'bg-white text-brand-navy shadow-xl shadow-black/20'
+              : 'text-slate-400 hover:text-white'
           ]"
         >
-          <i :class="[item.icon, 'text-base']"></i>
-          {{ item.name }}
+          <i :class="[item.icon, 'text-base flex-shrink-0']"></i>
+          <Transition name="fade-text">
+            <span v-if="!collapsed">{{ item.name }}</span>
+          </Transition>
         </NuxtLink>
       </nav>
 
-      <div class="p-6 border-t border-slate-900 mt-auto">
-        <div class="flex items-center gap-4 group cursor-pointer" @click="handleLogout">
-          <div class="h-10 w-10 bg-slate-900 flex items-center justify-center group-hover:bg-white group-hover:text-black transition-colors">
+      <!-- Collapse Toggle -->
+      <div class="px-4 pb-2">
+        <button
+          class="w-full flex items-center justify-center gap-3 px-4 py-3 text-slate-500 hover:text-white hover:bg-blue-900/30 transition-all cursor-pointer"
+          :class="collapsed ? 'px-0' : ''"
+          @click="collapsed = !collapsed"
+        >
+          <i
+            class="pi text-sm transition-transform duration-300"
+            :class="collapsed ? 'pi-chevron-right' : 'pi-chevron-left'"
+          ></i>
+          <Transition name="fade-text">
+            <span v-if="!collapsed" class="text-[9px] font-black uppercase tracking-widest">Collapse</span>
+          </Transition>
+        </button>
+      </div>
+
+      <!-- Sign Out -->
+      <div class="p-6 border-t border-blue-900/50" :class="collapsed ? 'p-4 flex justify-center' : ''">
+        <div
+          class="flex items-center gap-4 group cursor-pointer"
+          :class="collapsed ? 'justify-center' : ''"
+          @click="handleLogout"
+        >
+          <div class="h-10 w-10 bg-blue-900/50 flex items-center justify-center group-hover:bg-white group-hover:text-brand-navy transition-colors flex-shrink-0">
             <i class="pi pi-sign-out text-sm"></i>
           </div>
-          <div class="flex flex-col">
-            <span class="text-[10px] font-black uppercase tracking-widest text-slate-400 group-hover:text-white transition-colors">Sign Out</span>
-            <span class="text-[8px] font-bold text-slate-600 uppercase">{{ profile?.email || 'System User' }}</span>
-          </div>
+          <Transition name="fade-text">
+            <div v-if="!collapsed" class="flex flex-col">
+              <span class="text-[10px] font-black uppercase tracking-widest text-slate-500 group-hover:text-white transition-colors">Sign Out</span>
+              <span class="text-[8px] font-bold text-slate-600 uppercase">{{ profile?.email || 'System User' }}</span>
+            </div>
+          </Transition>
         </div>
       </div>
     </aside>
 
     <!-- Main Content Wrapper -->
-    <div class="flex-1 ml-72 flex flex-col min-h-screen">
+    <div
+      class="flex-1 flex flex-col min-h-screen transition-all duration-300 ease-in-out"
+      :class="collapsed ? 'ml-20' : 'ml-72'"
+    >
       <!-- Top Header -->
       <header class="h-20 bg-white border-b border-slate-100 flex items-center justify-between px-10 sticky top-0 z-40 backdrop-blur-md bg-white/80">
         <div class="flex items-center gap-4">
@@ -85,6 +122,8 @@ const route = useRoute()
 const supabase = useSupabaseClient()
 const { profile, role, clearProfile } = useCurrentProfile()
 
+const collapsed = ref(false)
+
 const navigation = [
   { name: 'Dashboard', path: '/', icon: 'pi pi-chart-bar' },
   { name: 'Students', path: '/students', icon: 'pi pi-users' },
@@ -106,12 +145,10 @@ const handleLogout = async () => {
 </script>
 
 <style>
-/* PrimeIcons in B&W */
 .pi {
   vertical-align: middle;
 }
 
-/* Custom Scrollbar for Minimalist Look */
 ::-webkit-scrollbar {
   width: 6px;
 }
@@ -123,5 +160,14 @@ const handleLogout = async () => {
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #000;
+}
+
+.fade-text-enter-active,
+.fade-text-leave-active {
+  transition: opacity 0.2s ease;
+}
+.fade-text-enter-from,
+.fade-text-leave-to {
+  opacity: 0;
 }
 </style>

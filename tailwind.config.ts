@@ -15,9 +15,14 @@ export default <Partial<Config>>{
         brand: {
           navy: '#0A1628',
           blue: '#1E4FD8',
-          teal: '#00C2CB',
-          mid: '#1A73E8',
+          cyan: '#00C2CB',
+          gold: '#F59E0B',
           bg: '#F4F6FB'
+        },
+        text: {
+          primary: '#0F172A',
+          muted: '#64748B',
+          veryMuted: '#94A3B8'
         }
       }
     }

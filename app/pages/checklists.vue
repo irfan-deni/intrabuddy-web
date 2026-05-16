@@ -2,12 +2,12 @@
   <div class="space-y-12">
     <header class="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-slate-100 pb-8">
       <div>
-        <h1 class="text-4xl font-black text-black tracking-tight uppercase">Master Checklist</h1>
-        <p class="text-slate-400 mt-2 font-bold uppercase text-[10px] tracking-widest">Global requirements template for the active cohort.</p>
+        <h1 class="text-4xl font-black text-brand-navy tracking-tight uppercase">Master Checklist</h1>
+        <p class="text-text-muted mt-2 font-bold uppercase text-[10px] tracking-widest">Global requirements template for the active cohort.</p>
       </div>
       <button
         v-if="isSuperCoordinator"
-        class="bg-black text-white px-6 py-3 rounded-none font-black text-[10px] uppercase tracking-[0.2em] hover:bg-slate-800 transition-all flex items-center gap-3"
+        class="bg-brand-cyan text-brand-navy px-6 py-3 rounded-none font-black text-[10px] uppercase tracking-[0.2em] hover:brightness-110 transition-all flex items-center gap-3"
         @click="openAddForm"
       >
         <i class="pi pi-plus"></i>
@@ -15,23 +15,23 @@
       </button>
     </header>
 
-    <div v-if="errorMessage" class="p-4 rounded bg-rose-50 border border-rose-100 text-rose-700 text-[10px] font-black uppercase tracking-widest">
+    <div v-if="errorMessage" class="p-4 bg-rose-50 border border-rose-100 text-rose-700 text-[10px] font-black uppercase tracking-widest">
       {{ errorMessage }}
     </div>
 
-    <div v-if="successMessage" class="p-4 rounded bg-black text-white text-[10px] font-black uppercase tracking-widest">
+    <div v-if="successMessage" class="p-4 bg-brand-navy text-white text-[10px] font-black uppercase tracking-widest">
       {{ successMessage }}
     </div>
 
     <article class="bg-white border border-slate-100 shadow-sm relative overflow-hidden">
       <div v-if="isLoading" class="absolute inset-0 bg-white/50 z-10 flex items-center justify-center backdrop-blur-sm">
-        <i class="pi pi-spin pi-spinner text-2xl text-black"></i>
+        <i class="pi pi-spin pi-spinner text-2xl text-brand-cyan"></i>
       </div>
 
       <div class="overflow-x-auto">
         <table class="w-full text-left">
           <thead>
-            <tr class="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em] bg-slate-50/50 border-b border-slate-100">
+            <tr class="text-[10px] font-black text-text-veryMuted uppercase tracking-[0.2em] bg-slate-50/50 border-b border-slate-100">
               <th class="px-8 py-6">Order</th>
               <th class="px-8 py-6">Requirement Title</th>
               <th class="px-8 py-6">Mandatory</th>
@@ -40,24 +40,24 @@
           </thead>
           <tbody class="divide-y divide-slate-50 text-xs">
             <tr v-if="templates.length === 0 && !isLoading">
-              <td colspan="4" class="px-8 py-20 text-center text-slate-300 font-black uppercase tracking-widest uppercase">No templates defined</td>
+              <td colspan="4" class="px-8 py-20 text-center text-text-veryMuted font-black uppercase tracking-widest">No templates defined</td>
             </tr>
             <tr v-for="item in templates" :key="item.id" class="hover:bg-slate-50 transition-all group">
-              <td class="px-8 py-6 font-black text-slate-300 tabular-nums">{{ item.display_order }}</td>
+              <td class="px-8 py-6 font-black text-text-veryMuted tabular-nums">{{ item.display_order }}</td>
               <td class="px-8 py-6">
-                <div class="font-black text-black uppercase tracking-tight">{{ item.title }}</div>
-                <div class="text-[9px] font-bold text-slate-400 uppercase tracking-tighter mt-1">{{ item.description || 'No additional details' }}</div>
+                <div class="font-black text-brand-navy uppercase tracking-tight">{{ item.title }}</div>
+                <div class="text-[9px] font-bold text-text-veryMuted uppercase tracking-tighter mt-1">{{ item.description || 'No additional details' }}</div>
               </td>
               <td class="px-8 py-6">
-                <span v-if="item.required" class="px-2 py-0.5 bg-black text-white text-[9px] font-black uppercase tracking-tighter">Required</span>
-                <span v-else class="text-slate-300 font-bold uppercase text-[9px]">Optional</span>
+                <span v-if="item.required" class="px-2 py-0.5 bg-brand-navy text-white text-[9px] font-black uppercase tracking-tighter">Required</span>
+                <span v-else class="text-text-veryMuted font-bold uppercase text-[9px]">Optional</span>
               </td>
               <td v-if="isSuperCoordinator" class="px-8 py-6 text-right">
                 <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
-                  <button class="h-8 w-8 flex items-center justify-center bg-black text-white hover:bg-slate-800 transition-all" @click="openEditForm(item)">
+                  <button class="h-8 w-8 flex items-center justify-center bg-brand-navy text-white hover:brightness-150 transition-all" @click="openEditForm(item)">
                     <i class="pi pi-pencil text-[10px]"></i>
                   </button>
-                  <button class="h-8 w-8 flex items-center justify-center border border-black text-black hover:bg-black hover:text-white transition-all" @click="deleteTemplate(item.id)">
+                  <button class="h-8 w-8 flex items-center justify-center border border-brand-navy text-brand-navy hover:bg-brand-navy hover:text-white transition-all" @click="deleteTemplate(item.id)">
                     <i class="pi pi-trash text-[10px]"></i>
                   </button>
                 </div>
@@ -69,39 +69,39 @@
     </article>
 
     <!-- Modal Form -->
-    <div v-if="showForm" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-6">
+    <div v-if="showForm" class="fixed inset-0 z-50 flex items-center justify-center bg-brand-navy/80 backdrop-blur-sm p-6">
       <div class="bg-white w-full max-w-lg p-10 border border-slate-100 shadow-2xl relative">
-        <button class="absolute top-6 right-6 text-slate-300 hover:text-black transition-colors" @click="showForm = false">
+        <button class="absolute top-6 right-6 text-slate-300 hover:text-brand-navy transition-colors" @click="showForm = false">
           <i class="pi pi-times"></i>
         </button>
         
-        <h2 class="text-xl font-black text-black uppercase tracking-widest mb-8">{{ editingId ? 'Edit Requirement' : 'New Requirement' }}</h2>
+        <h2 class="text-xl font-black text-brand-navy uppercase tracking-widest mb-8">{{ editingId ? 'Edit Requirement' : 'New Requirement' }}</h2>
         
         <form @submit.prevent="saveTemplate" class="space-y-6">
           <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div class="md:col-span-3 space-y-2">
-              <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Title</label>
-              <input v-model="form.title" type="text" required class="w-full bg-slate-50 border border-slate-100 rounded-none px-4 py-3 text-xs font-black uppercase tracking-widest focus:border-black outline-none transition-all">
+              <label class="text-[9px] font-black text-text-muted uppercase tracking-widest">Title</label>
+              <input v-model="form.title" type="text" required class="w-full bg-white border border-slate-100 rounded-none px-4 py-3 text-xs font-black uppercase tracking-widest focus:border-brand-cyan outline-none transition-all text-brand-navy">
             </div>
             <div class="space-y-2">
-              <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Order</label>
-              <input v-model="form.display_order" type="number" required class="w-full bg-slate-50 border border-slate-100 rounded-none px-4 py-3 text-xs font-black uppercase tracking-widest focus:border-black outline-none transition-all tabular-nums">
+              <label class="text-[9px] font-black text-text-muted uppercase tracking-widest">Order</label>
+              <input v-model="form.display_order" type="number" required class="w-full bg-white border border-slate-100 rounded-none px-4 py-3 text-xs font-black uppercase tracking-widest focus:border-brand-cyan outline-none transition-all tabular-nums text-brand-navy">
             </div>
           </div>
 
           <div class="space-y-2">
-            <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Description</label>
-            <textarea v-model="form.description" rows="3" class="w-full bg-slate-50 border border-slate-100 rounded-none px-4 py-3 text-xs font-bold uppercase tracking-widest focus:border-black outline-none transition-all resize-none"></textarea>
+            <label class="text-[9px] font-black text-text-muted uppercase tracking-widest">Description</label>
+            <textarea v-model="form.description" rows="3" class="w-full bg-white border border-slate-100 rounded-none px-4 py-3 text-xs font-bold uppercase tracking-widest focus:border-brand-cyan outline-none transition-all resize-none text-brand-navy"></textarea>
           </div>
 
           <div class="flex items-center gap-3 group cursor-pointer" @click="form.required = !form.required">
-            <div class="h-5 w-5 border border-black flex items-center justify-center transition-all" :class="form.required ? 'bg-black' : 'bg-white'">
+            <div class="h-5 w-5 border border-brand-navy flex items-center justify-center transition-all" :class="form.required ? 'bg-brand-navy' : 'bg-white'">
               <i v-if="form.required" class="pi pi-check text-[10px] text-white"></i>
             </div>
-            <span class="text-[10px] font-black uppercase tracking-widest text-black">Mandatory for all students</span>
+            <span class="text-[10px] font-black uppercase tracking-widest text-brand-navy">Mandatory for all students</span>
           </div>
           
-          <button type="submit" :disabled="isSaving" class="w-full bg-black text-white h-14 font-black text-[10px] uppercase tracking-[0.3em] hover:bg-slate-800 transition-all disabled:opacity-30 mt-4">
+          <button type="submit" :disabled="isSaving" class="w-full bg-brand-cyan text-brand-navy h-14 font-black text-[10px] uppercase tracking-[0.3em] hover:brightness-110 transition-all disabled:opacity-30 mt-4">
             {{ isSaving ? 'Processing...' : 'Save Template' }}
           </button>
         </form>

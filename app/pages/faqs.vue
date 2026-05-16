@@ -2,12 +2,12 @@
   <div class="space-y-10">
     <header class="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-slate-100 pb-8">
       <div>
-        <h1 class="text-4xl font-black text-black tracking-tight uppercase">Knowledge Base</h1>
-        <p class="text-slate-400 mt-2 font-bold uppercase text-[10px] tracking-widest">Self-service FAQ library for internship candidates.</p>
+        <h1 class="text-4xl font-black text-brand-navy tracking-tight uppercase">Knowledge Base</h1>
+        <p class="text-text-muted mt-2 font-bold uppercase text-[10px] tracking-widest">Self-service FAQ library for internship candidates.</p>
       </div>
       <button
         v-if="isSuperCoordinator"
-        class="bg-black text-white px-6 py-3 rounded-none font-black text-[10px] uppercase tracking-[0.2em] hover:bg-slate-800 transition-all flex items-center gap-3"
+        class="bg-brand-cyan text-brand-navy px-6 py-3 rounded-none font-black text-[10px] uppercase tracking-[0.2em] hover:brightness-110 transition-all flex items-center gap-3"
         @click="openAddModal"
       >
         <i class="pi pi-plus"></i>
@@ -15,57 +15,55 @@
       </button>
     </header>
 
-    <div v-if="errorMessage" class="p-4 rounded bg-rose-50 border border-rose-100 text-rose-700 text-[10px] font-black uppercase tracking-widest">
+    <div v-if="errorMessage" class="p-4 bg-rose-50 border border-rose-100 text-rose-700 text-[10px] font-black uppercase tracking-widest">
       {{ errorMessage }}
     </div>
 
-    <!-- Search Bar -->
     <div class="relative group">
-      <i class="pi pi-search absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-black transition-colors"></i>
+      <i class="pi pi-search absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-brand-cyan transition-colors"></i>
       <input
         v-model="searchQuery"
         type="text"
         placeholder="Search articles..."
-        class="w-full pl-14 pr-6 py-4 bg-white border border-slate-100 rounded-none outline-none focus:border-black transition-all text-xs font-black uppercase tracking-widest"
+        class="w-full pl-14 pr-6 py-4 bg-white border border-slate-100 rounded-none outline-none focus:border-brand-cyan transition-all text-xs font-black uppercase tracking-widest text-brand-navy placeholder:text-slate-300"
       >
     </div>
 
-    <!-- FAQ Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8 relative">
       <div v-if="isLoading" class="md:col-span-2 py-20 text-center flex flex-col items-center gap-4">
-        <i class="pi pi-spin pi-spinner text-3xl text-black"></i>
-        <span class="text-[10px] font-black uppercase tracking-widest">Syncing Library</span>
+        <i class="pi pi-spin pi-spinner text-3xl text-brand-cyan"></i>
+        <span class="text-[10px] font-black uppercase tracking-widest text-brand-navy">Syncing Library</span>
       </div>
       
       <div v-else-if="filteredFaqs.length === 0" class="md:col-span-2 py-24 text-center border-2 border-dashed border-slate-100">
         <i class="pi pi-question-circle text-5xl mb-6 text-slate-100"></i>
-        <p class="text-[10px] font-black text-slate-300 uppercase tracking-widest">No articles found</p>
+        <p class="text-[10px] font-black text-text-veryMuted uppercase tracking-widest">No articles found</p>
       </div>
 
       <div 
         v-for="faq in filteredFaqs" 
         :key="faq.id" 
-        class="bg-white p-8 border border-slate-100 hover:border-black transition-all group flex flex-col relative"
+        class="bg-white p-8 border border-slate-100 hover:border-brand-cyan transition-all group flex flex-col relative"
       >
         <div v-if="isSuperCoordinator" class="absolute top-0 right-0 p-4 flex gap-1 opacity-0 group-hover:opacity-100 transition-all">
-          <button class="h-8 w-8 flex items-center justify-center bg-black text-white" @click="editFaq(faq)">
+          <button class="h-8 w-8 flex items-center justify-center bg-brand-navy text-white" @click="editFaq(faq)">
             <i class="pi pi-pencil text-[10px]"></i>
           </button>
-          <button class="h-8 w-8 flex items-center justify-center border border-black text-black hover:bg-black hover:text-white" @click="confirmDelete(faq.id)">
+          <button class="h-8 w-8 flex items-center justify-center border border-brand-navy text-brand-navy hover:bg-brand-navy hover:text-white" @click="confirmDelete(faq.id)">
             <i class="pi pi-trash text-[10px]"></i>
           </button>
         </div>
 
         <div class="mb-6">
-          <span class="inline-flex px-2 py-1 bg-black text-white text-[9px] font-black uppercase tracking-tighter mb-4">
+          <span class="inline-flex px-2 py-1 bg-brand-navy text-white text-[9px] font-black uppercase tracking-tighter mb-4">
             {{ getCategoryName(faq.category_id) }}
           </span>
-          <h3 class="text-base font-black text-black uppercase tracking-tight leading-tight">{{ faq.question }}</h3>
+          <h3 class="text-base font-black text-brand-navy uppercase tracking-tight leading-tight">{{ faq.question }}</h3>
         </div>
         
-        <p class="text-xs text-slate-500 font-medium leading-relaxed mb-8 flex-1 line-clamp-4">{{ faq.answer }}</p>
+        <p class="text-xs text-text-muted font-medium leading-relaxed mb-8 flex-1 line-clamp-4">{{ faq.answer }}</p>
 
-        <div class="pt-6 border-t border-slate-50 flex items-center justify-between text-[9px] font-black text-slate-300 uppercase tracking-widest">
+        <div class="pt-6 border-t border-slate-50 flex items-center justify-between text-[9px] font-black text-text-veryMuted uppercase tracking-widest">
           <span>Article #{{ faq.id }}</span>
           <span>Last Updated: {{ faq.updated_at ? new Date(faq.updated_at).toLocaleDateString() : '---' }}</span>
         </div>
@@ -73,34 +71,34 @@
     </div>
 
     <!-- Modal Form -->
-    <div v-if="showModal || editingId" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-6">
+    <div v-if="showModal || editingId" class="fixed inset-0 z-50 flex items-center justify-center bg-brand-navy/80 backdrop-blur-sm p-6">
       <div class="bg-white w-full max-w-lg p-10 border border-slate-100 shadow-2xl relative">
-        <button class="absolute top-6 right-6 text-slate-300 hover:text-black transition-colors" @click="closeModal">
+        <button class="absolute top-6 right-6 text-slate-300 hover:text-brand-navy transition-colors" @click="closeModal">
           <i class="pi pi-times"></i>
         </button>
         
-        <h2 class="text-xl font-black text-black uppercase tracking-widest mb-8">{{ editingId ? 'Update Article' : 'New Knowledge Base Entry' }}</h2>
+        <h2 class="text-xl font-black text-brand-navy uppercase tracking-widest mb-8">{{ editingId ? 'Update Article' : 'New Knowledge Base Entry' }}</h2>
         
         <form @submit.prevent="saveFaq" class="space-y-6">
           <div class="space-y-2">
-            <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Classification</label>
-            <select v-model="form.category_id" required class="w-full bg-slate-50 border border-slate-100 rounded-none px-4 py-3 text-xs font-black uppercase tracking-widest focus:border-black outline-none transition-all cursor-pointer">
+            <label class="text-[9px] font-black text-text-muted uppercase tracking-widest">Classification</label>
+            <select v-model="form.category_id" required class="w-full bg-white border border-slate-100 rounded-none px-4 py-3 text-xs font-black uppercase tracking-widest focus:border-brand-cyan outline-none transition-all cursor-pointer text-brand-navy">
               <option :value="null">Select Category...</option>
               <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
             </select>
           </div>
 
           <div class="space-y-2">
-            <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Inquiry / Question</label>
-            <input v-model="form.question" type="text" required class="w-full bg-slate-50 border border-slate-100 rounded-none px-4 py-3 text-xs font-black uppercase tracking-widest focus:border-black outline-none transition-all">
+            <label class="text-[9px] font-black text-text-muted uppercase tracking-widest">Inquiry / Question</label>
+            <input v-model="form.question" type="text" required class="w-full bg-white border border-slate-100 rounded-none px-4 py-3 text-xs font-black uppercase tracking-widest focus:border-brand-cyan outline-none transition-all text-brand-navy">
           </div>
 
           <div class="space-y-2">
-            <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Resolution / Answer</label>
-            <textarea v-model="form.answer" rows="6" required class="w-full bg-slate-50 border border-slate-100 rounded-none px-4 py-3 text-xs font-bold uppercase tracking-widest focus:border-black outline-none transition-all resize-none leading-relaxed"></textarea>
+            <label class="text-[9px] font-black text-text-muted uppercase tracking-widest">Resolution / Answer</label>
+            <textarea v-model="form.answer" rows="6" required class="w-full bg-white border border-slate-100 rounded-none px-4 py-3 text-xs font-bold uppercase tracking-widest focus:border-brand-cyan outline-none transition-all resize-none leading-relaxed text-brand-navy"></textarea>
           </div>
           
-          <button type="submit" :disabled="isSaving" class="w-full bg-black text-white h-14 font-black text-[10px] uppercase tracking-[0.3em] hover:bg-slate-800 transition-all disabled:opacity-30 mt-4">
+          <button type="submit" :disabled="isSaving" class="w-full bg-brand-cyan text-brand-navy h-14 font-black text-[10px] uppercase tracking-[0.3em] hover:brightness-110 transition-all disabled:opacity-30 mt-4">
             {{ isSaving ? 'Processing...' : 'Sync Entry' }}
           </button>
         </form>
