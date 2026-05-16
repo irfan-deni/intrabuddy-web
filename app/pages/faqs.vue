@@ -29,6 +29,26 @@
       >
     </div>
 
+    <!-- Category Filter Pills -->
+    <div class="flex flex-wrap gap-2" v-if="categories.length > 0">
+      <button
+        class="px-4 py-2 text-[9px] font-black uppercase tracking-widest border transition-all"
+        :class="activeCategory === null ? 'bg-brand-navy text-white border-brand-navy' : 'bg-white text-text-veryMuted border-slate-100 hover:border-brand-navy hover:text-brand-navy'"
+        @click="activeCategory = null"
+      >
+        All
+      </button>
+      <button
+        v-for="cat in categories"
+        :key="cat.id"
+        class="px-4 py-2 text-[9px] font-black uppercase tracking-widest border transition-all"
+        :class="activeCategory === cat.id ? 'bg-brand-navy text-white border-brand-navy' : 'bg-white text-text-veryMuted border-slate-100 hover:border-brand-navy hover:text-brand-navy'"
+        @click="activeCategory = cat.id"
+      >
+        {{ cat.name }}
+      </button>
+    </div>
+
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8 relative">
       <div v-if="isLoading" class="md:col-span-2 py-20 text-center flex flex-col items-center gap-4">
         <i class="pi pi-spin pi-spinner text-3xl text-brand-cyan"></i>
@@ -61,7 +81,18 @@
           <h3 class="text-base font-black text-brand-navy uppercase tracking-tight leading-tight">{{ faq.question }}</h3>
         </div>
         
-        <p class="text-xs text-text-muted font-medium leading-relaxed mb-8 flex-1 line-clamp-4">{{ faq.answer }}</p>
+        <p class="text-xs text-text-muted font-medium leading-relaxed mb-6 flex-1 line-clamp-4">{{ faq.answer }}</p>
+
+        <div v-if="faq.keywords && faq.keywords.length > 0" class="flex flex-wrap gap-1.5 mb-6">
+          <span
+            v-for="tag in faq.keywords"
+            :key="tag"
+            class="px-2 py-0.5 bg-slate-100 text-brand-navy text-[8px] font-black uppercase tracking-tight cursor-pointer hover:bg-brand-navy hover:text-white transition-colors"
+            @click="searchQuery = tag"
+          >
+            {{ tag }}
+          </span>
+        </div>
 
         <div class="pt-6 border-t border-slate-50 flex items-center justify-between text-[9px] font-black text-text-veryMuted uppercase tracking-widest">
           <span>Article #{{ faq.id }}</span>
@@ -97,6 +128,12 @@
             <label class="text-[9px] font-black text-text-muted uppercase tracking-widest">Resolution / Answer</label>
             <textarea v-model="form.answer" rows="6" required class="w-full bg-white border border-slate-100 rounded-none px-4 py-3 text-xs font-bold uppercase tracking-widest focus:border-brand-cyan outline-none transition-all resize-none leading-relaxed text-brand-navy"></textarea>
           </div>
+
+          <div class="space-y-2">
+            <label class="text-[9px] font-black text-text-muted uppercase tracking-widest">Tags (comma-separated)</label>
+            <input v-model="form.keywordsStr" type="text" placeholder="e.g., deadline, requirements, form"
+              class="w-full bg-white border border-slate-100 rounded-none px-4 py-3 text-xs font-black uppercase tracking-widest focus:border-brand-cyan outline-none transition-all text-brand-navy placeholder:text-slate-300">
+          </div>
           
           <button type="submit" :disabled="isSaving" class="w-full bg-brand-cyan text-brand-navy h-14 font-black text-[10px] uppercase tracking-[0.3em] hover:brightness-110 transition-all disabled:opacity-30 mt-4">
             {{ isSaving ? 'Processing...' : 'Sync Entry' }}
@@ -128,17 +165,24 @@ const isSaving = ref(false)
 const searchQuery = ref('')
 const errorMessage = ref('')
 
+const activeCategory = ref<number | null>(null)
 const showModal = ref(false)
 const editingId = ref<number | null>(null)
-const form = ref({ category_id: null as number | null, question: '', answer: '' })
+const form = ref({ category_id: null as number | null, question: '', answer: '', keywordsStr: '' })
 
 const filteredFaqs = computed(() => {
-  if (!searchQuery.value) return faqs.value
-  const query = searchQuery.value.toLowerCase()
-  return faqs.value.filter(f => 
-    f.question.toLowerCase().includes(query) || 
-    f.answer.toLowerCase().includes(query)
-  )
+  let list = faqs.value
+  if (activeCategory.value !== null) {
+    list = list.filter(f => f.category_id === activeCategory.value)
+  }
+  if (searchQuery.value) {
+    const query = searchQuery.value.toLowerCase()
+    list = list.filter(f => 
+      f.question.toLowerCase().includes(query) || 
+      f.answer.toLowerCase().includes(query)
+    )
+  }
+  return list
 })
 
 const getCategoryName = (id: number | null) => {
@@ -170,10 +214,14 @@ const fetchInitialData = async () => {
 const saveFaq = async () => {
   isSaving.value = true
   try {
+    const keywords = form.value.keywordsStr
+      ? form.value.keywordsStr.split(',').map(k => k.trim()).filter(k => k.length > 0)
+      : []
     const payload = {
       category_id: form.value.category_id,
       question: form.value.question,
       answer: form.value.answer,
+      keywords,
       updated_at: new Date().toISOString()
     }
 
@@ -196,7 +244,7 @@ const saveFaq = async () => {
 const openAddModal = () => {
   showModal.value = true
   editingId.value = null
-  form.value = { category_id: categories.value[0]?.id || null, question: '', answer: '' }
+  form.value = { category_id: categories.value[0]?.id || null, question: '', answer: '', keywordsStr: '' }
 }
 
 const editFaq = (faq: FaqRow) => {
@@ -204,7 +252,8 @@ const editFaq = (faq: FaqRow) => {
   form.value = {
     category_id: faq.category_id,
     question: faq.question,
-    answer: faq.answer
+    answer: faq.answer,
+    keywordsStr: (faq.keywords || []).join(', ')
   }
 }
 
@@ -222,7 +271,7 @@ const confirmDelete = async (id: number) => {
 const closeModal = () => {
   showModal.value = false
   editingId.value = null
-  form.value = { category_id: null, question: '', answer: '' }
+  form.value = { category_id: null, question: '', answer: '', keywordsStr: '' }
 }
 
 onMounted(fetchInitialData)
