@@ -1,163 +1,210 @@
 <template>
-  <div class="space-y-8">
-    <header class="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-slate-100 pb-8">
-      <div>
-        <h1 class="text-4xl font-black text-black tracking-tight uppercase">Students</h1>
-        <p class="text-slate-400 mt-2 font-bold uppercase text-[10px] tracking-widest">Directory of current cohort placements.</p>
-      </div>
-      <button
-        v-if="isSuperCoordinator"
-        class="bg-black text-white px-6 py-3 rounded-none font-black text-[10px] uppercase tracking-[0.2em] hover:bg-slate-800 transition-all flex items-center gap-3"
-        @click="showAddModal = true"
-      >
-        <i class="pi pi-plus"></i>
-        New Enrollment
-      </button>
-    </header>
-
-    <!-- Filter Bar -->
-    <div class="flex flex-col md:flex-row gap-4">
-      <div class="relative flex-1 group">
-        <i class="pi pi-search absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-black transition-colors"></i>
-        <input
-          v-model="searchQuery"
-          type="text"
-          placeholder="Filter records..."
-          class="w-full pl-14 pr-6 py-4 bg-white border border-slate-100 rounded-none outline-none focus:border-black transition-all text-xs font-black uppercase tracking-widest placeholder:text-slate-200"
-        >
-      </div>
-
-      <select v-model="statusFilter" class="bg-white border border-slate-100 rounded-none px-6 py-4 text-xs font-black text-black uppercase tracking-widest outline-none cursor-pointer focus:border-black transition-all">
-        <option value="all">All Statuses</option>
-        <option value="Searching">Searching</option>
-        <option value="Pending">Pending</option>
-        <option value="Interview">Interview</option>
-        <option value="Accepted">Accepted</option>
-      </select>
-    </div>
-
-    <!-- Students Table -->
-    <div class="bg-white border border-slate-100 overflow-hidden relative">
-      <div v-if="isLoading" class="absolute inset-0 bg-white/50 z-10 flex items-center justify-center backdrop-blur-sm">
-        <i class="pi pi-spin pi-spinner text-2xl text-black"></i>
-      </div>
-
-      <div class="overflow-x-auto">
-        <table class="w-full text-left">
-          <thead>
-            <tr class="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em] bg-slate-50/50 border-b border-slate-100">
-              <th class="px-8 py-6">Identity</th>
-              <th class="px-8 py-6">Progress</th>
-              <th class="px-8 py-6 text-center">Status</th>
-              <th class="px-8 py-6 text-right">Docs</th>
-              <th v-if="isSuperCoordinator" class="px-8 py-6"></th>
-            </tr>
-          </thead>
-          
-          <tbody class="divide-y divide-slate-50 text-xs">
-            <tr v-if="students.length === 0 && !isLoading">
-              <td colspan="5" class="px-8 py-20 text-center text-slate-300 font-black uppercase tracking-widest">No matching records</td>
-            </tr>
-            <tr
-              v-for="student in paginatedStudents"
-              :key="student.id"
-              class="hover:bg-slate-50 transition-all cursor-pointer group"
-              @click="navigateTo(`/student?id=${student.id}`)"
+  <div class="relative min-h-screen">
+    <div class="space-y-12 pb-24">
+      <!-- Header with Search & Add -->
+      <header class="flex flex-col md:flex-row md:items-end justify-between gap-8 border-b border-slate-100 pb-10">
+        <div class="flex-1 max-w-xl">
+          <h1 class="text-4xl font-black text-black tracking-tight uppercase mb-4">Student Directory</h1>
+          <div class="relative group">
+            <i class="pi pi-search absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-black transition-colors"></i>
+            <input 
+              v-model="searchQuery" 
+              type="text" 
+              placeholder="Search by name or matric number..."
+              class="w-full pl-14 pr-6 py-4 bg-white border border-slate-100 rounded-none outline-none focus:border-black transition-all text-[10px] font-black uppercase tracking-widest shadow-sm"
             >
-              <td class="px-8 py-6">
-                <div class="flex flex-col">
-                  <span class="font-black text-black uppercase tracking-tight">{{ student.full_name }}</span>
-                  <span class="text-[9px] font-bold text-slate-400 tabular-nums uppercase">{{ student.student_id || '---' }}</span>
-                </div>
-              </td>
-              <td class="px-8 py-6">
-                <div class="flex items-center gap-4">
-                  <div class="flex-1 h-1 bg-slate-100 rounded-none overflow-hidden max-w-[120px]">
-                    <div 
-                      class="h-full bg-black rounded-none transition-all duration-700" 
-                      :style="{ width: student.completionPercent + '%' }"
-                    ></div>
-                  </div>
-                  <span class="text-[9px] font-black text-slate-400 tabular-nums">{{ student.completionPercent }}%</span>
-                </div>
-              </td>
-              <td class="px-8 py-6">
-                <div class="flex justify-center">
-                  <span :class="[
-                    'px-3 py-1 border font-black uppercase text-[9px] tracking-tighter',
-                    student.placementStatus === 'Accepted' ? 'bg-black text-white border-black' : 'bg-white text-black border-black'
-                  ]">
-                    {{ student.placementStatus }}
-                  </span>
-                </div>
-              </td>
-              <td class="px-8 py-6 text-right font-black text-slate-900 tabular-nums">
-                {{ student.documentCount }}
-              </td>
-              <td v-if="isSuperCoordinator" class="px-8 py-6 text-right" @click.stop>
-                <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
-                  <button class="h-8 w-8 flex items-center justify-center bg-black text-white hover:bg-slate-800 transition-all" @click="editStudent(student)">
-                    <i class="pi pi-pencil text-[10px]"></i>
-                  </button>
-                  <button class="h-8 w-8 flex items-center justify-center border border-black text-black hover:bg-black hover:text-white transition-all" @click="confirmDelete(student)">
-                    <i class="pi pi-trash text-[10px]"></i>
-                  </button>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <!-- Pagination -->
-      <div class="px-8 py-6 bg-slate-50/50 border-t border-slate-50 flex items-center justify-between">
-        <p class="text-[9px] font-black text-slate-300 uppercase tracking-widest uppercase">
-          {{ totalCount }} Records Found
-        </p>
-        <div class="flex items-center gap-2">
-          <button
-            :disabled="currentPage === 1"
-            class="h-8 px-4 text-[9px] font-black uppercase tracking-widest text-black border border-black hover:bg-black hover:text-white disabled:opacity-30 transition-all"
-            @click="currentPage--"
+          </div>
+        </div>
+        
+        <div class="flex items-center gap-4">
+          <select v-model="statusFilter" class="bg-white border border-slate-100 px-6 py-4 text-[10px] font-black uppercase tracking-widest outline-none focus:border-black cursor-pointer shadow-sm">
+            <option value="all">Status: All</option>
+            <option value="Accepted">Status: Placed</option>
+            <option value="Searching">Status: Searching</option>
+            <option value="Pending">Status: Pending</option>
+          </select>
+          
+          <button 
+            v-if="isSuperCoordinator"
+            class="bg-black text-white px-8 py-4 font-black text-[10px] uppercase tracking-[0.2em] hover:bg-slate-800 transition-all flex items-center gap-3 shadow-xl shadow-black/10"
+            @click="openAddModal"
           >
-            Prev
-          </button>
-          <button
-            :disabled="currentPage >= totalPages"
-            class="h-8 px-4 text-[9px] font-black uppercase tracking-widest text-black border border-black hover:bg-black hover:text-white disabled:opacity-30 transition-all"
-            @click="currentPage++"
-          >
-            Next
+            <i class="pi pi-user-plus"></i>
+            Enroll Student
           </button>
         </div>
-      </div>
+      </header>
+
+      <!-- Data Table -->
+      <article class="bg-white border border-slate-100 shadow-sm relative">
+        <div v-if="isLoading" class="absolute inset-0 bg-white/50 backdrop-blur-[2px] z-20 flex items-center justify-center">
+          <i class="pi pi-spin pi-spinner text-3xl text-black"></i>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left">
+            <thead>
+              <tr class="text-[9px] font-black text-slate-300 uppercase tracking-[0.2em] bg-slate-50/50 border-b border-slate-100">
+                <th class="px-10 py-6">Identity</th>
+                <th class="px-10 py-6">Placement Status</th>
+                <th class="px-10 py-6">Milestone Progress</th>
+                <th class="px-10 py-6">Documents</th>
+                <th class="px-10 py-6 text-right">Records</th>
+              </tr>
+            </thead>
+            <tbody class="text-xs divide-y divide-slate-50">
+              <tr v-if="filteredStudents.length === 0 && !isLoading" class="text-center">
+                <td colspan="5" class="px-10 py-24 text-[10px] font-black text-slate-300 uppercase tracking-widest">No matching records found</td>
+              </tr>
+              <tr v-for="student in filteredStudents" :key="student.id" class="group hover:bg-slate-50 transition-all cursor-pointer" @click="selectStudent(student)">
+                <td class="px-10 py-8">
+                  <div class="flex items-center gap-4">
+                    <div class="h-10 w-10 bg-slate-50 border border-slate-100 flex items-center justify-center font-black text-slate-300 group-hover:bg-black group-hover:text-white transition-all">
+                      {{ student.full_name.charAt(0) }}
+                    </div>
+                    <div class="flex flex-col">
+                      <span class="font-black text-black uppercase tracking-tight group-hover:underline underline-offset-4 decoration-2">{{ student.full_name }}</span>
+                      <span class="text-[8px] font-bold text-slate-400 tabular-nums uppercase">{{ student.student_id || 'NOT_ASSIGNED' }}</span>
+                    </div>
+                  </div>
+                </td>
+                <td class="px-10 py-8">
+                  <span :class="[
+                    'px-3 py-1 text-[9px] font-black uppercase tracking-tighter border',
+                    student.placementStatus === 'Accepted' ? 'bg-black text-white border-black' : 
+                    student.placementStatus === 'Searching' ? 'bg-white text-black border-black' : 'bg-white text-slate-300 border-slate-100'
+                  ]">
+                    {{ student.placementStatus || 'Searching' }}
+                  </span>
+                </td>
+                <td class="px-10 py-8">
+                  <div class="flex items-center gap-4">
+                    <div class="flex-1 h-1 bg-slate-100 max-w-[100px] overflow-hidden">
+                      <div class="h-full bg-black transition-all duration-1000" :style="{ width: student.completionPercent + '%' }"></div>
+                    </div>
+                    <span class="text-[9px] font-black tabular-nums">{{ student.completionPercent }}%</span>
+                  </div>
+                </td>
+                <td class="px-10 py-8">
+                  <div class="flex items-center gap-2 text-slate-300">
+                    <i class="pi pi-file text-[10px]"></i>
+                    <span class="text-[9px] font-black tabular-nums">{{ student.documentCount }} Items</span>
+                  </div>
+                </td>
+                <td class="px-10 py-8 text-right">
+                  <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all" @click.stop>
+                    <button v-if="isSuperCoordinator" class="h-8 w-8 bg-black text-white hover:bg-slate-800 flex items-center justify-center" @click="editStudent(student)">
+                      <i class="pi pi-pencil text-[10px]"></i>
+                    </button>
+                    <button v-if="isSuperCoordinator" class="h-8 w-8 border border-black text-black hover:bg-black hover:text-white flex items-center justify-center" @click="deleteStudent(student.id)">
+                      <i class="pi pi-trash text-[10px]"></i>
+                    </button>
+                    <button class="h-8 w-8 bg-slate-100 text-slate-400 hover:bg-black hover:text-white flex items-center justify-center" @click="selectStudent(student)">
+                      <i class="pi pi-chevron-right text-[10px]"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </article>
     </div>
 
-    <!-- B&W Modal for Add/Edit -->
-    <div v-if="showAddModal || editingStudent" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-6">
-      <div class="bg-white w-full max-w-md p-10 border border-slate-100 shadow-2xl relative">
-        <button class="absolute top-6 right-6 text-slate-300 hover:text-black" @click="closeModal">
+    <!-- Sliding Sidebar Dossier -->
+    <Transition name="slide">
+      <div v-if="selectedStudent" class="fixed inset-y-0 right-0 w-full max-w-2xl bg-white shadow-[-20px_0_60px_rgba(0,0,0,0.1)] z-[100] border-l border-slate-100 overflow-y-auto">
+        <div class="sticky top-0 bg-white/90 backdrop-blur-md z-10 px-12 py-10 border-b border-slate-50 flex items-center justify-between">
+          <div class="flex items-center gap-6">
+            <button class="h-10 w-10 border border-slate-100 flex items-center justify-center hover:bg-black hover:text-white transition-all" @click="selectedStudent = null">
+              <i class="pi pi-arrow-left text-[10px]"></i>
+            </button>
+            <h2 class="text-xl font-black text-black uppercase tracking-widest">Student Dossier</h2>
+          </div>
+          <NuxtLink :to="`/student?id=${selectedStudent.id}`" class="text-[10px] font-black text-slate-300 uppercase tracking-widest hover:text-black hover:underline transition-all">
+            Full Profile View
+          </NuxtLink>
+        </div>
+
+        <div class="p-12 space-y-12">
+          <!-- Student Summary Card -->
+          <div class="bg-black p-10 text-white flex flex-col gap-8">
+            <div class="flex flex-col gap-2">
+              <span class="text-[9px] font-black uppercase tracking-[0.3em] text-slate-500">Identity Record</span>
+              <h3 class="text-3xl font-black uppercase tracking-tight">{{ selectedStudent.full_name }}</h3>
+              <span class="text-xs font-bold text-slate-400 tabular-nums uppercase">{{ selectedStudent.student_id }}</span>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-8 pt-8 border-t border-slate-800">
+              <div>
+                <p class="text-[8px] font-black text-slate-600 uppercase tracking-widest mb-2">Email Access</p>
+                <p class="text-xs font-bold truncate">{{ selectedStudent.email || 'N/A' }}</p>
+              </div>
+              <div>
+                <p class="text-[8px] font-black text-slate-600 uppercase tracking-widest mb-2">Market Status</p>
+                <p class="text-xs font-black uppercase tracking-tighter">{{ selectedStudent.placementStatus }}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Stats / Progress -->
+          <div class="grid grid-cols-2 gap-6">
+            <div class="border border-slate-100 p-6 flex flex-col gap-4">
+              <span class="text-[9px] font-black text-slate-300 uppercase tracking-widest">Checklist State</span>
+              <div class="flex items-end justify-between">
+                <span class="text-3xl font-black tabular-nums">{{ selectedStudent.completionPercent }}%</span>
+                <div class="h-10 w-1 bg-black"></div>
+              </div>
+            </div>
+            <div class="border border-slate-100 p-6 flex flex-col gap-4">
+              <span class="text-[9px] font-black text-slate-300 uppercase tracking-widest">Vault Items</span>
+              <div class="flex items-end justify-between">
+                <span class="text-3xl font-black tabular-nums">{{ selectedStudent.documentCount }}</span>
+                <div class="h-10 w-1 bg-slate-200"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Dashboard Redirection Prompt -->
+          <div class="bg-slate-50 p-8 text-center border border-slate-100">
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6 leading-relaxed">
+              For detailed logbook tracking and document validation, please proceed to the full profile view.
+            </p>
+            <NuxtLink :to="`/student?id=${selectedStudent.id}`" class="inline-block bg-black text-white px-8 py-3 text-[9px] font-black uppercase tracking-[0.2em] hover:bg-slate-800 transition-all">
+              Launch Detailed View
+            </NuxtLink>
+          </div>
+        </div>
+      </div>
+    </Transition>
+
+    <!-- Overlay for Sidebar -->
+    <div v-if="selectedStudent" class="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-[90]" @click="selectedStudent = null"></div>
+
+    <!-- Enrollment Modal -->
+    <div v-if="showModal" class="fixed inset-0 z-[110] flex items-center justify-center bg-black/90 p-6">
+      <div class="bg-white w-full max-w-lg p-12 shadow-2xl relative border border-slate-100">
+        <button class="absolute top-8 right-8 text-slate-300 hover:text-black transition-colors" @click="closeModal">
           <i class="pi pi-times"></i>
         </button>
-        
-        <h2 class="text-xl font-black text-black uppercase tracking-widest mb-8">{{ editingStudent ? 'Update Profile' : 'New Enrollment' }}</h2>
-        
-        <form @submit.prevent="saveStudent" class="space-y-6">
+        <h2 class="text-2xl font-black text-black uppercase tracking-widest mb-10">{{ editingId ? 'Update Record' : 'Enroll Student' }}</h2>
+        <form @submit.prevent="saveStudent" class="space-y-8">
           <div class="space-y-2">
             <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Full Name</label>
-            <input v-model="form.full_name" type="text" required class="w-full bg-slate-50 border border-slate-100 rounded-none px-4 py-3 text-xs font-black uppercase tracking-widest focus:border-black outline-none transition-all">
+            <input v-model="form.full_name" type="text" required class="w-full bg-slate-50 border border-slate-100 px-5 py-4 text-xs font-black uppercase focus:border-black outline-none transition-all">
           </div>
-          <div class="space-y-2">
-            <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Email Address</label>
-            <input v-model="form.email" type="email" required class="w-full bg-slate-50 border border-slate-100 rounded-none px-4 py-3 text-xs font-black uppercase tracking-widest focus:border-black outline-none transition-all">
+          <div class="grid grid-cols-2 gap-6">
+            <div class="space-y-2">
+              <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Matric Number</label>
+              <input v-model="form.student_id" type="text" class="w-full bg-slate-50 border border-slate-100 px-5 py-4 text-xs font-black uppercase focus:border-black outline-none transition-all tabular-nums">
+            </div>
+            <div class="space-y-2">
+              <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Email Address</label>
+              <input v-model="form.email" type="email" required class="w-full bg-slate-50 border border-slate-100 px-5 py-4 text-xs font-black uppercase focus:border-black outline-none transition-all">
+            </div>
           </div>
-          <div class="space-y-2">
-            <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Student ID / Matric</label>
-            <input v-model="form.student_id" type="text" class="w-full bg-slate-50 border border-slate-100 rounded-none px-4 py-3 text-xs font-black uppercase tracking-widest focus:border-black outline-none transition-all">
-          </div>
-          
-          <button type="submit" :disabled="isSaving" class="w-full bg-black text-white h-14 font-black text-[10px] uppercase tracking-[0.3em] hover:bg-slate-800 transition-all disabled:opacity-30 mt-4">
-            {{ isSaving ? 'Processing...' : (editingStudent ? 'Update' : 'Enroll') }}
+          <button type="submit" :disabled="isSaving" class="w-full bg-black text-white h-16 font-black text-[10px] uppercase tracking-[0.4em] hover:bg-slate-800 transition-all disabled:opacity-30">
+            {{ isSaving ? 'Syncing...' : 'Confirm Enrollment' }}
           </button>
         </form>
       </div>
@@ -172,113 +219,105 @@ definePageMeta({
   requiredRole: 'coordinator'
 })
 
-type StudentRow = {
-  id: string
-  full_name: string
-  student_id: string | null
-  email: string
-  placementStatus: string
-  completionPercent: number
-  documentCount: number
-}
-
-const students = ref<StudentRow[]>([])
-const totalCount = ref(0)
-const isLoading = ref(true)
-const isSaving = ref(false)
-const errorMessage = ref('')
-
 const { isSuperCoordinator } = useCoordinatorPrivileges()
 
+const students = ref<any[]>([])
+const isLoading = ref(true)
+const isSaving = ref(false)
 const searchQuery = ref('')
 const statusFilter = ref('all')
-const currentPage = ref(1)
-const pageSize = 10
 
-const totalPages = computed(() => Math.max(Math.ceil(totalCount.value / pageSize), 1))
-const pageStart = computed(() => (currentPage.value - 1) * pageSize)
-const paginatedStudents = computed(() => students.value.slice(pageStart.value, pageStart.value + pageSize))
+const showModal = ref(false)
+const selectedStudent = ref<any>(null)
+const editingId = ref<string | null>(null)
+const form = ref({ full_name: '', student_id: '', email: '' })
 
-const showAddModal = ref(false)
-const editingStudent = ref<StudentRow | null>(null)
-const form = ref({ full_name: '', email: '', student_id: '' })
-
-let searchDebounce: ReturnType<typeof setTimeout> | null = null
-
-watch([searchQuery, statusFilter], () => {
-  currentPage.value = 1
-  if (searchDebounce) clearTimeout(searchDebounce)
-  searchDebounce = setTimeout(() => {
-    searchDebounce = null
-    void fetchStudents()
-  }, 300)
+const filteredStudents = computed(() => {
+  let list = students.value
+  if (statusFilter.value !== 'all') list = list.filter(s => s.placementStatus === statusFilter.value)
+  if (searchQuery.value) {
+    const q = searchQuery.value.toLowerCase()
+    list = list.filter(s => s.full_name.toLowerCase().includes(q) || (s.student_id && s.student_id.toLowerCase().includes(q)))
+  }
+  return list
 })
 
 const fetchStudents = async () => {
   isLoading.value = true
-  errorMessage.value = ''
   try {
-    const params = new URLSearchParams()
-    if (searchQuery.value) params.set('search', searchQuery.value)
-    if (statusFilter.value !== 'all') params.set('status', statusFilter.value)
-    const response = await $fetch<{ students: StudentRow[], totalCount: number }>(`/api/students?${params.toString()}`)
-    students.value = response.students
-    totalCount.value = response.totalCount
-  } catch (error: any) {
-    errorMessage.value = 'Sync failed'
+    const { students: data } = await $fetch<{ students: any[] }>('/api/students')
+    students.value = data || []
+  } catch (error) {
+    console.error('Fetch failed')
   } finally {
     isLoading.value = false
   }
 }
 
+const selectStudent = (student: any) => {
+  selectedStudent.value = student
+}
+
 const saveStudent = async () => {
   isSaving.value = true
   try {
-    if (editingStudent.value) {
-      await $fetch(`/api/students/${editingStudent.value.id}`, {
-        method: 'PUT',
-        body: form.value
-      })
+    if (editingId.value) {
+      await $fetch(`/api/students/${editingId.value}`, { method: 'PUT', body: form.value })
     } else {
-      await $fetch('/api/students', {
-        method: 'POST',
-        body: form.value
-      })
+      await $fetch('/api/students', { method: 'POST', body: form.value })
     }
     await fetchStudents()
     closeModal()
   } catch (error: any) {
-    alert('Save failed: ' + (error.data?.message || error.message))
+    alert('Save failed')
   } finally {
     isSaving.value = false
   }
 }
 
-const editStudent = (student: StudentRow) => {
-  editingStudent.value = student
-  form.value = {
-    full_name: student.full_name,
-    email: student.email,
-    student_id: student.student_id || ''
-  }
+const editStudent = (student: any) => {
+  editingId.value = student.id
+  form.value = { full_name: student.full_name, student_id: student.student_id || '', email: student.email || '' }
+  showModal.value = true
 }
 
-const confirmDelete = async (student: StudentRow) => {
-  if (confirm(`Archive record for ${student.full_name}?`)) {
+const deleteStudent = async (id: string) => {
+  if (confirm('Permanently remove record?')) {
     try {
-      await $fetch(`/api/students/${student.id}`, { method: 'DELETE' })
+      await $fetch(`/api/students/${id}`, { method: 'DELETE' })
       await fetchStudents()
-    } catch (error: any) {
+    } catch (error) {
       alert('Delete failed')
     }
   }
 }
 
+const openAddModal = () => {
+  editingId.value = null
+  form.value = { full_name: '', student_id: '', email: '' }
+  showModal.value = true
+}
+
 const closeModal = () => {
-  showAddModal.value = false
-  editingStudent.value = null
-  form.value = { full_name: '', email: '', student_id: '' }
+  showModal.value = false
+  editingId.value = null
 }
 
 onMounted(fetchStudents)
 </script>
+
+<style scoped>
+.slide-enter-active, .slide-leave-active {
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.slide-enter-from, .slide-leave-to {
+  transform: translateX(100%);
+}
+
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
+}
+</style>
