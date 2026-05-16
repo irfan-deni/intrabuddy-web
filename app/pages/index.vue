@@ -1,4 +1,5 @@
 <template>
+<<<<<<< HEAD
   <div class="p-8 lg:p-10">
     <header class="mb-8 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
       <div>
@@ -11,6 +12,14 @@
       <div class="rounded-2xl border border-brand-blue/10 bg-white px-4 py-3 text-sm text-slate-500 shadow-sm">
         Placement data is refreshed from Supabase active cohort records.
       </div>
+=======
+  <div class="p-8 space-y-8">
+    <header>
+      <h1 class="text-3xl font-bold text-slate-900">Cohort Progress Overview</h1>
+      <p class="text-slate-500 mt-1">
+        Active Cohort: <span class="font-semibold text-cyan-600">{{ cohortName || 'Loading...' }}</span>
+      </p>
+>>>>>>> fb6c239 (feat: enhance UI with cyan color scheme, add Master Checklist page, and implement wallet document management for students)
     </header>
 
     <div v-if="errorMessage" class="mb-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
@@ -20,8 +29,13 @@
     <div class="mb-8 grid grid-cols-1 gap-6 md:grid-cols-4">
       <div class="flex flex-col justify-between rounded-3xl border border-brand-blue/10 bg-white p-6 shadow-[0_18px_60px_rgba(15,23,42,0.06)]">
         <div class="flex items-center gap-3 mb-2">
+<<<<<<< HEAD
           <i class="pi pi-users text-brand-blue text-xl"></i>
           <h3 class="font-medium text-slate-500">Total Students</h3>
+=======
+          <i class="pi pi-users text-cyan-500 text-xl"></i>
+          <h3 class="text-slate-500 font-medium">Total Students</h3>
+>>>>>>> fb6c239 (feat: enhance UI with cyan color scheme, add Master Checklist page, and implement wallet document management for students)
         </div>
         <p class="text-4xl font-black text-brand-navy">{{ isLoading ? '-' : totalStudents }}</p>
       </div>
@@ -42,12 +56,21 @@
         <p class="text-4xl font-black text-brand-navy">{{ isLoading ? '-' : unplacedStudents }}</p>
       </div>
 
+<<<<<<< HEAD
       <div class="flex flex-col justify-between rounded-3xl border border-brand-blue/15 bg-gradient-to-br from-brand-blue to-brand-teal p-6 text-white shadow-[0_18px_60px_rgba(30,79,216,0.24)]">
         <div class="mb-2 flex items-center gap-3">
           <i class="pi pi-chart-pie text-white text-xl"></i>
           <h3 class="font-medium text-white/90">Placement Rate</h3>
         </div>
         <p class="text-4xl font-black text-white">{{ isLoading ? '-' : placementPercentage + '%' }}</p>
+=======
+      <div class="flex flex-col justify-between rounded-xl border border-slate-100 bg-cyan-50 p-6 shadow-sm">
+         <div class="flex items-center gap-3 mb-2">
+          <i class="pi pi-chart-pie text-cyan-600 text-xl"></i>
+          <h3 class="text-cyan-800 font-medium">Milestone Status</h3>
+        </div>
+        <p class="text-4xl font-bold text-cyan-700">{{ isLoading ? '-' : placementPercentage + '%' }}</p>
+>>>>>>> fb6c239 (feat: enhance UI with cyan color scheme, add Master Checklist page, and implement wallet document management for students)
       </div>
     </div>
 
@@ -69,7 +92,7 @@
           <div class="flex items-center gap-3">
             <select
               v-model="statusFilter"
-              class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-200"
+              class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200"
             >
               <option value="all">All Statuses</option>
               <option value="Submitted">Submitted</option>

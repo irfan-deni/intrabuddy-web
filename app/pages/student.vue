@@ -86,6 +86,33 @@
         </table>
       </div>
     </article>
+
+    <article v-if="studentId" class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div class="mb-4 flex items-center justify-between">
+        <h2 class="text-lg font-semibold text-slate-900">Digital Wallet Documents</h2>
+      </div>
+
+      <div v-if="isLoading" class="py-8 text-center text-slate-400">
+        <i class="pi pi-spin pi-spinner mr-2" />
+        Loading documents...
+      </div>
+
+      <div v-else-if="walletItems.length === 0" class="rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+        No documents uploaded yet.
+      </div>
+
+      <ul v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <li v-for="item in walletItems" :key="item.id" class="flex items-center gap-3 rounded-lg border border-slate-200 p-3 hover:bg-slate-50 transition">
+          <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+            <i class="pi pi-file-pdf"></i>
+          </div>
+          <div>
+            <p class="font-medium text-slate-900 text-sm">{{ item.item_name }}</p>
+            <p class="text-xs text-slate-500">{{ item.uploaded_at ? new Date(item.uploaded_at).toLocaleDateString() : 'Unknown date' }}</p>
+          </div>
+        </li>
+      </ul>
+    </article>
   </section>
 </template>
 
@@ -98,6 +125,7 @@ definePageMeta({
 
 type ApplicationRow = Database['public']['Tables']['job_applications']['Row']
 type LogbookRow = Database['public']['Tables']['weekly_logbook_tracking']['Row']
+type WalletItemRow = Database['public']['Tables']['digital_wallet_items']['Row']
 
 type ChecklistItem = {
   id: number
@@ -119,6 +147,7 @@ import ProgressBar from '~/components/ProgressBar.vue'
 const checklists = ref<ChecklistItem[]>([])
 const applications = ref<ApplicationRow[]>([])
 const logbookEntries = ref<LogbookRow[]>([])
+const walletItems = ref<WalletItemRow[]>([])
 
 const checklistCompletion = computed(() => {
   if (!checklists.value.length) return 0
@@ -133,14 +162,16 @@ const loadStudentData = async () => {
   errorMessage.value = ''
 
   try {
-    const [chkRes, appRes, logRes] = await Promise.all([
+    const [chkRes, appRes, logRes, walletRes] = await Promise.all([
       supabase.from('student_checklists').select('id, is_completed, checklist_item_id').eq('student_id', studentId.value),
       supabase.from('job_applications').select('*').eq('student_id', studentId.value).order('application_date', { ascending: false }),
-      supabase.from('weekly_logbook_tracking').select('*').eq('student_id', studentId.value).order('week_number', { ascending: true })
+      supabase.from('weekly_logbook_tracking').select('*').eq('student_id', studentId.value).order('week_number', { ascending: true }),
+      supabase.from('digital_wallet_items').select('*').eq('student_id', studentId.value).order('uploaded_at', { ascending: false })
     ])
 
     if (appRes.data) applications.value = appRes.data
     if (logRes.data) logbookEntries.value = logRes.data
+    if (walletRes.data) walletItems.value = walletRes.data
 
     if (chkRes.data) {
       // Need titles from templates
