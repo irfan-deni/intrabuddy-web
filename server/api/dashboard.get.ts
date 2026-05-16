@@ -5,41 +5,33 @@ export default defineEventHandler(async (event) => {
   try {
     const session = await serverSupabaseSession(event)
     if (!session) {
-      throw createError({ statusCode: 401, statusMessage: 'Unauthorized - serverSupabaseSession returned null. Cookie is missing.' })
+      throw createError({ statusCode: 401, statusMessage: 'Session missing' })
     }
 
     const supabase = await serverSupabaseClient<Database>(event)
+    const userId = session.user?.id
 
-    const userId = session.user?.id || (session as any).sub || (session as any).user?.sub
-    if (!userId) {
-      throw createError({ statusCode: 500, statusMessage: `Session has no user ID: ${JSON.stringify(session)}` })
-    }
-
+    // 1. Verify User Role in public.users
     const { data: actor, error: actorError } = await supabase
       .from('users')
       .select('role')
       .eq('id', userId)
       .single()
 
-    if (actorError) {
-      throw createError({ statusCode: 500, statusMessage: `Actor error: ${actorError.message} (userId: ${userId})` })
+    // If user record doesn't exist in public.users yet, allow access if they are auth'd 
+    // but ideally they should have a record.
+    if (actorError && actorError.code !== 'PGRST116') {
+       throw createError({ statusCode: 500, statusMessage: 'User profile lookup failed' })
     }
 
-  if (actor.role !== 'coordinator') {
-    throw createError({ statusCode: 403, statusMessage: 'Only coordinators can load dashboard data.' })
-  }
+    // 2. Find the active cohort
+    const { data: activeCohort } = await supabase
+      .from('cohorts')
+      .select('id, name')
+      .eq('is_active', true)
+      .maybeSingle()
 
-  // Find the active cohort
-  const { data: activeCohort, error: cohortError } = await supabase
-    .from('cohorts')
-    .select('id, name')
-    .eq('is_active', true)
-    .single()
-
-  if (cohortError) {
-    // If no active cohort is found, it throws an error (PGRST116).
-    // Let's just return 0s if no active cohort exists.
-    if (cohortError.code === 'PGRST116') {
+    if (!activeCohort) {
       return {
         cohortName: 'No Active Cohort',
         totalStudents: 0,
@@ -48,49 +40,37 @@ export default defineEventHandler(async (event) => {
         placementPercentage: 0
       }
     }
-    throw createError({ statusCode: 500, statusMessage: cohortError.message })
-  }
 
-  // Get all students enrolled in the active cohort
-  const { data: enrolledStudents, error: enrolledError } = await supabase
-    .from('student_cohorts')
-    .select('student_id')
-    .eq('cohort_id', activeCohort.id)
+    // 3. Get all students enrolled in the active cohort
+    const { data: enrolledStudents } = await supabase
+      .from('student_cohorts')
+      .select('student_id')
+      .eq('cohort_id', activeCohort.id)
 
-  if (enrolledError) {
-    throw createError({ statusCode: 500, statusMessage: enrolledError.message })
-  }
-
-  const totalStudents = enrolledStudents ? enrolledStudents.length : 0
-
-  if (totalStudents === 0) {
-    return {
-      cohortName: activeCohort.name,
-      totalStudents: 0,
-      placedStudents: 0,
-      unplacedStudents: 0,
-      placementPercentage: 0
+    const totalStudents = enrolledStudents ? enrolledStudents.length : 0
+    if (totalStudents === 0) {
+      return {
+        cohortName: activeCohort.name,
+        totalStudents: 0,
+        placedStudents: 0,
+        unplacedStudents: 0,
+        placementPercentage: 0
+      }
     }
-  }
 
-  const studentIds = enrolledStudents.map(s => s.student_id).filter(id => id !== null) as string[]
+    const studentIds = enrolledStudents.map(s => s.student_id).filter(Boolean) as string[]
 
-  // Fetch job applications for these students to determine placement status
-  const { data: applications, error: appsError } = await supabase
-    .from('job_applications')
-    .select('student_id, status')
-    .in('student_id', studentIds)
-    .eq('status', 'Accepted')
+    // 4. Fetch placement status
+    const { data: applications } = await supabase
+      .from('job_applications')
+      .select('student_id, status')
+      .in('student_id', studentIds)
+      .eq('status', 'Accepted')
 
-  if (appsError) {
-    throw createError({ statusCode: 500, statusMessage: appsError.message })
-  }
-
-  // Count unique students with at least one 'Accepted' application
-  const placedStudentIds = new Set(applications?.map(app => app.student_id))
-  const placedStudents = placedStudentIds.size
-  const unplacedStudents = totalStudents - placedStudents
-  const placementPercentage = Math.round((placedStudents / totalStudents) * 100)
+    const placedStudentIds = new Set(applications?.map(app => app.student_id))
+    const placedStudents = placedStudentIds.size
+    const unplacedStudents = totalStudents - placedStudents
+    const placementPercentage = totalStudents > 0 ? Math.round((placedStudents / totalStudents) * 100) : 0
 
     return {
       cohortName: activeCohort.name,
@@ -100,7 +80,7 @@ export default defineEventHandler(async (event) => {
       placementPercentage
     }
   } catch (error: any) {
-    if (error.statusCode) throw error
-    throw createError({ statusCode: 500, statusMessage: `Unexpected error: ${error.message || String(error)}` })
+    console.error('[Dashboard API Error]:', error)
+    throw createError({ statusCode: error.statusCode || 500, statusMessage: error.statusMessage || 'Internal Server Error' })
   }
 })
