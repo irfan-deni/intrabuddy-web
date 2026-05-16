@@ -1,41 +1,38 @@
 <template>
-  <span :class="classes">
-    <slot>{{ label }}</slot>
+  <span
+    class="inline-flex items-center px-2.5 py-0.5 text-[9px] font-black uppercase tracking-tighter border transition-all"
+    :class="badgeClass"
+  >
+    {{ label }}
   </span>
 </template>
 
 <script setup lang="ts">
 const props = defineProps<{
   status?: string
-  positive?: boolean | null
+  positive?: boolean
 }>()
 
-import { computed } from 'vue'
-
 const label = computed(() => {
-  if (props.positive !== undefined && props.positive !== null) {
-    return props.positive ? 'Yes' : 'No'
+  if (props.positive !== undefined) {
+    return props.positive ? 'YES' : 'NO'
   }
-  return props.status || ''
+  return props.status || 'UNKNOWN'
 })
 
-const classes = computed(() => {
-  if (props.positive !== undefined && props.positive !== null) {
-    return props.positive
-      ? 'inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-800'
-      : 'inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-800'
+const badgeClass = computed(() => {
+  // Pure B&W logic
+  const isPositive = props.positive === true || ['Accepted', 'Completed', 'YES', 'Submitted'].includes(props.status || '')
+  const isWarning = ['Interview', 'Pending', 'NO', 'Not Submitted', 'Late'].includes(props.status || '')
+
+  if (isPositive) {
+    return 'bg-black text-white border-black shadow-sm shadow-black/10'
+  }
+  
+  if (isWarning) {
+    return 'bg-white text-black border-black'
   }
 
-  switch ((props.status || '').toLowerCase()) {
-    case 'pending':
-      return 'inline-flex items-center rounded-full bg-yellow-100 px-2 py-0.5 text-xs font-semibold text-yellow-800'
-    case 'accepted':
-    case 'yes':
-      return 'inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-800'
-    case 'rejected':
-      return 'inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-800'
-    default:
-      return 'inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700'
-  }
+  return 'bg-white text-slate-300 border-slate-100'
 })
 </script>

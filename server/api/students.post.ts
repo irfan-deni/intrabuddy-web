@@ -8,39 +8,26 @@ export default defineEventHandler(async (event) => {
   }
 
   const supabase = await serverSupabaseClient<Database>(event)
-
-  let userId = session.user?.id || (session as any).sub || (session as any).user?.sub
-  if (!userId && session.access_token) {
-    try {
-      const payload = JSON.parse(Buffer.from(session.access_token.split('.')[1], 'base64').toString())
-      userId = payload.sub
-    } catch (e) {
-      // ignore
-    }
-  }
-
-  if (!userId) {
-    throw createError({ statusCode: 500, statusMessage: 'Session has no user ID' })
-  }
-
-  const { data: actor, error: actorError } = await supabase
+  
+  // Verify Coordinator role
+  const { data: actor } = await supabase
     .from('users')
     .select('role')
-    .eq('id', userId)
+    .eq('id', session.user.id)
     .single()
 
-  if (actorError || actor.role !== 'coordinator') {
+  if (!actor || actor.role !== 'coordinator') {
     throw createError({ statusCode: 403, statusMessage: 'Forbidden' })
   }
 
   const body = await readBody(event)
-  const { full_name, student_id, email } = body
+  const { full_name, student_id, email, id } = body
 
-  if (!full_name) {
-    throw createError({ statusCode: 400, statusMessage: 'Full name is required' })
+  if (!full_name || !email) {
+    throw createError({ statusCode: 400, statusMessage: 'Full name and Email are required' })
   }
 
-  // Find active cohort
+  // 1. Find active cohort
   const { data: activeCohort } = await supabase
     .from('cohorts')
     .select('id')
@@ -51,23 +38,27 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: 'No active cohort found' })
   }
 
-  // Insert into public.users
+  // 2. Insert into public.users (using provided ID or generating one)
+  // Note: In production, you'd usually create an Auth user first.
+  const userPayload = {
+    id: id || crypto.randomUUID(), // Fallback if no ID provided
+    role: 'student' as const,
+    full_name,
+    student_id: student_id || null,
+    email: email
+  }
+
   const { data: newUser, error: userError } = await supabase
     .from('users')
-    .insert({
-      role: 'student',
-      full_name,
-      student_id: student_id || null,
-      email: email || null
-    })
+    .insert(userPayload)
     .select('id')
     .single()
 
   if (userError || !newUser) {
-    throw createError({ statusCode: 500, statusMessage: `Failed to create user: ${userError?.message}` })
+    throw createError({ statusCode: 500, statusMessage: `User creation failed: ${userError?.message}` })
   }
 
-  // Enroll in active cohort
+  // 3. Enroll in active cohort via student_cohorts
   const { error: cohortError } = await supabase
     .from('student_cohorts')
     .insert({
@@ -76,9 +67,24 @@ export default defineEventHandler(async (event) => {
     })
 
   if (cohortError) {
-    // Attempt rollback (delete user) since we're not in a strong transaction
     await supabase.from('users').delete().eq('id', newUser.id)
-    throw createError({ statusCode: 500, statusMessage: `Failed to enroll student: ${cohortError.message}` })
+    throw createError({ statusCode: 500, statusMessage: 'Cohort enrollment failed' })
+  }
+
+  // 4. Initialize Checklist from templates
+  const { data: templates } = await supabase
+    .from('checklist_templates')
+    .select('id, required')
+    .eq('cohort_id', activeCohort.id)
+
+  if (templates && templates.length > 0) {
+    const checklists = templates.map(t => ({
+      student_id: newUser.id,
+      checklist_item_id: t.id,
+      is_completed: false
+    }))
+
+    await supabase.from('student_checklists').insert(checklists)
   }
 
   return { success: true, id: newUser.id }

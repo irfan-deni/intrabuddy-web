@@ -1,123 +1,145 @@
 <template>
-  <section class="space-y-6 p-8">
-    <header>
-      <h1 class="text-3xl font-bold text-slate-900">Student Workspace (Coordinator View)</h1>
-      <p class="mt-1 text-slate-500">View student readiness, applications, and logbook tracking.</p>
+  <div class="space-y-12">
+    <header class="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-slate-100 pb-8">
+      <div>
+        <h1 class="text-4xl font-black text-black tracking-tight uppercase">Student Dossier</h1>
+        <p class="text-slate-400 mt-2 font-bold uppercase text-[10px] tracking-widest">Comprehensive performance and compliance tracking.</p>
+      </div>
+      <div v-if="studentId" class="flex items-center gap-4">
+        <div class="h-12 px-6 bg-slate-50 border border-slate-100 rounded-none flex items-center gap-2">
+          <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Status:</span>
+          <span class="text-[10px] font-black text-black uppercase tracking-widest">{{ isLoading ? 'Syncing...' : 'Active' }}</span>
+        </div>
+      </div>
     </header>
 
-    <p v-if="errorMessage" class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+    <div v-if="errorMessage" class="p-4 rounded bg-rose-50 border border-rose-100 text-rose-700 text-[10px] font-black uppercase tracking-widest">
       {{ errorMessage }}
-    </p>
-
-    <div v-if="!studentId" class="py-8 text-center text-slate-500">
-      Please provide a student ?id= in the URL.
     </div>
 
-    <div v-else class="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          <article class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm lg:col-span-1">
-            <h2 class="mb-4 text-lg font-semibold text-slate-900">Pre-Internship Checklist</h2>
-            <ProgressBar :value="checklistCompletion" class="mb-4" />
-            <div v-if="isLoading" class="text-slate-400 text-sm">Loading...</div>
-            <div v-else class="space-y-3">
-              <label v-for="item in checklists" :key="item.id" class="flex items-center gap-3 text-sm text-slate-700">
-                <input type="checkbox" :checked="item.is_completed || false" disabled class="h-4 w-4 opacity-70">
-                {{ item.title }}
+    <div v-if="!studentId" class="py-20 text-center border-2 border-dashed border-slate-100">
+      <i class="pi pi-user-plus text-4xl mb-4 text-slate-100"></i>
+      <p class="text-[10px] font-black text-slate-300 uppercase tracking-widest">No Student Selected</p>
+    </div>
+
+    <div v-else class="grid grid-cols-1 lg:grid-cols-12 gap-12">
+      <!-- Sidebar Info -->
+      <div class="lg:col-span-4 space-y-10">
+        <!-- Checklist Section -->
+        <article class="bg-white p-8 border border-slate-100 shadow-sm relative">
+          <div class="absolute top-0 right-0 p-6 opacity-5 pointer-events-none">
+            <i class="pi pi-check-square text-6xl text-black"></i>
+          </div>
+          
+          <h2 class="text-[11px] font-black text-black uppercase tracking-[0.2em] mb-6">Readiness Checklist</h2>
+          
+          <div class="space-y-6">
+            <div>
+              <div class="flex justify-between text-[9px] font-black uppercase tracking-widest mb-2">
+                <span>Completion</span>
+                <span>{{ checklistCompletion }}%</span>
+              </div>
+              <ProgressBar :value="checklistCompletion" />
+            </div>
+
+            <div v-if="isLoading" class="py-8 text-center text-slate-300">
+              <i class="pi pi-spin pi-spinner text-xl"></i>
+            </div>
+            
+            <div v-else class="space-y-4">
+              <label v-for="item in checklists" :key="item.id" class="flex items-center gap-3 group cursor-default">
+                <div class="h-5 w-5 flex items-center justify-center border border-slate-100 group-hover:border-black transition-colors" :class="item.is_completed ? 'bg-black border-black' : 'bg-white'">
+                  <i v-if="item.is_completed" class="pi pi-check text-[10px] text-white"></i>
+                </div>
+                <span class="text-[10px] font-bold uppercase tracking-widest" :class="item.is_completed ? 'text-black' : 'text-slate-400'">
+                  {{ item.title }}
+                </span>
               </label>
             </div>
-          </article>
+          </div>
+        </article>
 
-      <article class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm lg:col-span-2">
-        <div class="mb-4 flex items-center justify-between">
-          <h2 class="text-lg font-semibold text-slate-900">Job Applications</h2>
-        </div>
-
-        <div v-if="isLoading" class="py-8 text-center text-slate-400">
-          <i class="pi pi-spin pi-spinner mr-2" />
-          Loading applications...
-        </div>
-
-        <div v-else-if="applications.length === 0" class="rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
-          No applications recorded yet.
-        </div>
-
-        <ul v-else class="space-y-3">
-          <li v-for="application in applications" :key="application.id" class="rounded-lg border border-slate-200 p-3">
-            <div class="flex items-center justify-between gap-4">
-              <div>
-                <p class="font-semibold text-slate-900">{{ application.company_name }}</p>
-                <div class="mt-1">
-                  <StatusBadge :status="application.status" />
-                </div>
+        <!-- Wallet Documents -->
+        <article class="bg-white p-8 border border-slate-100 shadow-sm">
+          <h2 class="text-[11px] font-black text-black uppercase tracking-[0.2em] mb-6">Digital Wallet</h2>
+          
+          <div v-if="isLoading" class="py-8 text-center text-slate-300">
+            <i class="pi pi-spin pi-spinner text-xl"></i>
+          </div>
+          <div v-else-if="walletItems.length === 0" class="py-8 text-center border-t border-slate-50">
+            <p class="text-[9px] font-bold text-slate-300 uppercase tracking-widest">No Documents</p>
+          </div>
+          <ul v-else class="space-y-4">
+            <li v-for="item in walletItems" :key="item.id" class="flex items-center gap-4 group">
+              <div class="h-10 w-10 flex items-center justify-center border border-slate-100 bg-slate-50 group-hover:bg-black group-hover:text-white transition-all">
+                <i class="pi pi-file-pdf"></i>
               </div>
-            </div>
-          </li>
-        </ul>
-      </article>
+              <div class="min-w-0">
+                <p class="text-[10px] font-black text-black uppercase tracking-tight truncate">{{ item.item_name }}</p>
+                <p class="text-[9px] font-bold text-slate-300 uppercase tracking-tighter">{{ item.uploaded_at ? new Date(item.uploaded_at).toLocaleDateString() : '---' }}</p>
+              </div>
+            </li>
+          </ul>
+        </article>
+      </div>
+
+      <!-- Main Activity -->
+      <div class="lg:col-span-8 space-y-10">
+        <!-- Applications -->
+        <article class="bg-white p-8 border border-slate-100 shadow-sm overflow-hidden">
+          <h2 class="text-[11px] font-black text-black uppercase tracking-[0.2em] mb-8">Placement Applications</h2>
+          
+          <div v-if="isLoading" class="py-12 text-center text-slate-300">
+            <i class="pi pi-spin pi-spinner text-2xl"></i>
+          </div>
+          <div v-else-if="applications.length === 0" class="py-12 text-center bg-slate-50/50">
+            <p class="text-[10px] font-black text-slate-300 uppercase tracking-widest">Empty Application List</p>
+          </div>
+          <ul v-else class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <li v-for="application in applications" :key="application.id" class="p-6 border border-slate-100 hover:border-black transition-all group">
+              <div class="flex justify-between items-start mb-4">
+                <h3 class="text-xs font-black text-black uppercase tracking-widest">{{ application.company_name }}</h3>
+                <StatusBadge :status="application.status" />
+              </div>
+              <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Date Applied: {{ application.application_date ? new Date(application.application_date).toLocaleDateString() : '---' }}</p>
+            </li>
+          </ul>
+        </article>
+
+        <!-- Logbooks -->
+        <article class="bg-white p-8 border border-slate-100 shadow-sm">
+          <h2 class="text-[11px] font-black text-black uppercase tracking-[0.2em] mb-8">Weekly Logbook Status</h2>
+          
+          <div class="overflow-x-auto">
+            <table class="w-full text-left">
+              <thead>
+                <tr class="text-[10px] font-black text-slate-300 uppercase tracking-widest border-b border-slate-50">
+                  <th class="pb-4">Week</th>
+                  <th class="pb-4">Period End</th>
+                  <th class="pb-4 text-right">Compliance</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-50">
+                <tr v-for="entry in logbookEntries" :key="entry.id" class="text-xs hover:bg-slate-50 transition-colors">
+                  <td class="py-4 font-black text-black uppercase tracking-widest">Week {{ entry.week_number }}</td>
+                  <td class="py-4 font-bold text-slate-400 tabular-nums uppercase">{{ entry.week_end_date }}</td>
+                  <td class="py-4 text-right">
+                    <StatusBadge :positive="entry.is_submitted" />
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
+      </div>
     </div>
-
-    <article v-if="studentId" class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-      <div class="mb-4 flex items-center justify-between">
-        <h2 class="text-lg font-semibold text-slate-900">Weekly Logbook Tracking</h2>
-      </div>
-
-      <div v-if="isLoading" class="py-8 text-center text-slate-400">
-        <i class="pi pi-spin pi-spinner mr-2" />
-        Loading...
-      </div>
-
-      <div v-else class="mt-4 overflow-x-auto">
-        <table class="w-full border-collapse text-left text-sm">
-          <thead>
-            <tr class="border-b border-slate-200 text-slate-500">
-              <th class="py-2">Week</th>
-              <th class="py-2">End Date</th>
-              <th class="py-2">Submitted</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="entry in logbookEntries" :key="entry.id" class="border-b border-slate-100">
-              <td class="py-2">{{ entry.week_number }}</td>
-              <td class="py-2">{{ entry.week_end_date }}</td>
-              <td class="py-2">
-                <StatusBadge :positive="entry.is_submitted" />
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </article>
-
-    <article v-if="studentId" class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-      <div class="mb-4 flex items-center justify-between">
-        <h2 class="text-lg font-semibold text-slate-900">Digital Wallet Documents</h2>
-      </div>
-
-      <div v-if="isLoading" class="py-8 text-center text-slate-400">
-        <i class="pi pi-spin pi-spinner mr-2" />
-        Loading documents...
-      </div>
-
-      <div v-else-if="walletItems.length === 0" class="rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
-        No documents uploaded yet.
-      </div>
-
-      <ul v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <li v-for="item in walletItems" :key="item.id" class="flex items-center gap-3 rounded-lg border border-slate-200 p-3 hover:bg-slate-50 transition">
-          <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
-            <i class="pi pi-file-pdf"></i>
-          </div>
-          <div>
-            <p class="font-medium text-slate-900 text-sm">{{ item.item_name }}</p>
-            <p class="text-xs text-slate-500">{{ item.uploaded_at ? new Date(item.uploaded_at).toLocaleDateString() : 'Unknown date' }}</p>
-          </div>
-        </li>
-      </ul>
-    </article>
-  </section>
+  </div>
 </template>
 
 <script setup lang="ts">
 import type { Database } from '~/types/supabase'
+import StatusBadge from '~/components/StatusBadge.vue'
+import ProgressBar from '~/components/ProgressBar.vue'
 
 definePageMeta({
   requiredRole: 'coordinator'
@@ -140,9 +162,6 @@ const studentId = computed(() => route.query.id as string || null)
 
 const isLoading = ref(false)
 const errorMessage = ref('')
-
-import StatusBadge from '~/components/StatusBadge.vue'
-import ProgressBar from '~/components/ProgressBar.vue'
 
 const checklists = ref<ChecklistItem[]>([])
 const applications = ref<ApplicationRow[]>([])
@@ -174,13 +193,12 @@ const loadStudentData = async () => {
     if (walletRes.data) walletItems.value = walletRes.data
 
     if (chkRes.data) {
-      // Need titles from templates
       const templateIds = chkRes.data.map(c => c.checklist_item_id).filter(Boolean) as number[]
       if (templateIds.length > 0) {
         const { data: tpls } = await supabase.from('checklist_templates').select('id, title').in('id', templateIds)
         
         checklists.value = chkRes.data.map(c => {
-          const title = tpls?.find(t => t.id === c.checklist_item_id)?.title || 'Unknown Task'
+          const title = tpls?.find(t => t.id === c.checklist_item_id)?.title || 'Task'
           return {
             id: c.id,
             title,
@@ -190,8 +208,8 @@ const loadStudentData = async () => {
       }
     }
 
-  } catch (error: unknown) {
-    errorMessage.value = error instanceof Error ? error.message : 'Unable to load student data.'
+  } catch (error: any) {
+    errorMessage.value = 'Sync failed'
   } finally {
     isLoading.value = false
   }

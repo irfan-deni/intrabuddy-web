@@ -1,75 +1,66 @@
 <template>
-  <section class="space-y-6 p-8">
-    <header>
-      <h1 class="text-3xl font-bold text-slate-900">Master Checklist</h1>
-      <p class="mt-1 text-slate-500">Manage pre-internship checklist templates for the active cohort.</p>
+  <div class="space-y-12">
+    <header class="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-slate-100 pb-8">
+      <div>
+        <h1 class="text-4xl font-black text-black tracking-tight uppercase">Master Checklist</h1>
+        <p class="text-slate-400 mt-2 font-bold uppercase text-[10px] tracking-widest">Global requirements template for the active cohort.</p>
+      </div>
+      <button
+        v-if="isSuperCoordinator"
+        class="bg-black text-white px-6 py-3 rounded-none font-black text-[10px] uppercase tracking-[0.2em] hover:bg-slate-800 transition-all flex items-center gap-3"
+        @click="openAddForm"
+      >
+        <i class="pi pi-plus"></i>
+        New Requirement
+      </button>
     </header>
 
-    <p v-if="errorMessage" class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+    <div v-if="errorMessage" class="p-4 rounded bg-rose-50 border border-rose-100 text-rose-700 text-[10px] font-black uppercase tracking-widest">
       {{ errorMessage }}
-    </p>
+    </div>
 
-    <p v-if="successMessage" class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+    <div v-if="successMessage" class="p-4 rounded bg-black text-white text-[10px] font-black uppercase tracking-widest">
       {{ successMessage }}
-    </p>
+    </div>
 
-    <article class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-      <div class="mb-4 flex items-center justify-between">
-        <h2 class="text-lg font-semibold text-slate-900">Checklist Items</h2>
-        <button
-          v-if="isSuperCoordinator"
-          class="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
-          @click="openAddForm"
-        >
-          <i class="pi pi-plus mr-2"></i> Add Item
-        </button>
+    <article class="bg-white border border-slate-100 shadow-sm relative overflow-hidden">
+      <div v-if="isLoading" class="absolute inset-0 bg-white/50 z-10 flex items-center justify-center backdrop-blur-sm">
+        <i class="pi pi-spin pi-spinner text-2xl text-black"></i>
       </div>
 
-      <div v-if="isLoading" class="py-8 text-center text-slate-400">
-        <i class="pi pi-spin pi-spinner mr-2" />
-        Loading templates...
-      </div>
-
-      <div v-else-if="templates.length === 0" class="rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
-        No checklist templates found for this cohort.
-      </div>
-
-      <div v-else class="overflow-x-auto">
-        <table class="w-full border-collapse text-left text-sm">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left">
           <thead>
-            <tr class="border-b border-slate-200 bg-slate-50 text-slate-500">
-              <th class="px-4 py-3 font-medium">Order</th>
-              <th class="px-4 py-3 font-medium">Title</th>
-              <th class="px-4 py-3 font-medium">Required</th>
-              <th v-if="isSuperCoordinator" class="px-4 py-3 font-medium text-right">Actions</th>
+            <tr class="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em] bg-slate-50/50 border-b border-slate-100">
+              <th class="px-8 py-6">Order</th>
+              <th class="px-8 py-6">Requirement Title</th>
+              <th class="px-8 py-6">Mandatory</th>
+              <th v-if="isSuperCoordinator" class="px-8 py-6 text-right">Actions</th>
             </tr>
           </thead>
-          <tbody>
-            <tr v-for="item in templates" :key="item.id" class="border-b border-slate-100 hover:bg-slate-50">
-              <td class="px-4 py-3">{{ item.display_order }}</td>
-              <td class="px-4 py-3">
-                <div class="font-medium text-slate-900">{{ item.title }}</div>
-                <div class="text-xs text-slate-500 truncate max-w-sm">{{ item.description }}</div>
+          <tbody class="divide-y divide-slate-50 text-xs">
+            <tr v-if="templates.length === 0 && !isLoading">
+              <td colspan="4" class="px-8 py-20 text-center text-slate-300 font-black uppercase tracking-widest uppercase">No templates defined</td>
+            </tr>
+            <tr v-for="item in templates" :key="item.id" class="hover:bg-slate-50 transition-all group">
+              <td class="px-8 py-6 font-black text-slate-300 tabular-nums">{{ item.display_order }}</td>
+              <td class="px-8 py-6">
+                <div class="font-black text-black uppercase tracking-tight">{{ item.title }}</div>
+                <div class="text-[9px] font-bold text-slate-400 uppercase tracking-tighter mt-1">{{ item.description || 'No additional details' }}</div>
               </td>
-              <td class="px-4 py-3">
-                <span v-if="item.required" class="text-cyan-600 font-medium"><i class="pi pi-check"></i> Yes</span>
-                <span v-else class="text-slate-400">No</span>
+              <td class="px-8 py-6">
+                <span v-if="item.required" class="px-2 py-0.5 bg-black text-white text-[9px] font-black uppercase tracking-tighter">Required</span>
+                <span v-else class="text-slate-300 font-bold uppercase text-[9px]">Optional</span>
               </td>
-              <td v-if="isSuperCoordinator" class="px-4 py-3 text-right">
-                <button
-                  class="rounded p-1.5 text-slate-400 hover:bg-slate-100 hover:text-blue-600 transition mr-2"
-                  title="Edit"
-                  @click="openEditForm(item)"
-                >
-                  <i class="pi pi-pencil"></i>
-                </button>
-                <button
-                  class="rounded p-1.5 text-slate-400 hover:bg-slate-100 hover:text-red-600 transition"
-                  title="Delete"
-                  @click="deleteTemplate(item.id)"
-                >
-                  <i class="pi pi-trash"></i>
-                </button>
+              <td v-if="isSuperCoordinator" class="px-8 py-6 text-right">
+                <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
+                  <button class="h-8 w-8 flex items-center justify-center bg-black text-white hover:bg-slate-800 transition-all" @click="openEditForm(item)">
+                    <i class="pi pi-pencil text-[10px]"></i>
+                  </button>
+                  <button class="h-8 w-8 flex items-center justify-center border border-black text-black hover:bg-black hover:text-white transition-all" @click="deleteTemplate(item.id)">
+                    <i class="pi pi-trash text-[10px]"></i>
+                  </button>
+                </div>
               </td>
             </tr>
           </tbody>
@@ -77,63 +68,46 @@
       </div>
     </article>
 
-    <!-- Simple Add/Edit Form below the table -->
-    <article v-if="showForm" class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-      <h2 class="mb-4 text-lg font-semibold text-slate-900">{{ editingId ? 'Edit Checklist Item' : 'Add New Item' }}</h2>
-      <form class="space-y-4" @submit.prevent="saveTemplate">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <label class="block text-sm font-medium text-slate-700">
-            Title
-            <input
-              v-model="form.title"
-              type="text"
-              required
-              class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
-            >
-          </label>
-          <label class="block text-sm font-medium text-slate-700">
-            Display Order
-            <input
-              v-model="form.display_order"
-              type="number"
-              class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
-            >
-          </label>
-        </div>
+    <!-- Modal Form -->
+    <div v-if="showForm" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-6">
+      <div class="bg-white w-full max-w-lg p-10 border border-slate-100 shadow-2xl relative">
+        <button class="absolute top-6 right-6 text-slate-300 hover:text-black transition-colors" @click="showForm = false">
+          <i class="pi pi-times"></i>
+        </button>
+        
+        <h2 class="text-xl font-black text-black uppercase tracking-widest mb-8">{{ editingId ? 'Edit Requirement' : 'New Requirement' }}</h2>
+        
+        <form @submit.prevent="saveTemplate" class="space-y-6">
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div class="md:col-span-3 space-y-2">
+              <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Title</label>
+              <input v-model="form.title" type="text" required class="w-full bg-slate-50 border border-slate-100 rounded-none px-4 py-3 text-xs font-black uppercase tracking-widest focus:border-black outline-none transition-all">
+            </div>
+            <div class="space-y-2">
+              <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Order</label>
+              <input v-model="form.display_order" type="number" required class="w-full bg-slate-50 border border-slate-100 rounded-none px-4 py-3 text-xs font-black uppercase tracking-widest focus:border-black outline-none transition-all tabular-nums">
+            </div>
+          </div>
 
-        <label class="block text-sm font-medium text-slate-700">
-          Description (optional)
-          <textarea
-            v-model="form.description"
-            rows="2"
-            class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
-          ></textarea>
-        </label>
+          <div class="space-y-2">
+            <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Description</label>
+            <textarea v-model="form.description" rows="3" class="w-full bg-slate-50 border border-slate-100 rounded-none px-4 py-3 text-xs font-bold uppercase tracking-widest focus:border-black outline-none transition-all resize-none"></textarea>
+          </div>
 
-        <label class="flex items-center gap-2 text-sm font-medium text-slate-700">
-          <input v-model="form.required" type="checkbox" class="h-4 w-4 text-cyan-600 focus:ring-cyan-500 border-slate-300 rounded">
-          Required for Placement
-        </label>
-
-        <div class="flex gap-3 pt-2">
-          <button
-            type="submit"
-            :disabled="isSaving"
-            class="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:opacity-50"
-          >
-            {{ isSaving ? 'Saving...' : 'Save Item' }}
+          <div class="flex items-center gap-3 group cursor-pointer" @click="form.required = !form.required">
+            <div class="h-5 w-5 border border-black flex items-center justify-center transition-all" :class="form.required ? 'bg-black' : 'bg-white'">
+              <i v-if="form.required" class="pi pi-check text-[10px] text-white"></i>
+            </div>
+            <span class="text-[10px] font-black uppercase tracking-widest text-black">Mandatory for all students</span>
+          </div>
+          
+          <button type="submit" :disabled="isSaving" class="w-full bg-black text-white h-14 font-black text-[10px] uppercase tracking-[0.3em] hover:bg-slate-800 transition-all disabled:opacity-30 mt-4">
+            {{ isSaving ? 'Processing...' : 'Save Template' }}
           </button>
-          <button
-            type="button"
-            class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-            @click="showForm = false"
-          >
-            Cancel
-          </button>
-        </div>
-      </form>
-    </article>
-  </section>
+        </form>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -172,7 +146,6 @@ const loadTemplates = async () => {
   errorMessage.value = ''
   
   try {
-    // 1. Get active cohort
     const { data: cohort, error: cohortError } = await supabase
       .from('cohorts')
       .select('id')
@@ -180,10 +153,8 @@ const loadTemplates = async () => {
       .single()
       
     if (cohortError) throw cohortError
-    
     activeCohortId.value = cohort.id
     
-    // 2. Fetch templates for this cohort
     const { data, error } = await supabase
       .from('checklist_templates')
       .select('*')
@@ -191,10 +162,9 @@ const loadTemplates = async () => {
       .order('display_order', { ascending: true })
       
     if (error) throw error
-    
     templates.value = data || []
   } catch (error: any) {
-    errorMessage.value = error.message || 'Failed to load templates.'
+    errorMessage.value = 'Sync failed'
   } finally {
     isLoading.value = false
   }
@@ -241,43 +211,33 @@ const saveTemplate = async () => {
     }
     
     if (editingId.value) {
-      const { error } = await supabase
-        .from('checklist_templates')
-        .update(payload)
-        .eq('id', editingId.value)
+      const { error } = await supabase.from('checklist_templates').update(payload).eq('id', editingId.value)
       if (error) throw error
     } else {
-      const { error } = await supabase
-        .from('checklist_templates')
-        .insert(payload)
+      const { error } = await supabase.from('checklist_templates').insert(payload)
       if (error) throw error
     }
     
-    successMessage.value = 'Checklist template saved successfully.'
+    successMessage.value = 'Template updated'
     showForm.value = false
     await loadTemplates()
   } catch (error: any) {
-    errorMessage.value = error.message || 'Failed to save template.'
+    errorMessage.value = 'Save failed'
   } finally {
     isSaving.value = false
   }
 }
 
 const deleteTemplate = async (id: number) => {
-  if (!confirm('Are you sure you want to delete this checklist item?')) return
+  if (!confirm('Discard template?')) return
   
   try {
-    const { error } = await supabase
-      .from('checklist_templates')
-      .delete()
-      .eq('id', id)
-      
+    const { error } = await supabase.from('checklist_templates').delete().eq('id', id)
     if (error) throw error
-    
-    successMessage.value = 'Checklist template deleted.'
+    successMessage.value = 'Template removed'
     await loadTemplates()
   } catch (error: any) {
-    errorMessage.value = error.message || 'Failed to delete template.'
+    errorMessage.value = 'Delete failed'
   }
 }
 
