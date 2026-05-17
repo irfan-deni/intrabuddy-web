@@ -1,14 +1,14 @@
 <template>
   <div class="space-y-12">
-    <header class="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-slate-100 pb-8">
+    <header class="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-stone-200 pb-8">
       <div>
-        <h1 class="text-4xl font-black text-brand-navy tracking-tight uppercase">Student Dossier</h1>
-        <p class="text-text-muted mt-2 font-bold uppercase text-[10px] tracking-widest">Comprehensive performance and compliance tracking.</p>
+        <h1 class="text-4xl font-black text-slate-800 tracking-tight uppercase">Student Dossier</h1>
+        <p class="text-stone-500 mt-2 font-bold uppercase text-[10px] tracking-widest">Comprehensive performance and compliance tracking.</p>
       </div>
       <div v-if="studentId" class="flex items-center gap-4">
-        <div class="h-12 px-6 bg-slate-50 border border-slate-100 flex items-center gap-2">
-          <span class="text-[10px] font-black text-text-veryMuted uppercase tracking-widest">Status:</span>
-          <span class="text-[10px] font-black text-brand-navy uppercase tracking-widest">{{ isLoading ? 'Syncing...' : 'Active' }}</span>
+        <div class="h-12 px-6 bg-stone-50 border border-stone-200 flex items-center gap-2">
+          <span class="text-[10px] font-black text-stone-400 uppercase tracking-widest">Status:</span>
+          <span class="text-[10px] font-black text-slate-800 uppercase tracking-widest">{{ isLoading ? 'Syncing...' : 'Active' }}</span>
         </div>
       </div>
     </header>
@@ -17,20 +17,20 @@
       {{ errorMessage }}
     </div>
 
-    <div v-if="!studentId" class="py-20 text-center border-2 border-dashed border-slate-100">
-      <i class="pi pi-user-plus text-4xl mb-4 text-slate-100"></i>
-      <p class="text-[10px] font-black text-text-veryMuted uppercase tracking-widest">No Student Selected</p>
+    <div v-if="!studentId" class="py-20 text-center border-2 border-dashed border-stone-200">
+      <i class="pi pi-user-plus text-4xl mb-4 text-stone-100"></i>
+      <p class="text-[10px] font-black text-stone-400 uppercase tracking-widest">No Student Selected</p>
     </div>
 
     <div v-else class="grid grid-cols-1 lg:grid-cols-12 gap-12">
       <!-- Sidebar Info -->
       <div class="lg:col-span-4 space-y-10">
-        <article class="bg-white p-8 border border-slate-100 shadow-sm relative">
+        <article class="bg-white p-8 border border-stone-200 shadow-sm relative">
           <div class="absolute top-0 right-0 p-6 opacity-5 pointer-events-none">
-            <i class="pi pi-check-square text-6xl text-brand-azure"></i>
+            <i class="pi pi-check-square text-6xl text-blue-600"></i>
           </div>
           
-          <h2 class="text-[11px] font-black text-brand-navy uppercase tracking-[0.2em] mb-6">Readiness Checklist</h2>
+          <h2 class="text-[11px] font-black text-slate-800 uppercase tracking-[0.2em] mb-6">Readiness Checklist</h2>
           
           <div class="space-y-6">
             <div>
@@ -41,16 +41,16 @@
               <ProgressBar :value="checklistCompletion" />
             </div>
 
-            <div v-if="isLoading" class="py-8 text-center text-text-veryMuted">
-              <i class="pi pi-spin pi-spinner text-xl text-brand-azure"></i>
+            <div v-if="isLoading" class="py-8 text-center text-stone-400">
+              <i class="pi pi-spin pi-spinner text-xl text-blue-600"></i>
             </div>
             
             <div v-else class="space-y-4">
               <label v-for="item in checklists" :key="item.id" class="flex items-center gap-3 group cursor-default">
-                <div class="h-5 w-5 flex items-center justify-center border border-slate-400 group-hover:border-brand-navy transition-colors" :class="item.is_completed ? 'bg-brand-navy border-brand-navy' : 'bg-white'">
+                <div class="h-5 w-5 flex items-center justify-center border-stone-400 group-hover:border-slate-900 transition-colors" :class="item.is_completed ? 'bg-slate-900 border-slate-900' : 'bg-white'">
                   <i v-if="item.is_completed" class="pi pi-check text-[10px] text-white"></i>
                 </div>
-                <span class="text-[10px] font-bold uppercase tracking-widest" :class="item.is_completed ? 'text-brand-navy' : 'text-text-veryMuted'">
+                <span class="text-[10px] font-bold uppercase tracking-widest" :class="item.is_completed ? 'text-slate-800' : 'text-stone-400'">
                   {{ item.title }}
                 </span>
               </label>
@@ -58,23 +58,23 @@
           </div>
         </article>
 
-        <article class="bg-white p-8 border border-slate-100 shadow-sm">
-          <h2 class="text-[11px] font-black text-brand-navy uppercase tracking-[0.2em] mb-6">Digital Wallet</h2>
+        <article class="bg-white p-8 border border-stone-200 shadow-sm">
+          <h2 class="text-[11px] font-black text-slate-800 uppercase tracking-[0.2em] mb-6">Digital Wallet</h2>
           
-          <div v-if="isLoading" class="py-8 text-center text-text-veryMuted">
-            <i class="pi pi-spin pi-spinner text-xl text-brand-azure"></i>
+          <div v-if="isLoading" class="py-8 text-center text-stone-400">
+            <i class="pi pi-spin pi-spinner text-xl text-blue-600"></i>
           </div>
-          <div v-else-if="walletItems.length === 0" class="py-8 text-center border-t border-slate-50">
-            <p class="text-[9px] font-bold text-text-veryMuted uppercase tracking-widest">No Documents</p>
+          <div v-else-if="walletItems.length === 0" class="py-8 text-center border-t border-stone-100">
+            <p class="text-[9px] font-bold text-stone-400 uppercase tracking-widest">No Documents</p>
           </div>
           <ul v-else class="space-y-4">
             <li v-for="item in walletItems" :key="item.id" class="flex items-center gap-4 group">
-              <div class="h-10 w-10 flex items-center justify-center border border-slate-100 bg-slate-50 group-hover:bg-brand-navy group-hover:text-white transition-all">
+              <div class="h-10 w-10 flex items-center justify-center border border-stone-200 bg-stone-50 group-hover:bg-slate-900 group-hover:text-white transition-all">
                 <i class="pi pi-file-pdf"></i>
               </div>
               <div class="min-w-0">
-                <p class="text-[10px] font-black text-brand-navy uppercase tracking-tight truncate">{{ item.item_name }}</p>
-                <p class="text-[9px] font-bold text-text-veryMuted uppercase tracking-tighter">{{ item.uploaded_at ? new Date(item.uploaded_at).toLocaleDateString() : '---' }}</p>
+                <p class="text-[10px] font-black text-slate-800 uppercase tracking-tight truncate">{{ item.item_name }}</p>
+                <p class="text-[9px] font-bold text-stone-400 uppercase tracking-tighter">{{ item.uploaded_at ? new Date(item.uploaded_at).toLocaleDateString() : '---' }}</p>
               </div>
             </li>
           </ul>
@@ -83,42 +83,42 @@
 
       <!-- Main Activity -->
       <div class="lg:col-span-8 space-y-10">
-        <article class="bg-white p-8 border border-slate-100 shadow-sm overflow-hidden">
-          <h2 class="text-[11px] font-black text-brand-navy uppercase tracking-[0.2em] mb-8">Placement Applications</h2>
+        <article class="bg-white p-8 border border-stone-200 shadow-sm overflow-hidden">
+          <h2 class="text-[11px] font-black text-slate-800 uppercase tracking-[0.2em] mb-8">Placement Applications</h2>
           
-          <div v-if="isLoading" class="py-12 text-center text-text-veryMuted">
-            <i class="pi pi-spin pi-spinner text-2xl text-brand-azure"></i>
+          <div v-if="isLoading" class="py-12 text-center text-stone-400">
+            <i class="pi pi-spin pi-spinner text-2xl text-blue-600"></i>
           </div>
-          <div v-else-if="applications.length === 0" class="py-12 text-center bg-slate-50/50">
-            <p class="text-[10px] font-black text-text-veryMuted uppercase tracking-widest">Empty Application List</p>
+          <div v-else-if="applications.length === 0" class="py-12 text-center bg-stone-50/50">
+            <p class="text-[10px] font-black text-stone-400 uppercase tracking-widest">Empty Application List</p>
           </div>
           <ul v-else class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <li v-for="application in applications" :key="application.id" class="p-6 border border-slate-100 hover:border-brand-azure transition-all group">
+            <li v-for="application in applications" :key="application.id" class="p-6 border border-stone-200 hover:border-blue-600 transition-all group">
               <div class="flex justify-between items-start mb-4">
-                <h3 class="text-xs font-black text-brand-navy uppercase tracking-widest">{{ application.company_name }}</h3>
+                <h3 class="text-xs font-black text-slate-800 uppercase tracking-widest">{{ application.company_name }}</h3>
                 <StatusBadge :status="application.status" />
               </div>
-              <p class="text-[9px] font-bold text-text-veryMuted uppercase tracking-widest">Date Applied: {{ application.application_date ? new Date(application.application_date).toLocaleDateString() : '---' }}</p>
+              <p class="text-[9px] font-bold text-stone-400 uppercase tracking-widest">Date Applied: {{ application.application_date ? new Date(application.application_date).toLocaleDateString() : '---' }}</p>
             </li>
           </ul>
         </article>
 
-        <article class="bg-white p-8 border border-slate-100 shadow-sm">
-          <h2 class="text-[11px] font-black text-brand-navy uppercase tracking-[0.2em] mb-8">Weekly Logbook Status</h2>
+        <article class="bg-white p-8 border border-stone-200 shadow-sm">
+          <h2 class="text-[11px] font-black text-slate-800 uppercase tracking-[0.2em] mb-8">Weekly Logbook Status</h2>
           
           <div class="overflow-x-auto">
             <table class="w-full text-left">
               <thead>
-                <tr class="text-[10px] font-black text-text-muted uppercase tracking-widest border-b border-slate-100">
+                <tr class="text-[10px] font-black text-stone-500 uppercase tracking-widest border-b border-stone-200">
                   <th class="pb-4">Week</th>
                   <th class="pb-4">Period End</th>
                   <th class="pb-4 text-right">Compliance</th>
                 </tr>
               </thead>
-              <tbody class="divide-y divide-slate-50">
-                <tr v-for="entry in logbookEntries" :key="entry.id" class="text-xs hover:bg-slate-50 transition-colors">
-                  <td class="py-4 font-black text-brand-navy uppercase tracking-widest">Week {{ entry.week_number }}</td>
-                  <td class="py-4 font-bold text-text-veryMuted tabular-nums uppercase">{{ entry.week_end_date }}</td>
+              <tbody class="divide-y divide-stone-100">
+                <tr v-for="entry in logbookEntries" :key="entry.id" class="text-xs hover:bg-stone-50 transition-colors">
+                  <td class="py-4 font-black text-slate-800 uppercase tracking-widest">Week {{ entry.week_number }}</td>
+                  <td class="py-4 font-bold text-stone-400 tabular-nums uppercase">{{ entry.week_end_date }}</td>
                   <td class="py-4 text-right">
                     <StatusBadge :positive="entry.is_submitted" />
                   </td>

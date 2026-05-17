@@ -1,6 +1,6 @@
 <template>
   <span
-    class="inline-flex items-center px-2.5 py-0.5 text-[9px] font-black uppercase tracking-tighter border transition-all"
+    class="inline-flex items-center px-3 py-1 text-xs font-semibold rounded"
     :class="badgeClass"
   >
     {{ label }}
@@ -25,13 +25,13 @@ const badgeClass = computed(() => {
   const isWarning = ['Interview', 'Pending', 'NO', 'Not Submitted', 'Late', 'Searching'].includes(props.status || '')
 
   if (isPositive) {
-    return 'bg-brand-emerald text-white border-brand-emerald shadow-sm shadow-black/10'
+    return 'bg-emerald-500 text-white'
   }
 
   if (isWarning) {
-    return 'bg-brand-gold text-black border-brand-gold'
+    return 'bg-amber-400 text-slate-900'
   }
 
-  return 'bg-white text-text-veryMuted border-slate-100'
+  return 'bg-white text-stone-400 border border-stone-200'
 })
 </script>

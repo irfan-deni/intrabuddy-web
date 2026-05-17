@@ -1,7 +1,7 @@
 <template>
-  <div class="w-full bg-slate-100 h-2 rounded-none overflow-hidden">
+  <div class="w-full bg-stone-100 h-2 rounded overflow-hidden">
     <div
-      class="bg-brand-azure h-full transition-all duration-700"
+      class="bg-blue-600 h-full transition-all duration-700"
       :style="{ width: `${value}%` }"
     ></div>
   </div>

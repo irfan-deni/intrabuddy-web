@@ -1,135 +1,131 @@
 <template>
-  <div class="space-y-8 md:space-y-12">
-    <!-- Row 1: Metric Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
-      <div v-for="stat in stats" :key="stat.label" class="bg-white p-4 sm:p-8 border border-slate-100 hover:border-brand-azure transition-all group relative overflow-hidden">
-        <div class="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-          <i :class="[stat.icon, 'text-4xl text-brand-azure']"></i>
-        </div>
-        <div class="flex items-center gap-3 mb-6">
-          <div class="h-8 w-8 bg-brand-navy text-white flex items-center justify-center">
-            <i :class="[stat.icon, 'text-xs']"></i>
-          </div>
-          <span class="text-[9px] font-black uppercase tracking-[0.2em] text-text-muted">{{ stat.label }}</span>
-        </div>
-        <p class="text-4xl font-black text-brand-navy tabular-nums tracking-tighter">
-          {{ isLoading ? '...' : stat.value }}
-        </p>
-      </div>
-    </div>
-
-    <!-- Row 2: Visuals & Secondary Stats -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-8">
-      <!-- Doughnut Chart Section -->
-      <div class="lg:col-span-2 bg-white border border-slate-100 p-4 sm:p-10 flex flex-col md:flex-row items-center gap-6 md:gap-12">
-        <div class="relative w-48 h-48 flex-shrink-0">
-          <svg viewBox="0 0 36 36" class="w-full h-full transform -rotate-90">
-            <circle cx="18" cy="18" r="16" fill="none" class="stroke-slate-100" stroke-width="3"></circle>
-            <circle 
-              cx="18" cy="18" r="16" 
-              fill="none" 
-              class="stroke-brand-azure" 
-              stroke-width="3" 
-              stroke-dasharray="100" 
-              :stroke-dashoffset="100 - (placementPercentage || 0)"
-              stroke-linecap="round"
-            ></circle>
-          </svg>
-          <div class="absolute inset-0 flex flex-col items-center justify-center">
-            <span class="text-3xl font-black text-brand-navy tabular-nums">{{ placementPercentage }}%</span>
-            <span class="text-[8px] font-black uppercase tracking-widest text-text-muted">Placed</span>
-          </div>
-        </div>
-        
-        <div class="flex-1 space-y-8">
-          <div>
-            <h2 class="text-lg font-black text-brand-navy uppercase tracking-tight mb-2">Placement Velocity</h2>
-            <p class="text-xs text-text-muted font-medium uppercase tracking-wide leading-relaxed">
-              Current cohort is operating at <span class="text-brand-navy font-black">{{ placementPercentage }}%</span> capacity. 
-              <span class="text-brand-navy font-black">{{ unplacedStudents }}</span> students are still in the active search funnel.
+  <div class="space-y-8">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <Card v-for="stat in stats" :key="stat.label" class="bg-white shadow-sm border border-stone-200">
+        <template #content>
+          <div class="p-6">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="h-10 w-10 bg-slate-800 text-white flex items-center justify-center rounded-lg">
+                <i :class="[stat.icon, 'text-sm']"></i>
+              </div>
+              <span class="text-xs font-semibold text-stone-500 uppercase tracking-wider">{{ stat.label }}</span>
+            </div>
+            <p class="text-4xl font-bold text-slate-800 tabular-nums tracking-tight">
+              {{ isLoading ? '...' : stat.value }}
             </p>
           </div>
-          <div class="grid grid-cols-2 gap-6">
-            <div class="border-l-2 border-brand-navy pl-4">
-              <p class="text-[8px] font-black text-text-muted uppercase tracking-widest mb-1">Target Rate</p>
-              <p class="text-xl font-black text-brand-navy tabular-nums">100%</p>
-            </div>
-            <div class="border-l-2 border-slate-200 pl-4">
-              <p class="text-[8px] font-black text-text-muted uppercase tracking-widest mb-1">Remaining</p>
-              <p class="text-xl font-black text-brand-navy tabular-nums">{{ unplacedStudents }}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="bg-brand-navy text-white p-10 flex flex-col justify-between">
-        <div>
-          <p class="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] mb-6">Cohort Control</p>
-          <h3 class="text-2xl font-black uppercase tracking-tight leading-tight mb-4">
-            Active: <br> {{ cohortName || 'Scanning...' }}
-          </h3>
-        </div>
-        <NuxtLink to="/broadcasts" class="inline-flex items-center gap-3 group text-brand-azure">
-          <span class="text-[10px] font-black uppercase tracking-widest group-hover:underline underline-offset-8">Dispatch Alert</span>
-          <i class="pi pi-arrow-right text-[10px]"></i>
-        </NuxtLink>
-      </div>
+        </template>
+      </Card>
     </div>
 
-    <section class="space-y-6">
-      <div class="flex items-center justify-between">
-        <h2 class="text-[11px] font-black text-brand-navy uppercase tracking-[0.2em]">Logbook Intelligence</h2>
-        <div class="flex items-center gap-4">
-          <select v-model="statusFilter" class="text-[10px] font-black border border-slate-200 rounded-none px-4 py-2 bg-white uppercase tracking-widest outline-none focus:border-brand-azure transition-all">
-            <option value="all">All Submissions</option>
-            <option value="Submitted">Approved</option>
-            <option value="Late">Pending/Late</option>
-          </select>
-        </div>
-      </div>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <Card class="lg:col-span-2 bg-white shadow-sm border border-stone-200">
+        <template #content>
+          <div class="p-6 md:p-8 flex flex-col md:flex-row items-center gap-8">
+            <div class="relative w-48 h-48 flex-shrink-0">
+              <svg viewBox="0 0 36 36" class="w-full h-full transform -rotate-90">
+                <circle cx="18" cy="18" r="16" fill="none" class="stroke-stone-200" stroke-width="3"></circle>
+                <circle cx="18" cy="18" r="16" fill="none" class="stroke-blue-600" stroke-width="3" stroke-dasharray="100" :stroke-dashoffset="100 - (placementPercentage || 0)" stroke-linecap="round"></circle>
+              </svg>
+              <div class="absolute inset-0 flex flex-col items-center justify-center">
+                <span class="text-3xl font-bold text-slate-800 tabular-nums">{{ placementPercentage }}%</span>
+                <span class="text-xs font-semibold text-stone-500 uppercase tracking-wider">Placed</span>
+              </div>
+            </div>
+            <div class="flex-1 space-y-6">
+              <div>
+                <h2 class="text-lg font-bold text-slate-800">Placement Velocity</h2>
+                <p class="text-sm text-stone-600 mt-2 leading-relaxed">
+                  Current cohort operating at <strong class="text-slate-800">{{ placementPercentage }}%</strong> capacity.
+                  <strong class="text-slate-800">{{ unplacedStudents }}</strong> students still in the active search funnel.
+                </p>
+              </div>
+              <div class="grid grid-cols-2 gap-6">
+                <div class="border-l-2 border-slate-800 pl-4">
+                  <p class="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1">Target Rate</p>
+                  <p class="text-xl font-bold text-slate-800 tabular-nums">100%</p>
+                </div>
+                <div class="border-l-2 border-stone-200 pl-4">
+                  <p class="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1">Remaining</p>
+                  <p class="text-xl font-bold text-slate-800 tabular-nums">{{ unplacedStudents }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </template>
+      </Card>
 
-      <div class="bg-white border border-slate-100 overflow-hidden">
-        <div class="overflow-x-auto">
-          <table class="w-full text-left min-w-[600px]">
-            <thead>
-              <tr class="text-[9px] font-black text-text-muted uppercase tracking-[0.2em] bg-slate-50/50">
-                <th class="px-4 sm:px-8 py-4 sm:py-6">Student Identity</th>
-                <th class="px-4 sm:px-8 py-4 sm:py-6">Period</th>
-                <th class="px-4 sm:px-8 py-4 sm:py-6">Status</th>
-                <th class="px-4 sm:px-8 py-4 sm:py-6 text-right">Activity</th>
-              </tr>
-            </thead>
-            <tbody class="text-xs divide-y divide-slate-50">
-              <tr v-if="logbooks.length === 0" class="text-center">
-                <td colspan="4" class="px-4 sm:px-8 py-12 sm:py-20 text-[10px] font-black text-text-veryMuted uppercase tracking-widest">No activity data available</td>
-              </tr>
-              <tr v-for="entry in logbooks" :key="entry.id" class="hover:bg-slate-50 transition-colors group">
-                <td class="px-4 sm:px-8 py-4 sm:py-6">
-                  <div class="flex flex-col">
-                    <span class="font-black text-brand-navy uppercase tracking-tight text-[11px] sm:text-xs">{{ entry.studentName }}</span>
-                    <span class="text-[8px] font-bold text-text-veryMuted tabular-nums">{{ entry.studentMatric || 'MATRIC_PENDING' }}</span>
-                  </div>
-                </td>
-                <td class="px-4 sm:px-8 py-4 sm:py-6">
-                  <span class="font-black text-brand-navy tracking-tighter text-[11px] sm:text-xs">WEEK {{ entry.weekNumber }}</span>
-                </td>
-                <td class="px-4 sm:px-8 py-4 sm:py-6">
-                  <span v-if="entry.statusLabel === 'Submitted'" class="px-2 py-0.5 bg-brand-emerald text-white text-[9px] font-black uppercase tracking-tighter">Approved</span>
-                  <span v-else class="px-2 py-0.5 bg-brand-gold text-black text-[9px] font-black uppercase tracking-tighter">{{ entry.statusLabel }}</span>
-                </td>
-                <td class="px-4 sm:px-8 py-4 sm:py-6 text-right text-text-veryMuted font-bold tabular-nums group-hover:text-brand-navy transition-colors text-[10px] sm:text-xs">
-                  {{ entry.submittedAt ? new Date(entry.submittedAt).toLocaleDateString() : 'WAITING' }}
-                </td>
-              </tr>
-            </tbody>
-          </table>
+      <Card class="bg-slate-800 text-white shadow-sm border border-slate-800">
+        <template #content>
+          <div class="p-8 flex flex-col justify-between h-full min-h-[200px]">
+            <div>
+              <p class="text-xs font-semibold text-white/50 uppercase tracking-wider mb-4">Cohort Control</p>
+              <h3 class="text-2xl font-bold leading-tight">
+                Active:<br>{{ cohortName || 'Scanning...' }}
+              </h3>
+            </div>
+            <NuxtLink to="/broadcasts" class="inline-flex items-center gap-2 mt-6 text-blue-400 hover:text-blue-300 transition-colors text-sm font-semibold">
+              <span>Dispatch Alert</span>
+              <i class="pi pi-arrow-right text-xs"></i>
+            </NuxtLink>
+          </div>
+        </template>
+      </Card>
+    </div>
+
+    <Card class="bg-white shadow-sm border border-stone-200">
+      <template #content>
+        <div class="p-6 md:p-8">
+          <div class="flex items-center justify-between mb-6">
+            <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider">Logbook Intelligence</h2>
+            <div class="flex items-center gap-4">
+              <select v-model="statusFilter" class="text-xs font-semibold border border-stone-200 rounded-lg px-4 py-2 bg-white text-slate-800 outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 transition-all">
+                <option value="all">All Submissions</option>
+                <option value="Submitted">Approved</option>
+                <option value="Late">Pending/Late</option>
+              </select>
+            </div>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left">
+              <thead>
+                <tr class="text-xs font-semibold text-stone-500 uppercase tracking-wider bg-stone-50">
+                  <th class="px-6 py-4">Student Identity</th>
+                  <th class="px-6 py-4">Period</th>
+                  <th class="px-6 py-4">Status</th>
+                  <th class="px-6 py-4 text-right">Activity</th>
+                </tr>
+              </thead>
+              <tbody class="text-sm divide-y divide-stone-100">
+                <tr v-if="logbooks.length === 0" class="text-center">
+                  <td colspan="4" class="px-6 py-16 text-sm font-semibold text-stone-400">No activity data available</td>
+                </tr>
+                <tr v-for="entry in logbooks" :key="entry.id" class="hover:bg-stone-50 transition-colors">
+                  <td class="px-6 py-5">
+                    <div class="font-semibold text-slate-800">{{ entry.studentName }}</div>
+                    <div class="text-xs text-stone-500 mt-0.5 tabular-nums">{{ entry.studentMatric || 'MATRIC_PENDING' }}</div>
+                  </td>
+                  <td class="px-6 py-5 text-slate-800 font-semibold">Week {{ entry.weekNumber }}</td>
+                  <td class="px-6 py-5">
+                    <span v-if="entry.statusLabel === 'Submitted'" class="inline-flex px-3 py-1 bg-emerald-500 text-white text-xs font-semibold rounded">Approved</span>
+                    <span v-else class="inline-flex px-3 py-1 bg-amber-400 text-slate-900 text-xs font-semibold rounded">{{ entry.statusLabel }}</span>
+                  </td>
+                  <td class="px-6 py-5 text-right text-stone-500 tabular-nums hover:text-slate-800 transition-colors">
+                    {{ entry.submittedAt ? new Date(entry.submittedAt).toLocaleDateString() : 'WAITING' }}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
-    </section>
+      </template>
+    </Card>
   </div>
 </template>
 
 <script setup lang="ts">
+import Card from 'primevue/card'
+
 definePageMeta({
   requiredRole: 'coordinator'
 })
@@ -153,10 +149,10 @@ const logbooks = ref<any[]>([])
 const statusFilter = ref('all')
 
 const stats = computed(() => [
-  { label: 'Active Cohort', value: totalStudents.value, icon: 'pi pi-users' },
-  { label: 'Placement Secured', value: placedStudents.value, icon: 'pi pi-check-circle' },
-  { label: 'Market Search', value: unplacedStudents.value, icon: 'pi pi-search' },
-  { label: 'Success Velocity', value: placementPercentage.value + '%', icon: 'pi pi-chart-line' }
+  { label: 'Total Students', value: totalStudents.value, icon: 'pi pi-users' },
+  { label: 'Placed', value: placedStudents.value, icon: 'pi pi-check-circle' },
+  { label: 'Unplaced', value: unplacedStudents.value, icon: 'pi pi-search' },
+  { label: 'Milestones Completed', value: placementPercentage.value + '%', icon: 'pi pi-chart-line' }
 ])
 
 const fetchData = async () => {
@@ -166,7 +162,7 @@ const fetchData = async () => {
       $fetch<DashboardResponse>('/api/dashboard'),
       $fetch<any[]>(`/api/logbooks${statusFilter.value !== 'all' ? '?status=' + statusFilter.value : ''}`)
     ])
-    
+
     cohortName.value = dash.cohortName
     totalStudents.value = dash.totalStudents
     placedStudents.value = dash.placedStudents
