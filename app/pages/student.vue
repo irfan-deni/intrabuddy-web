@@ -27,7 +27,7 @@
       <div class="lg:col-span-4 space-y-10">
         <article class="bg-white p-8 border border-stone-200 shadow-sm relative">
           <div class="absolute top-0 right-0 p-6 opacity-5 pointer-events-none">
-            <i class="pi pi-check-square text-6xl text-blue-600"></i>
+            <i class="pi pi-check-square text-6xl text-sky-600"></i>
           </div>
           
           <h2 class="text-[11px] font-black text-slate-800 uppercase tracking-[0.2em] mb-6">Readiness Checklist</h2>
@@ -42,7 +42,7 @@
             </div>
 
             <div v-if="isLoading" class="py-8 text-center text-stone-400">
-              <i class="pi pi-spin pi-spinner text-xl text-blue-600"></i>
+              <i class="pi pi-spin pi-spinner text-xl text-sky-600"></i>
             </div>
             
             <div v-else class="space-y-4">
@@ -62,7 +62,7 @@
           <h2 class="text-[11px] font-black text-slate-800 uppercase tracking-[0.2em] mb-6">Digital Wallet</h2>
           
           <div v-if="isLoading" class="py-8 text-center text-stone-400">
-            <i class="pi pi-spin pi-spinner text-xl text-blue-600"></i>
+            <i class="pi pi-spin pi-spinner text-xl text-sky-600"></i>
           </div>
           <div v-else-if="walletItems.length === 0" class="py-8 text-center border-t border-stone-100">
             <p class="text-[9px] font-bold text-stone-400 uppercase tracking-widest">No Documents</p>
@@ -87,13 +87,13 @@
           <h2 class="text-[11px] font-black text-slate-800 uppercase tracking-[0.2em] mb-8">Placement Applications</h2>
           
           <div v-if="isLoading" class="py-12 text-center text-stone-400">
-            <i class="pi pi-spin pi-spinner text-2xl text-blue-600"></i>
+            <i class="pi pi-spin pi-spinner text-2xl text-sky-600"></i>
           </div>
           <div v-else-if="applications.length === 0" class="py-12 text-center bg-stone-50/50">
             <p class="text-[10px] font-black text-stone-400 uppercase tracking-widest">Empty Application List</p>
           </div>
           <ul v-else class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <li v-for="application in applications" :key="application.id" class="p-6 border border-stone-200 hover:border-blue-600 transition-all group">
+            <li v-for="application in applications" :key="application.id" class="p-6 border border-stone-200 hover:border-sky-600 transition-all group">
               <div class="flex justify-between items-start mb-4">
                 <h3 class="text-xs font-black text-slate-800 uppercase tracking-widest">{{ application.company_name }}</h3>
                 <StatusBadge :status="application.status" />

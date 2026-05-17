@@ -18,7 +18,7 @@
         <div class="flex items-center gap-4">
           <select
             v-model="statusFilter"
-            class="text-[10px] font-black border border-stone-200 rounded-none px-4 py-2 bg-white uppercase tracking-widest outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 transition-all cursor-pointer"
+            class="text-[10px] font-black border border-stone-200 rounded-none px-4 py-2 bg-white uppercase tracking-widest outline-none focus:border-sky-600 focus:ring-1 focus:ring-sky-600 transition-all cursor-pointer"
           >
             <option value="all">All Statuses</option>
             <option value="Submitted">Submitted</option>
@@ -51,7 +51,7 @@
           <tbody class="text-xs divide-y divide-stone-100">
             <tr v-if="isLoading">
               <td colspan="5" class="px-4 sm:px-8 py-12 sm:py-16 text-center text-stone-400">
-                <i class="pi pi-spin pi-spinner text-xl text-blue-600 mr-2" />
+                <i class="pi pi-spin pi-spinner text-xl text-sky-600 mr-2" />
                 <span class="text-[10px] font-black uppercase tracking-widest">Loading logbooks...</span>
               </td>
             </tr>

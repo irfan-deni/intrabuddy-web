@@ -30,7 +30,7 @@
           :class="[
             collapsed && isLgScreen ? 'justify-center px-0' : '',
             route.path === item.path
-              ? 'bg-blue-600 text-white shadow-md'
+              ? 'bg-sky-600 text-white shadow-md'
               : 'text-white/70 hover:bg-white/10 hover:text-white'
           ]"
           @click="mobileOpen = false"

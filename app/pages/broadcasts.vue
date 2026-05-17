@@ -19,7 +19,7 @@
             type="text" 
             placeholder="e.g., Mandatory Industry Briefing"
             required 
-            class="w-full bg-white border border-stone-200 rounded-none px-6 py-4 text-xs font-black uppercase tracking-widest focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-all text-slate-800 placeholder:text-stone-400"
+            class="w-full bg-white border border-stone-200 rounded-none px-6 py-4 text-xs font-black uppercase tracking-widest focus:border-sky-600 focus:ring-1 focus:ring-sky-600 outline-none transition-all text-slate-800 placeholder:text-stone-400"
           >
         </div>
 
@@ -30,18 +30,18 @@
             rows="5" 
             placeholder="Enter the message you want to broadcast to all students..."
             required 
-            class="w-full bg-white border border-stone-200 rounded-none px-6 py-4 text-xs font-bold uppercase tracking-widest focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-all resize-none leading-relaxed text-slate-800 placeholder:text-stone-400"
+            class="w-full bg-white border border-stone-200 rounded-none px-6 py-4 text-xs font-bold uppercase tracking-widest focus:border-sky-600 focus:ring-1 focus:ring-sky-600 outline-none transition-all resize-none leading-relaxed text-slate-800 placeholder:text-stone-400"
           ></textarea>
         </div>
 
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 pt-4">
           <div class="flex items-center gap-6">
             <label class="flex items-center gap-3 cursor-pointer group">
-              <input type="checkbox" v-model="form.target_roles" value="student" class="h-4 w-4 appearance-none rounded-none border-2 border-stone-400 checked:border-blue-600 checked:bg-blue-600 focus:ring-0">
+              <input type="checkbox" v-model="form.target_roles" value="student" class="h-4 w-4 appearance-none rounded-none border-2 border-stone-400 checked:border-sky-600 checked:bg-sky-600 focus:ring-0">
               <span class="text-[9px] font-black uppercase tracking-widest text-stone-500 group-hover:text-slate-800 transition-colors">Target Students</span>
             </label>
             <label class="flex items-center gap-3 cursor-pointer group">
-              <input type="checkbox" v-model="form.target_roles" value="coordinator" class="h-4 w-4 appearance-none rounded-none border-2 border-stone-400 checked:border-blue-600 checked:bg-blue-600 focus:ring-0">
+              <input type="checkbox" v-model="form.target_roles" value="coordinator" class="h-4 w-4 appearance-none rounded-none border-2 border-stone-400 checked:border-sky-600 checked:bg-sky-600 focus:ring-0">
               <span class="text-[9px] font-black uppercase tracking-widest text-stone-500 group-hover:text-slate-800 transition-colors">Internal Only</span>
             </label>
           </div>
@@ -49,7 +49,7 @@
           <button 
             type="submit" 
             :disabled="isSending" 
-            class="bg-blue-600 text-white px-10 py-4 font-black text-[10px] uppercase tracking-[0.3em] hover:brightness-110 transition-all flex items-center gap-3 disabled:opacity-30"
+            class="bg-sky-600 text-white px-10 py-4 font-black text-[10px] uppercase tracking-[0.3em] hover:brightness-110 transition-all flex items-center gap-3 disabled:opacity-30"
           >
             <i class="pi pi-send"></i>
             {{ isSending ? 'Broadcasting...' : 'Confirm Dispatch' }}
@@ -111,8 +111,8 @@
     </section>
 
     <Transition name="fade">
-      <div v-if="successToast" class="fixed bottom-10 right-10 z-[100] bg-slate-900 text-white px-8 py-6 shadow-2xl flex items-center gap-6 border-l-8 border-blue-600">
-        <div class="h-10 w-10 bg-blue-600 text-white flex items-center justify-center">
+      <div v-if="successToast" class="fixed bottom-10 right-10 z-[100] bg-slate-900 text-white px-8 py-6 shadow-2xl flex items-center gap-6 border-l-8 border-sky-600">
+        <div class="h-10 w-10 bg-sky-600 text-white flex items-center justify-center">
           <i class="pi pi-check text-sm"></i>
         </div>
         <div>

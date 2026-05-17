@@ -21,7 +21,7 @@
             type="email"
             required
             placeholder="name@university.edu"
-            class="w-full px-5 py-4 bg-white border border-stone-200 outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 text-sm font-black uppercase tracking-widest text-slate-800 placeholder:text-stone-400 transition"
+            class="w-full px-5 py-4 bg-white border border-stone-200 outline-none focus:border-sky-600 focus:ring-1 focus:ring-sky-600 text-sm font-black uppercase tracking-widest text-slate-800 placeholder:text-stone-400 transition"
           >
         </div>
 
@@ -32,14 +32,14 @@
             type="password"
             required
             placeholder="••••••••"
-            class="w-full px-5 py-4 bg-white border border-stone-200 outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 text-sm font-black uppercase tracking-widest text-slate-800 placeholder:text-stone-400 transition"
+            class="w-full px-5 py-4 bg-white border border-stone-200 outline-none focus:border-sky-600 focus:ring-1 focus:ring-sky-600 text-sm font-black uppercase tracking-widest text-slate-800 placeholder:text-stone-400 transition"
           >
         </div>
 
         <button
           type="submit"
           :disabled="loading"
-          class="w-full py-4 bg-blue-600 text-white font-black text-[10px] uppercase tracking-[0.3em] hover:brightness-110 transition disabled:opacity-50"
+          class="w-full py-4 bg-sky-600 text-white font-black text-[10px] uppercase tracking-[0.3em] hover:brightness-110 transition disabled:opacity-50"
         >
           {{ loading ? 'Signing in...' : 'Sign In' }}
         </button>

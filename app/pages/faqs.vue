@@ -7,7 +7,7 @@
       </div>
       <button
         v-if="isSuperCoordinator"
-        class="bg-blue-600 text-white px-6 py-3 rounded-none font-black text-[10px] uppercase tracking-[0.2em] hover:brightness-110 transition-all flex items-center gap-3"
+        class="bg-sky-600 text-white px-6 py-3 rounded-none font-black text-[10px] uppercase tracking-[0.2em] hover:brightness-110 transition-all flex items-center gap-3"
         @click="openAddModal"
       >
         <i class="pi pi-plus"></i>
@@ -20,12 +20,12 @@
     </div>
 
     <div class="relative group">
-      <i class="pi pi-search absolute left-5 top-1/2 -translate-y-1/2 text-stone-400 group-focus-within:text-blue-600 transition-colors"></i>
+      <i class="pi pi-search absolute left-5 top-1/2 -translate-y-1/2 text-stone-400 group-focus-within:text-sky-600 transition-colors"></i>
       <input
         v-model="searchQuery"
         type="text"
         placeholder="Search articles..."
-        class="w-full pl-14 pr-6 py-4 bg-white border border-stone-200 rounded-none outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 transition-all text-xs font-black uppercase tracking-widest text-slate-800 placeholder:text-stone-400"
+        class="w-full pl-14 pr-6 py-4 bg-white border border-stone-200 rounded-none outline-none focus:border-sky-600 focus:ring-1 focus:ring-sky-600 transition-all text-xs font-black uppercase tracking-widest text-slate-800 placeholder:text-stone-400"
       >
     </div>
 
@@ -51,7 +51,7 @@
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8 relative">
       <div v-if="isLoading" class="md:col-span-2 py-20 text-center flex flex-col items-center gap-4">
-        <i class="pi pi-spin pi-spinner text-3xl text-blue-600"></i>
+        <i class="pi pi-spin pi-spinner text-3xl text-sky-600"></i>
         <span class="text-[10px] font-black uppercase tracking-widest text-slate-800">Syncing Library</span>
       </div>
       
@@ -63,7 +63,7 @@
       <div 
         v-for="faq in filteredFaqs" 
         :key="faq.id" 
-        class="bg-white p-8 border border-stone-200 hover:border-blue-600 transition-all group flex flex-col relative"
+        class="bg-white p-8 border border-stone-200 hover:border-sky-600 transition-all group flex flex-col relative"
       >
         <div v-if="isSuperCoordinator" class="absolute top-0 right-0 p-4 flex gap-1 opacity-0 group-hover:opacity-100 transition-all">
           <button class="h-8 w-8 flex items-center justify-center bg-slate-900 text-white" @click="editFaq(faq)">
@@ -113,7 +113,7 @@
         <form @submit.prevent="saveFaq" class="space-y-6">
           <div class="space-y-2">
             <label class="text-[9px] font-black text-stone-500 uppercase tracking-widest">Classification</label>
-            <select v-model="form.category_id" required class="w-full bg-white border border-stone-200 rounded-none px-4 py-3 text-xs font-black uppercase tracking-widest focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-all cursor-pointer text-slate-800">
+            <select v-model="form.category_id" required class="w-full bg-white border border-stone-200 rounded-none px-4 py-3 text-xs font-black uppercase tracking-widest focus:border-sky-600 focus:ring-1 focus:ring-sky-600 outline-none transition-all cursor-pointer text-slate-800">
               <option :value="null">Select Category...</option>
               <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
             </select>
@@ -121,21 +121,21 @@
 
           <div class="space-y-2">
             <label class="text-[9px] font-black text-stone-500 uppercase tracking-widest">Inquiry / Question</label>
-            <input v-model="form.question" type="text" required class="w-full bg-white border border-stone-200 rounded-none px-4 py-3 text-xs font-black uppercase tracking-widest focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-all text-slate-800">
+            <input v-model="form.question" type="text" required class="w-full bg-white border border-stone-200 rounded-none px-4 py-3 text-xs font-black uppercase tracking-widest focus:border-sky-600 focus:ring-1 focus:ring-sky-600 outline-none transition-all text-slate-800">
           </div>
 
           <div class="space-y-2">
             <label class="text-[9px] font-black text-stone-500 uppercase tracking-widest">Resolution / Answer</label>
-            <textarea v-model="form.answer" rows="6" required class="w-full bg-white border border-stone-200 rounded-none px-4 py-3 text-xs font-bold uppercase tracking-widest focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-all resize-none leading-relaxed text-slate-800"></textarea>
+            <textarea v-model="form.answer" rows="6" required class="w-full bg-white border border-stone-200 rounded-none px-4 py-3 text-xs font-bold uppercase tracking-widest focus:border-sky-600 focus:ring-1 focus:ring-sky-600 outline-none transition-all resize-none leading-relaxed text-slate-800"></textarea>
           </div>
 
           <div class="space-y-2">
             <label class="text-[9px] font-black text-stone-500 uppercase tracking-widest">Tags (comma-separated)</label>
             <input v-model="form.keywordsStr" type="text" placeholder="e.g., deadline, requirements, form"
-              class="w-full bg-white border border-stone-200 rounded-none px-4 py-3 text-xs font-black uppercase tracking-widest focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-all text-slate-800 placeholder:text-stone-400">
+              class="w-full bg-white border border-stone-200 rounded-none px-4 py-3 text-xs font-black uppercase tracking-widest focus:border-sky-600 focus:ring-1 focus:ring-sky-600 outline-none transition-all text-slate-800 placeholder:text-stone-400">
           </div>
           
-          <button type="submit" :disabled="isSaving" class="w-full bg-blue-600 text-white h-14 font-black text-[10px] uppercase tracking-[0.3em] hover:brightness-110 transition-all disabled:opacity-30 mt-4">
+          <button type="submit" :disabled="isSaving" class="w-full bg-sky-600 text-white h-14 font-black text-[10px] uppercase tracking-[0.3em] hover:brightness-110 transition-all disabled:opacity-30 mt-4">
             {{ isSaving ? 'Processing...' : 'Sync Entry' }}
           </button>
         </form>

@@ -14,7 +14,7 @@ export default <Partial<Config>>{
       colors: {
         brand: {
           navy: '#0F172A',
-          azure: '#2563EB',
+          azure: '#0284C7',
           gold: '#F59E0B',
           emerald: '#10B981',
           red: '#DC2626',

@@ -7,7 +7,7 @@
       </div>
       <button
         v-if="isSuperCoordinator"
-        class="bg-blue-600 text-white px-6 py-3 rounded-none font-black text-[10px] uppercase tracking-[0.2em] hover:brightness-110 transition-all flex items-center gap-3"
+        class="bg-sky-600 text-white px-6 py-3 rounded-none font-black text-[10px] uppercase tracking-[0.2em] hover:brightness-110 transition-all flex items-center gap-3"
         @click="openAddForm"
       >
         <i class="pi pi-plus"></i>
@@ -25,7 +25,7 @@
 
     <article class="bg-white border border-stone-200 shadow-sm relative overflow-hidden">
       <div v-if="isLoading" class="absolute inset-0 bg-white/50 z-10 flex items-center justify-center backdrop-blur-sm">
-        <i class="pi pi-spin pi-spinner text-2xl text-blue-600"></i>
+        <i class="pi pi-spin pi-spinner text-2xl text-sky-600"></i>
       </div>
 
       <div class="overflow-x-auto">
@@ -81,17 +81,17 @@
           <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div class="md:col-span-3 space-y-2">
               <label class="text-[9px] font-black text-stone-500 uppercase tracking-widest">Title</label>
-              <input v-model="form.title" type="text" required class="w-full bg-white border border-stone-200 rounded-none px-4 py-3 text-xs font-black uppercase tracking-widest focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-all text-slate-800">
+              <input v-model="form.title" type="text" required class="w-full bg-white border border-stone-200 rounded-none px-4 py-3 text-xs font-black uppercase tracking-widest focus:border-sky-600 focus:ring-1 focus:ring-sky-600 outline-none transition-all text-slate-800">
             </div>
             <div class="space-y-2">
               <label class="text-[9px] font-black text-stone-500 uppercase tracking-widest">Order</label>
-              <input v-model="form.display_order" type="number" required class="w-full bg-white border border-stone-200 rounded-none px-4 py-3 text-xs font-black uppercase tracking-widest focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-all tabular-nums text-slate-800">
+              <input v-model="form.display_order" type="number" required class="w-full bg-white border border-stone-200 rounded-none px-4 py-3 text-xs font-black uppercase tracking-widest focus:border-sky-600 focus:ring-1 focus:ring-sky-600 outline-none transition-all tabular-nums text-slate-800">
             </div>
           </div>
 
           <div class="space-y-2">
             <label class="text-[9px] font-black text-stone-500 uppercase tracking-widest">Description</label>
-            <textarea v-model="form.description" rows="3" class="w-full bg-white border border-stone-200 rounded-none px-4 py-3 text-xs font-bold uppercase tracking-widest focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-all resize-none text-slate-800"></textarea>
+            <textarea v-model="form.description" rows="3" class="w-full bg-white border border-stone-200 rounded-none px-4 py-3 text-xs font-bold uppercase tracking-widest focus:border-sky-600 focus:ring-1 focus:ring-sky-600 outline-none transition-all resize-none text-slate-800"></textarea>
           </div>
 
           <div class="flex items-center gap-3 group cursor-pointer" @click="form.required = !form.required">
@@ -101,7 +101,7 @@
             <span class="text-[10px] font-black uppercase tracking-widest text-slate-800">Mandatory for all students</span>
           </div>
           
-          <button type="submit" :disabled="isSaving" class="w-full bg-blue-600 text-white h-14 font-black text-[10px] uppercase tracking-[0.3em] hover:brightness-110 transition-all disabled:opacity-30 mt-4">
+          <button type="submit" :disabled="isSaving" class="w-full bg-sky-600 text-white h-14 font-black text-[10px] uppercase tracking-[0.3em] hover:brightness-110 transition-all disabled:opacity-30 mt-4">
             {{ isSaving ? 'Processing...' : 'Save Template' }}
           </button>
         </form>

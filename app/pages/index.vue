@@ -25,7 +25,7 @@
             <div class="relative w-48 h-48 flex-shrink-0">
               <svg viewBox="0 0 36 36" class="w-full h-full transform -rotate-90">
                 <circle cx="18" cy="18" r="16" fill="none" class="stroke-stone-200" stroke-width="3"></circle>
-                <circle cx="18" cy="18" r="16" fill="none" class="stroke-blue-600" stroke-width="3" stroke-dasharray="100" :stroke-dashoffset="100 - (placementPercentage || 0)" stroke-linecap="round"></circle>
+                <circle cx="18" cy="18" r="16" fill="none" class="stroke-sky-600" stroke-width="3" stroke-dasharray="100" :stroke-dashoffset="100 - (placementPercentage || 0)" stroke-linecap="round"></circle>
               </svg>
               <div class="absolute inset-0 flex flex-col items-center justify-center">
                 <span class="text-3xl font-bold text-slate-800 tabular-nums">{{ placementPercentage }}%</span>
@@ -64,7 +64,7 @@
                 Active:<br>{{ cohortName || 'Scanning...' }}
               </h3>
             </div>
-            <NuxtLink to="/broadcasts" class="inline-flex items-center gap-2 mt-6 text-blue-400 hover:text-blue-300 transition-colors text-sm font-semibold">
+            <NuxtLink to="/broadcasts" class="inline-flex items-center gap-2 mt-6 text-sky-400 hover:text-sky-300 transition-colors text-sm font-semibold">
               <span>Dispatch Alert</span>
               <i class="pi pi-arrow-right text-xs"></i>
             </NuxtLink>
@@ -79,7 +79,7 @@
           <div class="flex items-center justify-between mb-6">
             <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider">Logbook Intelligence</h2>
             <div class="flex items-center gap-4">
-              <select v-model="statusFilter" class="text-xs font-semibold border border-stone-200 rounded-lg px-4 py-2 bg-white text-slate-800 outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 transition-all">
+              <select v-model="statusFilter" class="text-xs font-semibold border border-stone-200 rounded-lg px-4 py-2 bg-white text-slate-800 outline-none focus:border-sky-600 focus:ring-1 focus:ring-sky-600 transition-all">
                 <option value="all">All Submissions</option>
                 <option value="Submitted">Approved</option>
                 <option value="Late">Pending/Late</option>

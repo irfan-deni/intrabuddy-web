@@ -6,18 +6,18 @@
         <div class="flex-1 max-w-xl">
           <h1 class="text-4xl font-black text-slate-800 tracking-tight uppercase mb-4">Student Directory</h1>
           <div class="relative group">
-            <i class="pi pi-search absolute left-5 top-1/2 -translate-y-1/2 text-stone-400 group-focus-within:text-blue-600 transition-colors"></i>
+            <i class="pi pi-search absolute left-5 top-1/2 -translate-y-1/2 text-stone-400 group-focus-within:text-sky-600 transition-colors"></i>
             <input 
               v-model="searchQuery" 
               type="text" 
               placeholder="Search by name or matric number..."
-              class="w-full pl-14 pr-6 py-4 bg-white border border-stone-200 rounded-none outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 transition-all text-[10px] font-black uppercase tracking-widest shadow-sm"
+              class="w-full pl-14 pr-6 py-4 bg-white border border-stone-200 rounded-none outline-none focus:border-sky-600 focus:ring-1 focus:ring-sky-600 transition-all text-[10px] font-black uppercase tracking-widest shadow-sm"
             >
           </div>
         </div>
         
         <div class="flex items-center gap-4">
-          <select v-model="statusFilter" class="bg-white border border-stone-200 px-6 py-4 text-[10px] font-black uppercase tracking-widest outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 cursor-pointer shadow-sm">
+          <select v-model="statusFilter" class="bg-white border border-stone-200 px-6 py-4 text-[10px] font-black uppercase tracking-widest outline-none focus:border-sky-600 focus:ring-1 focus:ring-sky-600 cursor-pointer shadow-sm">
             <option value="all">Status: All</option>
             <option value="Accepted">Status: Placed</option>
             <option value="Searching">Status: Searching</option>
@@ -26,7 +26,7 @@
           
           <button 
             v-if="isSuperCoordinator"
-            class="bg-blue-600 text-white px-8 py-4 font-black text-[10px] uppercase tracking-[0.2em] hover:brightness-110 transition-all flex items-center gap-3 shadow-xl shadow-black/10"
+            class="bg-sky-600 text-white px-8 py-4 font-black text-[10px] uppercase tracking-[0.2em] hover:brightness-110 transition-all flex items-center gap-3 shadow-xl shadow-black/10"
             @click="openAddModal"
           >
             <i class="pi pi-user-plus"></i>
@@ -38,7 +38,7 @@
       <!-- Data Table -->
       <article class="bg-white border border-stone-200 shadow-sm relative">
         <div v-if="isLoading" class="absolute inset-0 bg-white/50 backdrop-blur-[2px] z-20 flex items-center justify-center">
-          <i class="pi pi-spin pi-spinner text-3xl text-blue-600"></i>
+          <i class="pi pi-spin pi-spinner text-3xl text-sky-600"></i>
         </div>
 
         <div class="overflow-x-auto">
@@ -80,7 +80,7 @@
                 <td class="px-4 sm:px-10 py-4 sm:py-8">
                   <div class="flex items-center gap-2 sm:gap-4">
                     <div class="flex-1 h-1 bg-stone-100 max-w-[80px] sm:max-w-[100px] overflow-hidden">
-                      <div class="h-full bg-blue-600 transition-all duration-1000" :style="{ width: student.completionPercent + '%' }"></div>
+                      <div class="h-full bg-sky-600 transition-all duration-1000" :style="{ width: student.completionPercent + '%' }"></div>
                     </div>
                     <span class="text-[9px] font-black text-slate-800 tabular-nums">{{ student.completionPercent }}%</span>
                   </div>
@@ -99,7 +99,7 @@
                     <button v-if="isSuperCoordinator" class="h-8 w-8 border border-slate-900 text-slate-800 hover:bg-slate-900 hover:text-white flex items-center justify-center" @click="deleteStudent(student.id)">
                       <i class="pi pi-trash text-[10px]"></i>
                     </button>
-                    <button class="h-8 w-8 bg-stone-100 text-stone-400 hover:bg-blue-600 hover:text-slate-800 flex items-center justify-center" @click="selectStudent(student)">
+                    <button class="h-8 w-8 bg-stone-100 text-stone-400 hover:bg-sky-600 hover:text-slate-800 flex items-center justify-center" @click="selectStudent(student)">
                       <i class="pi pi-chevron-right text-[10px]"></i>
                     </button>
                   </div>
@@ -151,7 +151,7 @@
               <span class="text-[9px] font-black text-stone-400 uppercase tracking-widest">Checklist State</span>
               <div class="flex items-end justify-between">
                 <span class="text-3xl font-black text-slate-800 tabular-nums">{{ selectedStudent.completionPercent }}%</span>
-                <div class="h-10 w-1 bg-blue-600"></div>
+                <div class="h-10 w-1 bg-sky-600"></div>
               </div>
             </div>
             <div class="border border-stone-200 p-6 flex flex-col gap-4">
@@ -167,7 +167,7 @@
             <p class="text-[10px] font-black text-stone-400 uppercase tracking-widest mb-6 leading-relaxed">
               For detailed logbook tracking and document validation, please proceed to the full profile view.
             </p>
-            <NuxtLink :to="`/student?id=${selectedStudent.id}`" class="inline-block bg-blue-600 text-white px-8 py-3 text-[9px] font-black uppercase tracking-[0.2em] hover:brightness-110 transition-all">
+            <NuxtLink :to="`/student?id=${selectedStudent.id}`" class="inline-block bg-sky-600 text-white px-8 py-3 text-[9px] font-black uppercase tracking-[0.2em] hover:brightness-110 transition-all">
               Launch Detailed View
             </NuxtLink>
           </div>
@@ -188,19 +188,19 @@
         <form @submit.prevent="saveStudent" class="space-y-8">
           <div class="space-y-2">
             <label class="text-[9px] font-black text-stone-500 uppercase tracking-widest">Full Name</label>
-            <input v-model="form.full_name" type="text" required class="w-full bg-stone-50 border border-stone-200 px-5 py-4 text-xs font-black uppercase focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-all">
+            <input v-model="form.full_name" type="text" required class="w-full bg-stone-50 border border-stone-200 px-5 py-4 text-xs font-black uppercase focus:border-sky-600 focus:ring-1 focus:ring-sky-600 outline-none transition-all">
           </div>
           <div class="grid grid-cols-2 gap-6">
             <div class="space-y-2">
               <label class="text-[9px] font-black text-stone-500 uppercase tracking-widest">Matric Number</label>
-              <input v-model="form.student_id" type="text" class="w-full bg-stone-50 border border-stone-200 px-5 py-4 text-xs font-black uppercase focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-all tabular-nums">
+              <input v-model="form.student_id" type="text" class="w-full bg-stone-50 border border-stone-200 px-5 py-4 text-xs font-black uppercase focus:border-sky-600 focus:ring-1 focus:ring-sky-600 outline-none transition-all tabular-nums">
             </div>
             <div class="space-y-2">
               <label class="text-[9px] font-black text-stone-500 uppercase tracking-widest">Email Address</label>
-              <input v-model="form.email" type="email" required class="w-full bg-stone-50 border border-stone-200 px-5 py-4 text-xs font-black uppercase focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-all">
+              <input v-model="form.email" type="email" required class="w-full bg-stone-50 border border-stone-200 px-5 py-4 text-xs font-black uppercase focus:border-sky-600 focus:ring-1 focus:ring-sky-600 outline-none transition-all">
             </div>
           </div>
-          <button type="submit" :disabled="isSaving" class="w-full bg-blue-600 text-white h-16 font-black text-[10px] uppercase tracking-[0.4em] hover:brightness-110 transition-all disabled:opacity-30">
+          <button type="submit" :disabled="isSaving" class="w-full bg-sky-600 text-white h-16 font-black text-[10px] uppercase tracking-[0.4em] hover:brightness-110 transition-all disabled:opacity-30">
             {{ isSaving ? 'Syncing...' : 'Confirm Enrollment' }}
           </button>
         </form>
