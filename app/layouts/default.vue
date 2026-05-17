@@ -67,32 +67,35 @@
       </div>
     </aside>
 
-    <Sidebar
-      v-model:visible="mobileOpen"
-      position="left"
-      :showCloseIcon="false"
-      :dismissable="true"
-      class="lg:hidden !bg-slate-900 !text-white !w-72 !border-none"
-      :pt="{
-        mask: { class: 'lg:hidden' },
-        root: { class: 'lg:hidden' }
-      }"
+    <div
+      v-if="mobileOpen"
+      class="fixed inset-0 bg-black/60 z-40 lg:hidden"
+      @click="mobileOpen = false"
+    ></div>
+
+    <div
+      class="fixed top-0 left-0 h-full z-50 flex flex-col bg-slate-900 text-white transition-transform duration-300 ease-in-out lg:hidden"
+      :class="mobileOpen ? 'translate-x-0' : '-translate-x-full'"
+      style="width: 288px"
     >
-      <div class="p-8">
+      <div class="flex items-center justify-between p-6 border-b border-white/10">
         <div class="flex items-center gap-3">
           <div class="bg-white p-1.5 flex-shrink-0">
             <i class="pi pi-graduation-cap text-slate-900 text-xl"></i>
           </div>
           <span class="text-lg font-black tracking-[0.3em] uppercase text-white whitespace-nowrap">INTRA Buddy</span>
         </div>
+        <button class="h-8 w-8 flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 transition-all rounded-lg" @click="mobileOpen = false">
+          <i class="pi pi-times text-sm"></i>
+        </button>
       </div>
 
-      <nav class="flex-1 px-4 space-y-1">
+      <nav class="flex-1 overflow-y-auto px-4 py-4 space-y-1">
         <NuxtLink
           v-for="item in navigation"
           :key="item.path"
           :to="item.path"
-          class="flex items-center gap-4 px-4 py-3 text-xs font-bold uppercase tracking-wider transition-all rounded-lg"
+          class="flex items-center gap-4 px-4 py-4 text-sm font-bold uppercase tracking-wider transition-all rounded-lg min-h-[48px]"
           :class="[
             route.path === item.path
               ? 'bg-sky-600 text-white shadow-md'
@@ -105,8 +108,8 @@
         </NuxtLink>
       </nav>
 
-      <div class="p-6 border-t border-white/10 mt-auto">
-        <div class="flex items-center gap-4 group cursor-pointer" @click="handleLogout">
+      <div class="p-6 border-t border-white/10">
+        <div class="flex items-center gap-4 group cursor-pointer min-h-[48px]" @click="handleLogout">
           <div class="h-10 w-10 bg-white/10 flex items-center justify-center group-hover:bg-white group-hover:text-slate-900 transition-colors rounded-lg flex-shrink-0">
             <i class="pi pi-sign-out text-sm"></i>
           </div>
@@ -116,7 +119,7 @@
           </div>
         </div>
       </div>
-    </Sidebar>
+    </div>
 
     <div
       class="flex-1 flex flex-col min-h-screen transition-all duration-300 ease-in-out"
@@ -148,11 +151,11 @@
         </div>
       </header>
 
-      <main class="flex-1 p-6 lg:p-12 max-w-[1600px] mx-auto w-full">
+      <main class="flex-1 p-4 lg:p-12 max-w-[1600px] mx-auto w-full">
         <slot />
       </main>
 
-      <footer class="p-6 lg:p-12 border-t border-stone-200 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-stone-500 text-center sm:text-left">
+      <footer class="p-4 lg:p-12 border-t border-stone-200 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-stone-500 text-center sm:text-left">
         <span>&copy; 2026 INTRA Buddy Management System</span>
         <span>Version 2.4.0</span>
       </footer>
@@ -168,6 +171,23 @@ const { isSuperCoordinator } = useCoordinatorPrivileges()
 
 const collapsed = ref(false)
 const mobileOpen = ref(false)
+
+watch(route, () => { mobileOpen.value = false })
+
+watch(mobileOpen, (val) => {
+  document.body.style.overflow = val ? 'hidden' : ''
+})
+
+onMounted(() => {
+  const handler = (e: KeyboardEvent) => {
+    if (e.key === 'Escape') mobileOpen.value = false
+  }
+  document.addEventListener('keydown', handler)
+})
+
+onUnmounted(() => {
+  document.body.style.overflow = ''
+})
 
 const navigation = [
   { name: 'Dashboard', path: '/', icon: 'pi pi-chart-bar' },
@@ -196,6 +216,10 @@ const handleLogout = async () => {
 <style>
 .pi {
   vertical-align: middle;
+}
+
+nav {
+  -webkit-overflow-scrolling: touch;
 }
 
 ::-webkit-scrollbar {
