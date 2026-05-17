@@ -6,18 +6,18 @@
         <div class="flex-1 max-w-xl">
           <h1 class="text-4xl font-black text-brand-navy tracking-tight uppercase mb-4">Student Directory</h1>
           <div class="relative group">
-            <i class="pi pi-search absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-brand-cyan transition-colors"></i>
+            <i class="pi pi-search absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-brand-azure transition-colors"></i>
             <input 
               v-model="searchQuery" 
               type="text" 
               placeholder="Search by name or matric number..."
-              class="w-full pl-14 pr-6 py-4 bg-white border border-slate-100 rounded-none outline-none focus:border-brand-cyan transition-all text-[10px] font-black uppercase tracking-widest shadow-sm"
+              class="w-full pl-14 pr-6 py-4 bg-white border border-slate-100 rounded-none outline-none focus:border-brand-azure transition-all text-[10px] font-black uppercase tracking-widest shadow-sm"
             >
           </div>
         </div>
         
         <div class="flex items-center gap-4">
-          <select v-model="statusFilter" class="bg-white border border-slate-100 px-6 py-4 text-[10px] font-black uppercase tracking-widest outline-none focus:border-brand-cyan cursor-pointer shadow-sm">
+          <select v-model="statusFilter" class="bg-white border border-slate-100 px-6 py-4 text-[10px] font-black uppercase tracking-widest outline-none focus:border-brand-azure cursor-pointer shadow-sm">
             <option value="all">Status: All</option>
             <option value="Accepted">Status: Placed</option>
             <option value="Searching">Status: Searching</option>
@@ -26,7 +26,7 @@
           
           <button 
             v-if="isSuperCoordinator"
-            class="bg-brand-cyan text-brand-navy px-8 py-4 font-black text-[10px] uppercase tracking-[0.2em] hover:brightness-110 transition-all flex items-center gap-3 shadow-xl shadow-black/10"
+            class="bg-brand-azure text-brand-navy px-8 py-4 font-black text-[10px] uppercase tracking-[0.2em] hover:brightness-110 transition-all flex items-center gap-3 shadow-xl shadow-black/10"
             @click="openAddModal"
           >
             <i class="pi pi-user-plus"></i>
@@ -38,13 +38,13 @@
       <!-- Data Table -->
       <article class="bg-white border border-slate-100 shadow-sm relative">
         <div v-if="isLoading" class="absolute inset-0 bg-white/50 backdrop-blur-[2px] z-20 flex items-center justify-center">
-          <i class="pi pi-spin pi-spinner text-3xl text-brand-cyan"></i>
+          <i class="pi pi-spin pi-spinner text-3xl text-brand-azure"></i>
         </div>
 
         <div class="overflow-x-auto">
           <table class="w-full text-left min-w-[700px]">
             <thead>
-              <tr class="text-[9px] font-black text-text-veryMuted uppercase tracking-[0.2em] bg-slate-50/50 border-b border-slate-100">
+              <tr class="text-[9px] font-black text-text-muted uppercase tracking-[0.2em] bg-slate-50/50 border-b border-slate-100">
                 <th class="px-4 sm:px-10 py-4 sm:py-6">Identity</th>
                 <th class="px-4 sm:px-10 py-4 sm:py-6">Placement Status</th>
                 <th class="px-4 sm:px-10 py-4 sm:py-6">Milestone Progress</th>
@@ -71,7 +71,7 @@
                 <td class="px-4 sm:px-10 py-4 sm:py-8">
                   <span :class="[
                     'px-3 py-1 text-[9px] font-black uppercase tracking-tighter border whitespace-nowrap',
-                    student.placementStatus === 'Accepted' ? 'bg-brand-navy text-white border-brand-navy' : 
+                    student.placementStatus === 'Accepted' ? 'bg-brand-emerald text-white border-brand-emerald' : 
                     student.placementStatus === 'Searching' ? 'bg-brand-gold text-black border-brand-gold' : 'bg-white text-text-veryMuted border-slate-100'
                   ]">
                     {{ student.placementStatus || 'Searching' }}
@@ -80,7 +80,7 @@
                 <td class="px-4 sm:px-10 py-4 sm:py-8">
                   <div class="flex items-center gap-2 sm:gap-4">
                     <div class="flex-1 h-1 bg-slate-100 max-w-[80px] sm:max-w-[100px] overflow-hidden">
-                      <div class="h-full bg-brand-cyan transition-all duration-1000" :style="{ width: student.completionPercent + '%' }"></div>
+                      <div class="h-full bg-brand-azure transition-all duration-1000" :style="{ width: student.completionPercent + '%' }"></div>
                     </div>
                     <span class="text-[9px] font-black text-brand-navy tabular-nums">{{ student.completionPercent }}%</span>
                   </div>
@@ -99,7 +99,7 @@
                     <button v-if="isSuperCoordinator" class="h-8 w-8 border border-brand-navy text-brand-navy hover:bg-brand-navy hover:text-white flex items-center justify-center" @click="deleteStudent(student.id)">
                       <i class="pi pi-trash text-[10px]"></i>
                     </button>
-                    <button class="h-8 w-8 bg-slate-100 text-slate-400 hover:bg-brand-cyan hover:text-brand-navy flex items-center justify-center" @click="selectStudent(student)">
+                    <button class="h-8 w-8 bg-slate-100 text-slate-400 hover:bg-brand-azure hover:text-brand-navy flex items-center justify-center" @click="selectStudent(student)">
                       <i class="pi pi-chevron-right text-[10px]"></i>
                     </button>
                   </div>
@@ -134,7 +134,7 @@
               <span class="text-xs font-bold text-slate-400 tabular-nums uppercase">{{ selectedStudent.student_id }}</span>
             </div>
             
-            <div class="grid grid-cols-2 gap-8 pt-8 border-t border-blue-900/50">
+            <div class="grid grid-cols-2 gap-8 pt-8 border-t border-white/10">
               <div>
                 <p class="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-2">Email Access</p>
                 <p class="text-xs font-bold truncate text-slate-300">{{ selectedStudent.email || 'N/A' }}</p>
@@ -151,7 +151,7 @@
               <span class="text-[9px] font-black text-text-veryMuted uppercase tracking-widest">Checklist State</span>
               <div class="flex items-end justify-between">
                 <span class="text-3xl font-black text-brand-navy tabular-nums">{{ selectedStudent.completionPercent }}%</span>
-                <div class="h-10 w-1 bg-brand-cyan"></div>
+                <div class="h-10 w-1 bg-brand-azure"></div>
               </div>
             </div>
             <div class="border border-slate-100 p-6 flex flex-col gap-4">
@@ -167,7 +167,7 @@
             <p class="text-[10px] font-black text-text-veryMuted uppercase tracking-widest mb-6 leading-relaxed">
               For detailed logbook tracking and document validation, please proceed to the full profile view.
             </p>
-            <NuxtLink :to="`/student?id=${selectedStudent.id}`" class="inline-block bg-brand-cyan text-brand-navy px-8 py-3 text-[9px] font-black uppercase tracking-[0.2em] hover:brightness-110 transition-all">
+            <NuxtLink :to="`/student?id=${selectedStudent.id}`" class="inline-block bg-brand-azure text-brand-navy px-8 py-3 text-[9px] font-black uppercase tracking-[0.2em] hover:brightness-110 transition-all">
               Launch Detailed View
             </NuxtLink>
           </div>
@@ -188,19 +188,19 @@
         <form @submit.prevent="saveStudent" class="space-y-8">
           <div class="space-y-2">
             <label class="text-[9px] font-black text-text-muted uppercase tracking-widest">Full Name</label>
-            <input v-model="form.full_name" type="text" required class="w-full bg-slate-50 border border-slate-100 px-5 py-4 text-xs font-black uppercase focus:border-brand-cyan outline-none transition-all">
+            <input v-model="form.full_name" type="text" required class="w-full bg-slate-50 border border-slate-100 px-5 py-4 text-xs font-black uppercase focus:border-brand-azure outline-none transition-all">
           </div>
           <div class="grid grid-cols-2 gap-6">
             <div class="space-y-2">
               <label class="text-[9px] font-black text-text-muted uppercase tracking-widest">Matric Number</label>
-              <input v-model="form.student_id" type="text" class="w-full bg-slate-50 border border-slate-100 px-5 py-4 text-xs font-black uppercase focus:border-brand-cyan outline-none transition-all tabular-nums">
+              <input v-model="form.student_id" type="text" class="w-full bg-slate-50 border border-slate-100 px-5 py-4 text-xs font-black uppercase focus:border-brand-azure outline-none transition-all tabular-nums">
             </div>
             <div class="space-y-2">
               <label class="text-[9px] font-black text-text-muted uppercase tracking-widest">Email Address</label>
-              <input v-model="form.email" type="email" required class="w-full bg-slate-50 border border-slate-100 px-5 py-4 text-xs font-black uppercase focus:border-brand-cyan outline-none transition-all">
+              <input v-model="form.email" type="email" required class="w-full bg-slate-50 border border-slate-100 px-5 py-4 text-xs font-black uppercase focus:border-brand-azure outline-none transition-all">
             </div>
           </div>
-          <button type="submit" :disabled="isSaving" class="w-full bg-brand-cyan text-brand-navy h-16 font-black text-[10px] uppercase tracking-[0.4em] hover:brightness-110 transition-all disabled:opacity-30">
+          <button type="submit" :disabled="isSaving" class="w-full bg-brand-azure text-brand-navy h-16 font-black text-[10px] uppercase tracking-[0.4em] hover:brightness-110 transition-all disabled:opacity-30">
             {{ isSaving ? 'Syncing...' : 'Confirm Enrollment' }}
           </button>
         </form>

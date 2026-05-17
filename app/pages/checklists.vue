@@ -7,7 +7,7 @@
       </div>
       <button
         v-if="isSuperCoordinator"
-        class="bg-brand-cyan text-brand-navy px-6 py-3 rounded-none font-black text-[10px] uppercase tracking-[0.2em] hover:brightness-110 transition-all flex items-center gap-3"
+        class="bg-brand-azure text-brand-navy px-6 py-3 rounded-none font-black text-[10px] uppercase tracking-[0.2em] hover:brightness-110 transition-all flex items-center gap-3"
         @click="openAddForm"
       >
         <i class="pi pi-plus"></i>
@@ -25,13 +25,13 @@
 
     <article class="bg-white border border-slate-100 shadow-sm relative overflow-hidden">
       <div v-if="isLoading" class="absolute inset-0 bg-white/50 z-10 flex items-center justify-center backdrop-blur-sm">
-        <i class="pi pi-spin pi-spinner text-2xl text-brand-cyan"></i>
+        <i class="pi pi-spin pi-spinner text-2xl text-brand-azure"></i>
       </div>
 
       <div class="overflow-x-auto">
         <table class="w-full text-left min-w-[500px]">
           <thead>
-            <tr class="text-[10px] font-black text-text-veryMuted uppercase tracking-[0.2em] bg-slate-50/50 border-b border-slate-100">
+            <tr class="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] bg-slate-50/50 border-b border-slate-100">
               <th class="px-4 sm:px-8 py-4 sm:py-6">Order</th>
               <th class="px-4 sm:px-8 py-4 sm:py-6">Requirement Title</th>
               <th class="px-4 sm:px-8 py-4 sm:py-6">Mandatory</th>
@@ -81,27 +81,27 @@
           <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div class="md:col-span-3 space-y-2">
               <label class="text-[9px] font-black text-text-muted uppercase tracking-widest">Title</label>
-              <input v-model="form.title" type="text" required class="w-full bg-white border border-slate-100 rounded-none px-4 py-3 text-xs font-black uppercase tracking-widest focus:border-brand-cyan outline-none transition-all text-brand-navy">
+              <input v-model="form.title" type="text" required class="w-full bg-white border border-slate-100 rounded-none px-4 py-3 text-xs font-black uppercase tracking-widest focus:border-brand-azure outline-none transition-all text-brand-navy">
             </div>
             <div class="space-y-2">
               <label class="text-[9px] font-black text-text-muted uppercase tracking-widest">Order</label>
-              <input v-model="form.display_order" type="number" required class="w-full bg-white border border-slate-100 rounded-none px-4 py-3 text-xs font-black uppercase tracking-widest focus:border-brand-cyan outline-none transition-all tabular-nums text-brand-navy">
+              <input v-model="form.display_order" type="number" required class="w-full bg-white border border-slate-100 rounded-none px-4 py-3 text-xs font-black uppercase tracking-widest focus:border-brand-azure outline-none transition-all tabular-nums text-brand-navy">
             </div>
           </div>
 
           <div class="space-y-2">
             <label class="text-[9px] font-black text-text-muted uppercase tracking-widest">Description</label>
-            <textarea v-model="form.description" rows="3" class="w-full bg-white border border-slate-100 rounded-none px-4 py-3 text-xs font-bold uppercase tracking-widest focus:border-brand-cyan outline-none transition-all resize-none text-brand-navy"></textarea>
+            <textarea v-model="form.description" rows="3" class="w-full bg-white border border-slate-100 rounded-none px-4 py-3 text-xs font-bold uppercase tracking-widest focus:border-brand-azure outline-none transition-all resize-none text-brand-navy"></textarea>
           </div>
 
           <div class="flex items-center gap-3 group cursor-pointer" @click="form.required = !form.required">
-            <div class="h-5 w-5 border border-brand-navy flex items-center justify-center transition-all" :class="form.required ? 'bg-brand-navy' : 'bg-white'">
+            <div class="h-5 w-5 border-2 border-slate-500 flex items-center justify-center transition-all" :class="form.required ? 'bg-brand-navy border-brand-navy' : 'bg-white'">
               <i v-if="form.required" class="pi pi-check text-[10px] text-white"></i>
             </div>
             <span class="text-[10px] font-black uppercase tracking-widest text-brand-navy">Mandatory for all students</span>
           </div>
           
-          <button type="submit" :disabled="isSaving" class="w-full bg-brand-cyan text-brand-navy h-14 font-black text-[10px] uppercase tracking-[0.3em] hover:brightness-110 transition-all disabled:opacity-30 mt-4">
+          <button type="submit" :disabled="isSaving" class="w-full bg-brand-azure text-brand-navy h-14 font-black text-[10px] uppercase tracking-[0.3em] hover:brightness-110 transition-all disabled:opacity-30 mt-4">
             {{ isSaving ? 'Processing...' : 'Save Template' }}
           </button>
         </form>

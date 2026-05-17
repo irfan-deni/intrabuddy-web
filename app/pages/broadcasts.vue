@@ -19,7 +19,7 @@
             type="text" 
             placeholder="e.g., Mandatory Industry Briefing"
             required 
-            class="w-full bg-white border border-slate-100 rounded-none px-6 py-4 text-xs font-black uppercase tracking-widest focus:border-brand-cyan outline-none transition-all text-brand-navy placeholder:text-slate-300"
+            class="w-full bg-white border border-slate-100 rounded-none px-6 py-4 text-xs font-black uppercase tracking-widest focus:border-brand-azure outline-none transition-all text-brand-navy placeholder:text-slate-300"
           >
         </div>
 
@@ -30,18 +30,18 @@
             rows="5" 
             placeholder="Enter the message you want to broadcast to all students..."
             required 
-            class="w-full bg-white border border-slate-100 rounded-none px-6 py-4 text-xs font-bold uppercase tracking-widest focus:border-brand-cyan outline-none transition-all resize-none leading-relaxed text-brand-navy placeholder:text-slate-300"
+            class="w-full bg-white border border-slate-100 rounded-none px-6 py-4 text-xs font-bold uppercase tracking-widest focus:border-brand-azure outline-none transition-all resize-none leading-relaxed text-brand-navy placeholder:text-slate-300"
           ></textarea>
         </div>
 
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 pt-4">
           <div class="flex items-center gap-6">
             <label class="flex items-center gap-3 cursor-pointer group">
-              <input type="checkbox" v-model="form.target_roles" value="student" class="h-4 w-4 rounded-none border-brand-navy text-brand-cyan focus:ring-0">
+              <input type="checkbox" v-model="form.target_roles" value="student" class="h-4 w-4 appearance-none rounded-none border-2 border-slate-400 checked:border-brand-azure checked:bg-brand-azure focus:ring-0">
               <span class="text-[9px] font-black uppercase tracking-widest text-text-muted group-hover:text-brand-navy transition-colors">Target Students</span>
             </label>
             <label class="flex items-center gap-3 cursor-pointer group">
-              <input type="checkbox" v-model="form.target_roles" value="coordinator" class="h-4 w-4 rounded-none border-brand-navy text-brand-cyan focus:ring-0">
+              <input type="checkbox" v-model="form.target_roles" value="coordinator" class="h-4 w-4 appearance-none rounded-none border-2 border-slate-400 checked:border-brand-azure checked:bg-brand-azure focus:ring-0">
               <span class="text-[9px] font-black uppercase tracking-widest text-text-muted group-hover:text-brand-navy transition-colors">Internal Only</span>
             </label>
           </div>
@@ -49,7 +49,7 @@
           <button 
             type="submit" 
             :disabled="isSending" 
-            class="bg-brand-cyan text-brand-navy px-10 py-4 font-black text-[10px] uppercase tracking-[0.3em] hover:brightness-110 transition-all flex items-center gap-3 disabled:opacity-30"
+            class="bg-brand-azure text-brand-navy px-10 py-4 font-black text-[10px] uppercase tracking-[0.3em] hover:brightness-110 transition-all flex items-center gap-3 disabled:opacity-30"
           >
             <i class="pi pi-send"></i>
             {{ isSending ? 'Broadcasting...' : 'Confirm Dispatch' }}
@@ -67,7 +67,7 @@
       <div class="bg-white border border-slate-100 overflow-x-auto">
         <table class="w-full text-left min-w-[600px]">
           <thead>
-            <tr class="text-[9px] font-black text-text-veryMuted uppercase tracking-[0.2em] bg-slate-50/50">
+            <tr class="text-[9px] font-black text-text-muted uppercase tracking-[0.2em] bg-slate-50/50">
               <th class="px-4 sm:px-10 py-4 sm:py-6">Message Identifier</th>
               <th class="px-4 sm:px-10 py-4 sm:py-6">Recipients</th>
               <th class="px-4 sm:px-10 py-4 sm:py-6 text-right">Timestamp</th>
@@ -111,8 +111,8 @@
     </section>
 
     <Transition name="fade">
-      <div v-if="successToast" class="fixed bottom-10 right-10 z-[100] bg-brand-navy text-white px-8 py-6 shadow-2xl flex items-center gap-6 border-l-8 border-brand-cyan">
-        <div class="h-10 w-10 bg-brand-cyan text-brand-navy flex items-center justify-center">
+      <div v-if="successToast" class="fixed bottom-10 right-10 z-[100] bg-brand-navy text-white px-8 py-6 shadow-2xl flex items-center gap-6 border-l-8 border-brand-azure">
+        <div class="h-10 w-10 bg-brand-azure text-brand-navy flex items-center justify-center">
           <i class="pi pi-check text-sm"></i>
         </div>
         <div>

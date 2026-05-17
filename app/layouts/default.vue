@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-[#F8FAFC] flex font-sans selection:bg-brand-blue selection:text-white">
+  <div class="min-h-screen bg-brand-bg flex font-sans selection:bg-brand-azure selection:text-white">
     <!-- Mobile Overlay -->
     <div
       v-if="mobileOpen"
@@ -39,7 +39,7 @@
             collapsed && isLgScreen ? 'justify-center' : '',
             route.path === item.path
               ? 'bg-white text-brand-navy shadow-xl shadow-black/20'
-              : 'text-slate-400 hover:text-white'
+              : 'text-white/60 hover:text-white'
           ]"
           @click="mobileOpen = false"
         >
@@ -53,7 +53,7 @@
       <!-- Desktop Collapse Toggle (hidden on mobile) -->
       <div class="px-4 pb-2 hidden lg:block">
         <button
-          class="w-full flex items-center justify-center gap-3 px-4 py-3 text-slate-500 hover:text-white hover:bg-blue-900/30 transition-all cursor-pointer"
+          class="w-full flex items-center justify-center gap-3 px-4 py-3 text-slate-500 hover:text-white hover:bg-white/5 transition-all cursor-pointer"
           :class="collapsed ? 'px-0' : ''"
           @click="collapsed = !collapsed"
         >
@@ -68,13 +68,13 @@
       </div>
 
       <!-- Sign Out -->
-      <div class="p-6 border-t border-blue-900/50" :class="collapsed && isLgScreen ? 'p-4 flex justify-center' : ''">
+      <div class="p-6 border-t border-white/10" :class="collapsed && isLgScreen ? 'p-4 flex justify-center' : ''">
         <div
           class="flex items-center gap-4 group cursor-pointer"
           :class="collapsed && isLgScreen ? 'justify-center' : ''"
           @click="handleLogout"
         >
-          <div class="h-10 w-10 bg-blue-900/50 flex items-center justify-center group-hover:bg-white group-hover:text-brand-navy transition-colors flex-shrink-0">
+          <div class="h-10 w-10 bg-white/10 flex items-center justify-center group-hover:bg-white group-hover:text-brand-navy transition-colors flex-shrink-0">
             <i class="pi pi-sign-out text-sm"></i>
           </div>
           <Transition name="fade-text">
@@ -99,7 +99,7 @@
           <button class="lg:hidden h-10 w-10 flex items-center justify-center text-slate-400 hover:text-brand-navy hover:bg-slate-100 transition-all" @click="mobileOpen = !mobileOpen">
             <i class="pi pi-bars text-lg"></i>
           </button>
-          <div class="hidden sm:flex text-[10px] font-black uppercase tracking-widest text-slate-300 items-center gap-3">
+          <div class="hidden sm:flex text-[10px] font-black uppercase tracking-widest text-slate-500 items-center gap-3">
             <span>Internal</span>
             <i class="pi pi-chevron-right text-[8px]"></i>
             <span class="text-black">{{ currentPageName }}</span>
@@ -123,7 +123,7 @@
       </main>
 
       <!-- Minimal Footer -->
-      <footer class="p-4 sm:p-6 lg:p-12 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-2 text-[9px] font-black text-slate-300 uppercase tracking-widest text-center sm:text-left">
+      <footer class="p-4 sm:p-6 lg:p-12 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-2 text-[9px] font-black text-slate-500 uppercase tracking-widest text-center sm:text-left">
         <span>&copy; 2026 INTRA Buddy Management System</span>
         <span>Version 2.4.0 (Stable)</span>
       </footer>

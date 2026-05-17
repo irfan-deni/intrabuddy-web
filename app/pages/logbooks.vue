@@ -18,7 +18,7 @@
         <div class="flex items-center gap-4">
           <select
             v-model="statusFilter"
-            class="text-[10px] font-black border border-slate-100 rounded-none px-4 py-2 bg-white uppercase tracking-widest outline-none focus:border-brand-cyan transition-all cursor-pointer"
+            class="text-[10px] font-black border border-slate-100 rounded-none px-4 py-2 bg-white uppercase tracking-widest outline-none focus:border-brand-azure transition-all cursor-pointer"
           >
             <option value="all">All Statuses</option>
             <option value="Submitted">Submitted</option>
@@ -39,7 +39,7 @@
       <div class="overflow-x-auto">
         <table class="w-full text-left min-w-[600px]">
           <thead>
-            <tr class="text-[9px] font-black text-text-veryMuted uppercase tracking-[0.2em] bg-slate-50/50 border-b border-slate-100">
+            <tr class="text-[9px] font-black text-text-muted uppercase tracking-[0.2em] bg-slate-50/50 border-b border-slate-100">
               <th class="px-4 sm:px-8 py-4 sm:py-6">Student</th>
               <th class="px-4 sm:px-8 py-4 sm:py-6">Week</th>
               <th class="px-4 sm:px-8 py-4 sm:py-6">End Date</th>
@@ -51,7 +51,7 @@
           <tbody class="text-xs divide-y divide-slate-50">
             <tr v-if="isLoading">
               <td colspan="5" class="px-4 sm:px-8 py-12 sm:py-16 text-center text-text-veryMuted">
-                <i class="pi pi-spin pi-spinner text-xl text-brand-cyan mr-2" />
+                <i class="pi pi-spin pi-spinner text-xl text-brand-azure mr-2" />
                 <span class="text-[10px] font-black uppercase tracking-widest">Loading logbooks...</span>
               </td>
             </tr>

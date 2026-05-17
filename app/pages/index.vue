@@ -2,9 +2,9 @@
   <div class="space-y-8 md:space-y-12">
     <!-- Row 1: Metric Cards -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
-      <div v-for="stat in stats" :key="stat.label" class="bg-white p-4 sm:p-8 border border-slate-100 hover:border-brand-cyan transition-all group relative overflow-hidden">
+      <div v-for="stat in stats" :key="stat.label" class="bg-white p-4 sm:p-8 border border-slate-100 hover:border-brand-azure transition-all group relative overflow-hidden">
         <div class="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-          <i :class="[stat.icon, 'text-4xl text-brand-cyan']"></i>
+          <i :class="[stat.icon, 'text-4xl text-brand-azure']"></i>
         </div>
         <div class="flex items-center gap-3 mb-6">
           <div class="h-8 w-8 bg-brand-navy text-white flex items-center justify-center">
@@ -28,7 +28,7 @@
             <circle 
               cx="18" cy="18" r="16" 
               fill="none" 
-              class="stroke-brand-cyan" 
+              class="stroke-brand-azure" 
               stroke-width="3" 
               stroke-dasharray="100" 
               :stroke-dashoffset="100 - (placementPercentage || 0)"
@@ -69,7 +69,7 @@
             Active: <br> {{ cohortName || 'Scanning...' }}
           </h3>
         </div>
-        <NuxtLink to="/broadcasts" class="inline-flex items-center gap-3 group text-brand-cyan">
+        <NuxtLink to="/broadcasts" class="inline-flex items-center gap-3 group text-brand-azure">
           <span class="text-[10px] font-black uppercase tracking-widest group-hover:underline underline-offset-8">Dispatch Alert</span>
           <i class="pi pi-arrow-right text-[10px]"></i>
         </NuxtLink>
@@ -80,7 +80,7 @@
       <div class="flex items-center justify-between">
         <h2 class="text-[11px] font-black text-brand-navy uppercase tracking-[0.2em]">Logbook Intelligence</h2>
         <div class="flex items-center gap-4">
-          <select v-model="statusFilter" class="text-[10px] font-black border border-slate-200 rounded-none px-4 py-2 bg-white uppercase tracking-widest outline-none focus:border-brand-cyan transition-all">
+          <select v-model="statusFilter" class="text-[10px] font-black border border-slate-200 rounded-none px-4 py-2 bg-white uppercase tracking-widest outline-none focus:border-brand-azure transition-all">
             <option value="all">All Submissions</option>
             <option value="Submitted">Approved</option>
             <option value="Late">Pending/Late</option>
@@ -92,7 +92,7 @@
         <div class="overflow-x-auto">
           <table class="w-full text-left min-w-[600px]">
             <thead>
-              <tr class="text-[9px] font-black text-text-veryMuted uppercase tracking-[0.2em] bg-slate-50/50">
+              <tr class="text-[9px] font-black text-text-muted uppercase tracking-[0.2em] bg-slate-50/50">
                 <th class="px-4 sm:px-8 py-4 sm:py-6">Student Identity</th>
                 <th class="px-4 sm:px-8 py-4 sm:py-6">Period</th>
                 <th class="px-4 sm:px-8 py-4 sm:py-6">Status</th>
@@ -114,7 +114,7 @@
                   <span class="font-black text-brand-navy tracking-tighter text-[11px] sm:text-xs">WEEK {{ entry.weekNumber }}</span>
                 </td>
                 <td class="px-4 sm:px-8 py-4 sm:py-6">
-                  <span v-if="entry.statusLabel === 'Submitted'" class="px-2 py-0.5 bg-brand-navy text-white text-[9px] font-black uppercase tracking-tighter">Approved</span>
+                  <span v-if="entry.statusLabel === 'Submitted'" class="px-2 py-0.5 bg-brand-emerald text-white text-[9px] font-black uppercase tracking-tighter">Approved</span>
                   <span v-else class="px-2 py-0.5 bg-brand-gold text-black text-[9px] font-black uppercase tracking-tighter">{{ entry.statusLabel }}</span>
                 </td>
                 <td class="px-4 sm:px-8 py-4 sm:py-6 text-right text-text-veryMuted font-bold tabular-nums group-hover:text-brand-navy transition-colors text-[10px] sm:text-xs">

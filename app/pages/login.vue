@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-[#F8FAFC] px-6">
+  <div class="min-h-screen flex items-center justify-center bg-brand-bg px-6">
     <div class="w-full max-w-md">
       <div class="text-center mb-10">
         <div class="inline-flex items-center justify-center h-14 w-14 bg-brand-navy text-white mb-4">
@@ -21,7 +21,7 @@
             type="email"
             required
             placeholder="name@university.edu"
-            class="w-full px-5 py-4 bg-white border border-slate-100 outline-none focus:border-brand-cyan text-sm font-black uppercase tracking-widest text-brand-navy placeholder:text-slate-300 transition"
+            class="w-full px-5 py-4 bg-white border border-slate-100 outline-none focus:border-brand-azure text-sm font-black uppercase tracking-widest text-brand-navy placeholder:text-slate-300 transition"
           >
         </div>
 
@@ -32,14 +32,14 @@
             type="password"
             required
             placeholder="••••••••"
-            class="w-full px-5 py-4 bg-white border border-slate-100 outline-none focus:border-brand-cyan text-sm font-black uppercase tracking-widest text-brand-navy placeholder:text-slate-300 transition"
+            class="w-full px-5 py-4 bg-white border border-slate-100 outline-none focus:border-brand-azure text-sm font-black uppercase tracking-widest text-brand-navy placeholder:text-slate-300 transition"
           >
         </div>
 
         <button
           type="submit"
           :disabled="loading"
-          class="w-full py-4 bg-brand-cyan text-brand-navy font-black text-[10px] uppercase tracking-[0.3em] hover:brightness-110 transition disabled:opacity-50"
+          class="w-full py-4 bg-brand-azure text-brand-navy font-black text-[10px] uppercase tracking-[0.3em] hover:brightness-110 transition disabled:opacity-50"
         >
           {{ loading ? 'Signing in...' : 'Sign In' }}
         </button>

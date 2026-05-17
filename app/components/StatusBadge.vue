@@ -25,7 +25,7 @@ const badgeClass = computed(() => {
   const isWarning = ['Interview', 'Pending', 'NO', 'Not Submitted', 'Late', 'Searching'].includes(props.status || '')
 
   if (isPositive) {
-    return 'bg-brand-navy text-white border-brand-navy shadow-sm shadow-black/10'
+    return 'bg-brand-emerald text-white border-brand-emerald shadow-sm shadow-black/10'
   }
 
   if (isWarning) {
