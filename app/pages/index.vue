@@ -1,6 +1,6 @@
 <template>
   <div class="space-y-8">
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       <Card v-for="stat in stats" :key="stat.label" class="bg-white shadow-sm border border-stone-200">
         <template #content>
           <div class="p-6">

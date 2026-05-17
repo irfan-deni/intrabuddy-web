@@ -1,22 +1,16 @@
 <template>
   <div class="min-h-screen bg-brand-bg flex font-sans selection:bg-brand-azure selection:text-white">
-    <div
-      v-if="mobileOpen"
-      class="fixed inset-0 bg-black/60 z-40 lg:hidden"
-      @click="mobileOpen = false"
-    ></div>
-
     <aside
-      class="bg-slate-900 text-white flex flex-col fixed h-screen z-50 transition-all duration-300 ease-in-out"
-      :class="[isLgScreen ? (collapsed ? 'w-20' : 'w-72') : mobileOpen ? 'left-0' : '-left-80']"
+      class="hidden lg:flex bg-slate-900 text-white flex-col fixed h-screen z-50 transition-all duration-300 ease-in-out"
+      :class="collapsed ? 'w-20' : 'w-72'"
     >
-      <div :class="collapsed && isLgScreen ? 'p-5' : 'p-8'">
-        <div class="flex items-center" :class="collapsed && isLgScreen ? 'justify-center' : 'gap-3'">
+      <div :class="collapsed ? 'p-5' : 'p-8'">
+        <div class="flex items-center" :class="collapsed ? 'justify-center' : 'gap-3'">
           <div class="bg-white p-1.5 flex-shrink-0">
             <i class="pi pi-graduation-cap text-slate-900 text-xl"></i>
           </div>
           <Transition name="fade-text">
-            <span v-if="!collapsed || !isLgScreen" class="text-lg font-black tracking-[0.3em] uppercase text-white whitespace-nowrap">INTRA Buddy</span>
+            <span v-if="!collapsed" class="text-lg font-black tracking-[0.3em] uppercase text-white whitespace-nowrap">INTRA Buddy</span>
           </Transition>
         </div>
       </div>
@@ -28,21 +22,20 @@
           :to="item.path"
           class="flex items-center gap-4 px-4 py-3 text-xs font-bold uppercase tracking-wider transition-all rounded-lg"
           :class="[
-            collapsed && isLgScreen ? 'justify-center px-0' : '',
+            collapsed ? 'justify-center px-0' : '',
             route.path === item.path
               ? 'bg-sky-600 text-white shadow-md'
               : 'text-white/70 hover:bg-white/10 hover:text-white'
           ]"
-          @click="mobileOpen = false"
         >
           <i :class="[item.icon, 'text-lg flex-shrink-0']"></i>
           <Transition name="fade-text">
-            <span v-if="!collapsed || !isLgScreen">{{ item.name }}</span>
+            <span v-if="!collapsed">{{ item.name }}</span>
           </Transition>
         </NuxtLink>
       </nav>
 
-      <div class="px-4 pb-2 hidden lg:block">
+      <div class="px-4 pb-2">
         <button
           class="w-full flex items-center justify-center gap-3 px-4 py-3 text-white/50 hover:text-white hover:bg-white/10 transition-all rounded-lg"
           :class="collapsed ? 'px-0' : ''"
@@ -55,17 +48,17 @@
         </button>
       </div>
 
-      <div class="p-6 border-t border-white/10" :class="collapsed && isLgScreen ? 'p-4 flex justify-center' : ''">
+      <div class="p-6 border-t border-white/10" :class="collapsed ? 'p-4 flex justify-center' : ''">
         <div
           class="flex items-center gap-4 group cursor-pointer"
-          :class="collapsed && isLgScreen ? 'justify-center' : ''"
+          :class="collapsed ? 'justify-center' : ''"
           @click="handleLogout"
         >
           <div class="h-10 w-10 bg-white/10 flex items-center justify-center group-hover:bg-white group-hover:text-slate-900 transition-colors rounded-lg flex-shrink-0">
             <i class="pi pi-sign-out text-sm"></i>
           </div>
           <Transition name="fade-text">
-            <div v-if="!collapsed || !isLgScreen" class="flex flex-col">
+            <div v-if="!collapsed" class="flex flex-col">
               <span class="text-xs font-bold tracking-wider text-white/50 group-hover:text-white transition-colors">Sign Out</span>
               <span class="text-[10px] text-white/30 tracking-wide">{{ profile?.email || 'System' }}</span>
             </div>
@@ -74,9 +67,60 @@
       </div>
     </aside>
 
+    <Sidebar
+      v-model:visible="mobileOpen"
+      position="left"
+      :showCloseIcon="false"
+      :dismissable="true"
+      class="lg:hidden !bg-slate-900 !text-white !w-72 !border-none"
+      :pt="{
+        mask: { class: 'lg:hidden' },
+        root: { class: 'lg:hidden' }
+      }"
+    >
+      <div class="p-8">
+        <div class="flex items-center gap-3">
+          <div class="bg-white p-1.5 flex-shrink-0">
+            <i class="pi pi-graduation-cap text-slate-900 text-xl"></i>
+          </div>
+          <span class="text-lg font-black tracking-[0.3em] uppercase text-white whitespace-nowrap">INTRA Buddy</span>
+        </div>
+      </div>
+
+      <nav class="flex-1 px-4 space-y-1">
+        <NuxtLink
+          v-for="item in navigation"
+          :key="item.path"
+          :to="item.path"
+          class="flex items-center gap-4 px-4 py-3 text-xs font-bold uppercase tracking-wider transition-all rounded-lg"
+          :class="[
+            route.path === item.path
+              ? 'bg-sky-600 text-white shadow-md'
+              : 'text-white/70 hover:bg-white/10 hover:text-white'
+          ]"
+          @click="mobileOpen = false"
+        >
+          <i :class="[item.icon, 'text-lg flex-shrink-0']"></i>
+          <span>{{ item.name }}</span>
+        </NuxtLink>
+      </nav>
+
+      <div class="p-6 border-t border-white/10 mt-auto">
+        <div class="flex items-center gap-4 group cursor-pointer" @click="handleLogout">
+          <div class="h-10 w-10 bg-white/10 flex items-center justify-center group-hover:bg-white group-hover:text-slate-900 transition-colors rounded-lg flex-shrink-0">
+            <i class="pi pi-sign-out text-sm"></i>
+          </div>
+          <div class="flex flex-col">
+            <span class="text-xs font-bold tracking-wider text-white/50 group-hover:text-white transition-colors">Sign Out</span>
+            <span class="text-[10px] text-white/30 tracking-wide">{{ profile?.email || 'System' }}</span>
+          </div>
+        </div>
+      </div>
+    </Sidebar>
+
     <div
       class="flex-1 flex flex-col min-h-screen transition-all duration-300 ease-in-out"
-      :class="isLgScreen ? (collapsed ? 'ml-20' : 'ml-72') : 'ml-0'"
+      :class="collapsed ? 'lg:ml-20' : 'lg:ml-72'"
     >
       <header class="h-16 lg:h-20 bg-white border-b border-stone-200 flex items-center justify-between px-4 lg:px-10 sticky top-0 z-30">
         <div class="flex items-center gap-3 lg:gap-4">
@@ -124,20 +168,6 @@ const { isSuperCoordinator } = useCoordinatorPrivileges()
 
 const collapsed = ref(false)
 const mobileOpen = ref(false)
-const isLgScreen = ref(false)
-
-const checkScreen = () => {
-  isLgScreen.value = window.innerWidth >= 1024
-}
-
-onMounted(() => {
-  checkScreen()
-  window.addEventListener('resize', checkScreen)
-})
-
-onUnmounted(() => {
-  window.removeEventListener('resize', checkScreen)
-})
 
 const navigation = [
   { name: 'Dashboard', path: '/', icon: 'pi pi-chart-bar' },
