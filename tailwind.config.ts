@@ -18,12 +18,12 @@ export default <Partial<Config>>{
           gold: '#F59E0B',
           emerald: '#10B981',
           red: '#DC2626',
-          bg: '#F8FAFC'
+          bg: '#FAFAF9'
         },
         text: {
-          primary: '#1E293B',
-          muted: '#64748B',
-          veryMuted: '#94A3B8'
+          primary: '#292524',
+          muted: '#57534E',
+          veryMuted: '#78716C'
         }
       }
     }

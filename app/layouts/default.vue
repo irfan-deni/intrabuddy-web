@@ -185,10 +185,10 @@ const handleLogout = async () => {
   width: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #f8fafc;
+  background: #FAFAF9;
 }
 ::-webkit-scrollbar-thumb {
-  background: #e2e8f0;
+  background: #e7e5e4;
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #000;
