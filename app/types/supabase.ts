@@ -166,6 +166,8 @@ export type Database = {
           completed_at: string | null
           due_date: string | null
           notes: string | null
+          override_reason: string | null
+          updated_by_admin: string | null
         }
         Insert: {
           id?: number
@@ -175,6 +177,8 @@ export type Database = {
           completed_at?: string | null
           due_date?: string | null
           notes?: string | null
+          override_reason?: string | null
+          updated_by_admin?: string | null
         }
         Update: {
           id?: number
@@ -184,6 +188,8 @@ export type Database = {
           completed_at?: string | null
           due_date?: string | null
           notes?: string | null
+          override_reason?: string | null
+          updated_by_admin?: string | null
         }
         Relationships: [
           {
@@ -213,6 +219,8 @@ export type Database = {
           notes: string | null
           created_at: string | null
           updated_at: string | null
+          override_reason: string | null
+          updated_by_admin: string | null
         }
         Insert: {
           id?: number
@@ -224,6 +232,8 @@ export type Database = {
           notes?: string | null
           created_at?: string | null
           updated_at?: string | null
+          override_reason?: string | null
+          updated_by_admin?: string | null
         }
         Update: {
           id?: number
@@ -235,6 +245,8 @@ export type Database = {
           notes?: string | null
           created_at?: string | null
           updated_at?: string | null
+          override_reason?: string | null
+          updated_by_admin?: string | null
         }
         Relationships: [
           {

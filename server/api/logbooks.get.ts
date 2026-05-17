@@ -31,6 +31,7 @@ export default defineEventHandler(async (event) => {
         week_end_date,
         is_submitted,
         submitted_at,
+        reminder_sent,
         student_id,
         users:student_id (
           full_name,
@@ -64,7 +65,8 @@ export default defineEventHandler(async (event) => {
         weekEndDate: entry.week_end_date,
         isSubmitted: entry.is_submitted,
         submittedAt: entry.submitted_at,
-        statusLabel
+        statusLabel,
+        reminderSent: entry.reminder_sent || false
       }
     })
 

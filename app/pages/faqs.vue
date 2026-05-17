@@ -29,8 +29,8 @@
       >
     </div>
 
-    <!-- Category Filter Pills -->
-    <div class="flex flex-wrap gap-2" v-if="categories.length > 0">
+    <!-- Category Filter Pills + Management -->
+    <div class="flex flex-wrap items-center gap-2">
       <button
         class="px-4 py-2 text-[9px] font-black uppercase tracking-widest border transition-all"
         :class="activeCategory === null ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-stone-400 border-stone-200 hover:border-slate-900 hover:text-slate-800'"
@@ -46,6 +46,13 @@
         @click="activeCategory = cat.id"
       >
         {{ cat.name }}
+      </button>
+      <button
+        v-if="isSuperCoordinator"
+        class="px-4 py-2 text-[9px] font-black uppercase tracking-widest border border-dashed border-stone-300 text-stone-400 hover:border-slate-900 hover:text-slate-800 transition-all"
+        @click="showCategoryForm = true"
+      >
+        <i class="pi pi-pencil mr-1"></i> Manage
       </button>
     </div>
 
@@ -141,6 +148,48 @@
         </form>
       </div>
     </div>
+
+    <!-- Category Management Modal -->
+    <div v-if="showCategoryForm" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-4 sm:p-6">
+      <div class="bg-white w-full max-w-lg p-6 sm:p-10 border border-stone-200 shadow-2xl relative mx-4 sm:mx-0">
+        <button class="absolute top-6 right-6 text-stone-400 hover:text-slate-800 transition-colors" @click="showCategoryForm = false">
+          <i class="pi pi-times"></i>
+        </button>
+
+        <h2 class="text-xl font-black text-slate-800 uppercase tracking-widest mb-8">Manage Categories</h2>
+
+        <div class="space-y-4 mb-8">
+          <div v-for="cat in categories" :key="cat.id" class="flex items-center justify-between gap-4 p-4 bg-stone-50 border border-stone-200">
+            <div>
+              <span class="font-black text-slate-800 uppercase tracking-tight text-xs">{{ cat.name }}</span>
+              <p v-if="cat.description" class="text-[9px] font-bold text-stone-400 uppercase tracking-tighter mt-1">{{ cat.description }}</p>
+            </div>
+            <button class="h-8 w-8 flex items-center justify-center border border-red-400 text-red-400 hover:bg-red-500 hover:text-white transition-all" @click="deleteCategory(cat.id)">
+              <i class="pi pi-trash text-[10px]"></i>
+            </button>
+          </div>
+          <div v-if="categories.length === 0" class="py-8 text-center text-stone-400 font-black uppercase tracking-widest text-[10px]">No categories defined</div>
+        </div>
+
+        <form @submit.prevent="saveCategory" class="space-y-4 border-t border-stone-200 pt-6">
+          <h3 class="text-[11px] font-black text-slate-800 uppercase tracking-[0.2em] mb-4">Add Category</h3>
+          <div class="space-y-2">
+            <label class="text-[9px] font-black text-stone-500 uppercase tracking-widest">Name</label>
+            <input v-model="catForm.name" type="text" required placeholder="e.g., Placement Requirements"
+              class="w-full bg-white border border-stone-200 rounded-none px-4 py-3 text-xs font-black uppercase tracking-widest focus:border-sky-600 focus:ring-1 focus:ring-sky-600 outline-none transition-all text-slate-800">
+          </div>
+          <div class="space-y-2">
+            <label class="text-[9px] font-black text-stone-500 uppercase tracking-widest">Description</label>
+            <input v-model="catForm.description" type="text" placeholder="Brief description"
+              class="w-full bg-white border border-stone-200 rounded-none px-4 py-3 text-xs font-black uppercase tracking-widest focus:border-sky-600 focus:ring-1 focus:ring-sky-600 outline-none transition-all text-slate-800">
+          </div>
+          <button type="submit" :disabled="isSavingCat"
+            class="w-full bg-sky-600 text-white h-12 font-black text-[10px] uppercase tracking-[0.3em] hover:brightness-110 transition-all disabled:opacity-30">
+            {{ isSavingCat ? 'Adding...' : 'Add Category' }}
+          </button>
+        </form>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -162,6 +211,7 @@ const faqs = ref<FaqRow[]>([])
 const categories = ref<CategoryRow[]>([])
 const isLoading = ref(true)
 const isSaving = ref(false)
+const isSavingCat = ref(false)
 const searchQuery = ref('')
 const errorMessage = ref('')
 
@@ -169,6 +219,41 @@ const activeCategory = ref<number | null>(null)
 const showModal = ref(false)
 const editingId = ref<number | null>(null)
 const form = ref({ category_id: null as number | null, question: '', answer: '', keywordsStr: '' })
+
+// Category management
+const showCategoryForm = ref(false)
+const catForm = ref({ name: '', description: '' })
+
+const saveCategory = async () => {
+  isSavingCat.value = true
+  try {
+    const { error } = await supabase.from('faq_categories').insert({
+      name: catForm.value.name,
+      description: catForm.value.description || null,
+      display_order: categories.value.length + 1
+    })
+    if (error) throw error
+    catForm.value = { name: '', description: '' }
+    const { data } = await supabase.from('faq_categories').select('*').order('display_order', { ascending: true })
+    if (data) categories.value = data as CategoryRow[]
+  } catch (error: any) {
+    alert('Failed to add category')
+  } finally {
+    isSavingCat.value = false
+  }
+}
+
+const deleteCategory = async (id: number) => {
+  if (!confirm('Remove this category? Articles in this category will become uncategorized.')) return
+  try {
+    await supabase.from('faqs').update({ category_id: null }).eq('category_id', id)
+    await supabase.from('faq_categories').delete().eq('id', id)
+    const { data } = await supabase.from('faq_categories').select('*').order('display_order', { ascending: true })
+    if (data) categories.value = data as CategoryRow[]
+  } catch (error: any) {
+    alert('Delete failed')
+  }
+}
 
 const filteredFaqs = computed(() => {
   let list = faqs.value
@@ -202,8 +287,8 @@ const fetchInitialData = async () => {
     if (faqRes.error) throw faqRes.error
     if (catRes.error) throw catRes.error
 
-    faqs.value = faqRes.data || []
-    categories.value = catRes.data || []
+    faqs.value = (faqRes.data || []) as FaqRow[]
+    categories.value = (catRes.data || []) as CategoryRow[]
   } catch (error: any) {
     errorMessage.value = 'Database sync failed'
   } finally {

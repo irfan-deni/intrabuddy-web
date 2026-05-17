@@ -40,24 +40,25 @@
         <table class="w-full text-left min-w-[600px]">
           <thead>
             <tr class="text-xs font-semibold text-stone-500 uppercase tracking-wider bg-stone-50/50 border-b border-stone-200">
-              <th class="px-4 sm:px-8 py-4 sm:py-6">Student</th>
+               <th class="px-4 sm:px-8 py-4 sm:py-6">Student</th>
               <th class="px-4 sm:px-8 py-4 sm:py-6">Week</th>
               <th class="px-4 sm:px-8 py-4 sm:py-6">End Date</th>
               <th class="px-4 sm:px-8 py-4 sm:py-6">Status</th>
               <th class="px-4 sm:px-8 py-4 sm:py-6 text-right">Submitted At</th>
+              <th class="px-4 sm:px-8 py-4 sm:py-6 text-right w-32">Actions</th>
             </tr>
           </thead>
           
           <tbody class="text-xs divide-y divide-stone-100">
             <tr v-if="isLoading">
-              <td colspan="5" class="px-4 sm:px-8 py-12 sm:py-16 text-center text-stone-400">
+              <td colspan="6" class="px-4 sm:px-8 py-12 sm:py-16 text-center text-stone-400">
                 <i class="pi pi-spin pi-spinner text-xl text-sky-600 mr-2" />
                 <span class="text-[10px] font-black uppercase tracking-widest">Loading logbooks...</span>
               </td>
             </tr>
 
             <tr v-else-if="logbooks.length === 0">
-              <td colspan="5" class="px-4 sm:px-8 py-12 sm:py-16 text-center text-stone-400">
+              <td colspan="6" class="px-4 sm:px-8 py-12 sm:py-16 text-center text-stone-400">
                 <i class="pi pi-inbox mb-2 text-3xl block"></i>
                 <span class="text-[10px] font-black uppercase tracking-widest">No logbook records found for the active cohort.</span>
               </td>
@@ -80,6 +81,28 @@
               <td class="px-4 sm:px-8 py-4 sm:py-6 text-right text-stone-400 font-black tabular-nums text-[10px]">
                 {{ entry.submittedAt ? formatDate(entry.submittedAt) : '-' }}
               </td>
+              <td class="px-4 sm:px-8 py-4 sm:py-6 text-right">
+                <div class="flex items-center justify-end gap-2">
+                  <button
+                    v-if="!entry.isSubmitted"
+                    class="h-8 px-3 bg-amber-400 text-slate-900 text-[8px] font-black uppercase tracking-wider hover:brightness-110 transition-all"
+                    :disabled="entry.isSendingReminder"
+                    @click="sendReminder(entry)"
+                  >
+                    <i class="pi pi-bell mr-1"></i>
+                    {{ entry.isSendingReminder ? '...' : 'Remind' }}
+                  </button>
+                  <button
+                    v-if="isSuperCoordinator"
+                    class="h-8 px-3 bg-slate-900 text-white text-[8px] font-black uppercase tracking-wider hover:brightness-150 transition-all"
+                    :disabled="entry.isSubmitting"
+                    @click="markSubmitted(entry)"
+                  >
+                    <i class="pi pi-check mr-1"></i>
+                    {{ entry.isSubmitting ? '...' : 'Mark Done' }}
+                  </button>
+                </div>
+              </td>
             </tr>
           </tbody>
         </table>
@@ -95,6 +118,8 @@ definePageMeta({
 
 import StatusBadge from '~/components/StatusBadge.vue'
 
+import { useCoordinatorPrivileges } from '~/composables/useCoordinatorPrivileges'
+
 type LogbookEntry = {
   id: number
   studentId: string
@@ -106,7 +131,12 @@ type LogbookEntry = {
   submittedAt: string | null
   statusLabel: string
   isStale: boolean
+  reminderSent: boolean
+  isSendingReminder?: boolean
+  isSubmitting?: boolean
 }
+
+const { isSuperCoordinator } = useCoordinatorPrivileges()
 
 const logbooks = ref<LogbookEntry[]>([])
 const isLoading = ref(false)
@@ -134,6 +164,32 @@ const loadLogbooks = async () => {
     errorMessage.value = error instanceof Error ? error.message : 'Unable to load logbooks.'
   } finally {
     isLoading.value = false
+  }
+}
+
+const sendReminder = async (entry: LogbookEntry) => {
+  entry.isSendingReminder = true
+  try {
+    await $fetch(`/api/logbooks/${entry.id}/reminder`, { method: 'POST' })
+    entry.reminderSent = true
+  } catch (error: any) {
+    alert('Failed to send reminder')
+  } finally {
+    entry.isSendingReminder = false
+  }
+}
+
+const markSubmitted = async (entry: LogbookEntry) => {
+  entry.isSubmitting = true
+  try {
+    await $fetch(`/api/logbooks/${entry.id}/submit`, { method: 'POST' })
+    entry.isSubmitted = true
+    entry.submittedAt = new Date().toISOString()
+    entry.statusLabel = 'Submitted'
+  } catch (error: any) {
+    alert('Failed to mark as submitted')
+  } finally {
+    entry.isSubmitting = false
   }
 }
 
