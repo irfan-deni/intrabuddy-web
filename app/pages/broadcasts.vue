@@ -6,8 +6,8 @@
         <i class="pi pi-megaphone text-[120px] text-black"></i>
       </div>
 
-      <header class="mb-10">
-        <h1 class="text-3xl font-black text-slate-800 tracking-tight uppercase">Dispatch Intelligence</h1>
+      <header class="mb-6 md:mb-10">
+        <h1 class="text-2xl md:text-3xl font-black text-slate-800 tracking-tight uppercase">Dispatch Intelligence</h1>
         <p class="text-stone-500 mt-2 font-bold uppercase text-[10px] tracking-widest">Send instant push notifications to the student mobile app.</p>
       </header>
 
@@ -64,43 +64,56 @@
         <span class="text-[8px] font-black text-stone-400 uppercase tracking-widest tabular-nums">{{ broadcasts.length }} Logs Detected</span>
       </div>
 
-      <div class="bg-white border border-stone-200 overflow-x-auto">
-        <table class="w-full text-left min-w-[600px]">
+      <div v-if="broadcasts.length === 0" class="py-12 md:py-20 text-center text-[10px] font-black text-stone-400 uppercase tracking-widest bg-white border border-stone-200">No previous transmissions recorded</div>
+
+      <div class="block md:hidden space-y-3">
+        <div v-for="msg in broadcasts" :key="msg.id" class="bg-white border border-stone-200 p-4">
+          <div class="flex items-start justify-between mb-3">
+            <div class="min-w-0 flex-1">
+              <div class="font-black text-slate-800 uppercase tracking-tight text-sm">{{ msg.title }}</div>
+              <div class="text-[9px] text-stone-400 font-medium mt-1 line-clamp-2 uppercase tracking-tighter">{{ msg.body }}</div>
+            </div>
+            <button class="h-8 w-8 border border-red-400 text-red-400 hover:bg-red-500 hover:text-white flex items-center justify-center flex-shrink-0 ml-2" @click="deleteBroadcast(msg.id)">
+              <i class="pi pi-trash text-[10px]"></i>
+            </button>
+          </div>
+          <div class="flex items-center justify-between pt-3 border-t border-stone-100">
+            <div class="flex gap-2">
+              <span v-for="role in msg.target_roles" :key="role" class="px-2 py-0.5 bg-slate-900 text-white text-[8px] font-black uppercase tracking-tighter">{{ role }}</span>
+            </div>
+            <span class="text-[10px] font-black text-stone-400 tabular-nums uppercase">{{ msg.sent_at ? new Date(msg.sent_at).toLocaleDateString() : 'Unknown' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="hidden md:block bg-white border border-stone-200 overflow-x-auto">
+        <table class="w-full text-left">
           <thead>
             <tr class="text-[9px] font-black text-stone-500 uppercase tracking-[0.2em] bg-stone-50/50">
-              <th class="px-4 sm:px-10 py-4 sm:py-6">Message Identifier</th>
-              <th class="px-4 sm:px-10 py-4 sm:py-6">Recipients</th>
-              <th class="px-4 sm:px-10 py-4 sm:py-6 text-right">Timestamp</th>
-              <th class="px-4 sm:px-10 py-4 sm:py-6 text-right w-20">Actions</th>
+              <th class="px-10 py-6">Message Identifier</th>
+              <th class="px-10 py-6">Recipients</th>
+              <th class="px-10 py-6 text-right">Timestamp</th>
+              <th class="px-10 py-6 text-right w-20">Actions</th>
             </tr>
           </thead>
           <tbody class="text-xs divide-y divide-stone-100">
-            <tr v-if="broadcasts.length === 0" class="text-center">
-              <td colspan="4" class="px-4 sm:px-10 py-12 sm:py-20 text-[10px] font-black text-stone-400 uppercase tracking-widest">No previous transmissions recorded</td>
-            </tr>
             <tr v-for="msg in broadcasts" :key="msg.id" class="hover:bg-stone-50 transition-colors group">
-              <td class="px-4 sm:px-10 py-4 sm:py-8">
+              <td class="px-10 py-8">
                 <div class="flex flex-col gap-1">
-                  <span class="font-black text-slate-800 uppercase tracking-tight text-[11px] sm:text-xs">{{ msg.title }}</span>
-                  <span class="hidden sm:block text-[9px] text-stone-400 font-medium line-clamp-1 uppercase tracking-tighter">{{ msg.body }}</span>
+                  <span class="font-black text-slate-800 uppercase tracking-tight text-xs">{{ msg.title }}</span>
+                  <span class="text-[9px] text-stone-400 font-medium line-clamp-1 uppercase tracking-tighter">{{ msg.body }}</span>
                 </div>
               </td>
-              <td class="px-4 sm:px-10 py-4 sm:py-8">
+              <td class="px-10 py-8">
                 <div class="flex gap-2">
-                  <span v-for="role in msg.target_roles" :key="role" class="px-2 py-0.5 bg-slate-900 text-white text-[8px] font-black uppercase tracking-tighter">
-                    {{ role }}
-                  </span>
+                  <span v-for="role in msg.target_roles" :key="role" class="px-2 py-0.5 bg-slate-900 text-white text-[8px] font-black uppercase tracking-tighter">{{ role }}</span>
                 </div>
               </td>
-              <td class="px-4 sm:px-10 py-4 sm:py-8 text-right text-stone-400 font-black tabular-nums group-hover:text-slate-800 transition-colors uppercase text-[10px] sm:text-xs">
+              <td class="px-10 py-8 text-right text-stone-400 font-black tabular-nums group-hover:text-slate-800 transition-colors uppercase text-xs">
                 {{ msg.sent_at ? new Date(msg.sent_at).toLocaleDateString() : 'Unknown' }}
               </td>
-              <td class="px-4 sm:px-10 py-4 sm:py-8 text-right">
-                <button
-                  class="h-8 w-8 border border-red-400 text-red-400 hover:bg-red-500 hover:text-white flex items-center justify-center transition-all"
-                  @click="deleteBroadcast(msg.id)"
-                  title="Delete transmission"
-                >
+              <td class="px-10 py-8 text-right">
+                <button class="h-8 w-8 border border-red-400 text-red-400 hover:bg-red-500 hover:text-white flex items-center justify-center transition-all" @click="deleteBroadcast(msg.id)">
                   <i class="pi pi-trash text-[10px]"></i>
                 </button>
               </td>
@@ -111,8 +124,8 @@
     </section>
 
     <Transition name="fade">
-      <div v-if="successToast" class="fixed bottom-10 right-10 z-[100] bg-slate-900 text-white px-8 py-6 shadow-2xl flex items-center gap-6 border-l-8 border-sky-600">
-        <div class="h-10 w-10 bg-sky-600 text-white flex items-center justify-center">
+      <div v-if="successToast" class="fixed bottom-4 right-4 md:bottom-10 md:right-10 left-4 md:left-auto z-[100] bg-slate-900 text-white px-6 md:px-8 py-5 md:py-6 shadow-2xl flex items-center gap-4 md:gap-6 border-l-8 border-sky-600">
+        <div class="h-8 w-8 md:h-10 md:w-10 bg-sky-600 text-white flex items-center justify-center">
           <i class="pi pi-check text-sm"></i>
         </div>
         <div>

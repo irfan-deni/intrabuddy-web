@@ -1,8 +1,8 @@
 <template>
-  <div class="space-y-12">
-    <header class="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-stone-200 pb-8">
+  <div class="space-y-6 md:space-y-12">
+    <header class="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-stone-200 pb-6 md:pb-8">
       <div>
-        <h1 class="text-4xl font-black text-slate-800 tracking-tight uppercase">Student Dossier</h1>
+        <h1 class="text-2xl md:text-4xl font-black text-slate-800 tracking-tight uppercase">Student Dossier</h1>
         <p class="text-stone-500 mt-2 font-bold uppercase text-[10px] tracking-widest">Comprehensive performance and compliance tracking.</p>
       </div>
       <div v-if="studentId" class="flex items-center gap-4">
@@ -22,10 +22,10 @@
       <p class="text-[10px] font-black text-stone-400 uppercase tracking-widest">No Student Selected</p>
     </div>
 
-    <div v-else class="grid grid-cols-1 lg:grid-cols-12 gap-12">
+    <div v-else class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-12">
       <!-- Sidebar Info -->
-      <div class="lg:col-span-4 space-y-10">
-        <article class="bg-white p-8 border border-stone-200 shadow-sm relative">
+      <div class="lg:col-span-4 space-y-6 lg:space-y-10">
+        <article class="bg-white p-4 md:p-6 lg:p-8 border border-stone-200 shadow-sm relative">
           <div class="absolute top-0 right-0 p-6 opacity-5 pointer-events-none">
             <i class="pi pi-check-square text-6xl text-sky-600"></i>
           </div>
@@ -61,7 +61,7 @@
           </div>
         </article>
 
-        <article class="bg-white p-8 border border-stone-200 shadow-sm">
+        <article class="bg-white p-4 md:p-6 lg:p-8 border border-stone-200 shadow-sm">
           <h2 class="text-[11px] font-black text-slate-800 uppercase tracking-[0.2em] mb-6">Digital Wallet</h2>
           
           <div v-if="isLoading" class="py-8 text-center text-stone-400">
@@ -85,9 +85,9 @@
       </div>
 
       <!-- Main Activity -->
-      <div class="lg:col-span-8 space-y-10">
-        <article class="bg-white p-8 border border-stone-200 shadow-sm overflow-hidden">
-          <h2 class="text-[11px] font-black text-slate-800 uppercase tracking-[0.2em] mb-8">Placement Applications</h2>
+      <div class="lg:col-span-8 space-y-6 lg:space-y-10">
+        <article class="bg-white p-4 md:p-6 lg:p-8 border border-stone-200 shadow-sm overflow-hidden">
+          <h2 class="text-[11px] font-black text-slate-800 uppercase tracking-[0.2em] mb-6 lg:mb-8">Placement Applications</h2>
           
           <div v-if="isLoading" class="py-12 text-center text-stone-400">
             <i class="pi pi-spin pi-spinner text-2xl text-sky-600"></i>
@@ -120,10 +120,21 @@
           </ul>
         </article>
 
-        <article class="bg-white p-8 border border-stone-200 shadow-sm">
-          <h2 class="text-[11px] font-black text-slate-800 uppercase tracking-[0.2em] mb-8">Weekly Logbook Status</h2>
+        <article class="bg-white p-4 md:p-6 lg:p-8 border border-stone-200 shadow-sm">
+          <h2 class="text-[11px] font-black text-slate-800 uppercase tracking-[0.2em] mb-6 lg:mb-8">Weekly Logbook Status</h2>
+
+          <div class="block md:hidden space-y-3">
+            <div v-for="entry in logbookEntries" :key="entry.id" class="flex items-center justify-between p-4 bg-stone-50 border border-stone-200">
+              <div>
+                <div class="font-black text-slate-800 uppercase tracking-widest text-xs">Week {{ entry.week_number }}</div>
+                <div class="text-[9px] font-bold text-stone-400 mt-1 tabular-nums">{{ entry.week_end_date }}</div>
+              </div>
+              <StatusBadge :positive="!!entry.is_submitted" />
+            </div>
+            <div v-if="logbookEntries.length === 0" class="py-8 text-center text-[10px] font-black text-stone-400 uppercase tracking-widest">No entries</div>
+          </div>
           
-          <div class="overflow-x-auto">
+          <div class="hidden md:block overflow-x-auto">
             <table class="w-full text-left">
               <thead>
                 <tr class="text-[10px] font-black text-stone-500 uppercase tracking-widest border-b border-stone-200">

@@ -1,8 +1,8 @@
 <template>
-  <div class="space-y-10">
-    <header class="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-stone-200 pb-8">
+  <div class="space-y-6 md:space-y-10">
+    <header class="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-stone-200 pb-6 md:pb-8">
       <div>
-        <h1 class="text-4xl font-black text-slate-800 tracking-tight uppercase">Chatbot Logs</h1>
+        <h1 class="text-2xl md:text-4xl font-black text-slate-800 tracking-tight uppercase">Chatbot Logs</h1>
         <p class="text-stone-500 mt-2 font-bold uppercase text-[10px] tracking-widest">Review student chatbot interactions and identify knowledge gaps.</p>
       </div>
     </header>
@@ -38,46 +38,58 @@
       </div>
 
       <div class="overflow-x-auto">
-        <table class="w-full text-left min-w-[600px]">
-          <thead>
-            <tr class="text-[9px] font-black text-stone-500 uppercase tracking-[0.2em] bg-stone-50/50 border-b border-stone-200">
-              <th class="px-4 sm:px-8 py-4 sm:py-6">Student</th>
-              <th class="px-4 sm:px-8 py-4 sm:py-6">Question</th>
-              <th class="px-4 sm:px-8 py-4 sm:py-6">Matched FAQ</th>
-              <th class="px-4 sm:px-8 py-4 sm:py-6 text-right">Timestamp</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-stone-100 text-xs">
-            <tr v-if="isLoading">
-              <td colspan="4" class="px-4 sm:px-8 py-12 sm:py-16 text-center text-stone-400">
-                <i class="pi pi-spin pi-spinner text-xl text-sky-600 mr-2" />
-                <span class="text-[10px] font-black uppercase tracking-widest">Loading conversations...</span>
-              </td>
-            </tr>
-            <tr v-else-if="filteredConversations.length === 0">
-              <td colspan="4" class="px-4 sm:px-8 py-12 sm:py-20 text-center text-stone-400 font-black uppercase tracking-widest">No conversations found</td>
-            </tr>
-            <tr v-for="conv in filteredConversations" :key="conv.id" class="hover:bg-stone-50 transition-all group">
-              <td class="px-4 sm:px-8 py-4 sm:py-6">
-                <div class="font-black text-slate-800 uppercase tracking-tight text-[11px] sm:text-xs whitespace-nowrap">{{ conv.student_name || 'Unknown' }}</div>
-              </td>
-              <td class="px-4 sm:px-8 py-4 sm:py-6 max-w-xs">
-                <p class="font-bold text-slate-800 text-[11px] sm:text-xs truncate">{{ conv.question }}</p>
-                <p v-if="conv.answer" class="text-[9px] text-stone-400 mt-1 line-clamp-1">{{ conv.answer }}</p>
-              </td>
-              <td class="px-4 sm:px-8 py-4 sm:py-6">
-                <span
-                  v-if="conv.matched_faq_id"
-                  class="px-2 py-0.5 bg-emerald-500 text-white text-[9px] font-black uppercase tracking-tighter"
-                >Matched #{{ conv.matched_faq_id }}</span>
-                <span v-else class="px-2 py-0.5 bg-amber-400 text-slate-900 text-[9px] font-black uppercase tracking-tighter">Unmatched</span>
-              </td>
-              <td class="px-4 sm:px-8 py-4 sm:py-6 text-right text-stone-400 font-black tabular-nums text-[10px]">
+        <div v-if="isLoading" class="py-12 md:py-16 text-center text-stone-400">
+          <i class="pi pi-spin pi-spinner text-xl text-sky-600 mr-2" />
+          <span class="text-[10px] font-black uppercase tracking-widest">Loading conversations...</span>
+        </div>
+
+        <div v-else-if="filteredConversations.length === 0" class="py-12 md:py-20 text-center text-stone-400 font-black uppercase tracking-widest text-[10px]">No conversations found</div>
+
+        <template v-else>
+          <div class="block md:hidden space-y-3">
+            <div v-for="conv in filteredConversations" :key="conv.id" class="border border-stone-200 p-4">
+              <div class="flex items-start justify-between mb-2">
+                <div class="font-black text-slate-800 uppercase tracking-tight text-sm">{{ conv.student_name || 'Unknown' }}</div>
+                <span v-if="conv.matched_faq_id" class="px-2 py-0.5 bg-emerald-500 text-white text-[9px] font-black uppercase tracking-tighter whitespace-nowrap ml-2">Matched #{{ conv.matched_faq_id }}</span>
+                <span v-else class="px-2 py-0.5 bg-amber-400 text-slate-900 text-[9px] font-black uppercase tracking-tighter whitespace-nowrap ml-2">Unmatched</span>
+              </div>
+              <div class="font-bold text-slate-800 text-xs mb-1">{{ conv.question }}</div>
+              <p v-if="conv.answer" class="text-[9px] text-stone-400 line-clamp-2 mb-2">{{ conv.answer }}</p>
+              <div class="text-right text-[9px] font-black text-stone-400 tabular-nums pt-2 border-t border-stone-100">
                 {{ conv.created_at ? new Date(conv.created_at).toLocaleString() : '---' }}
-              </td>
-            </tr>
-          </tbody>
-        </table>
+              </div>
+            </div>
+          </div>
+
+          <table class="hidden md:table w-full text-left">
+            <thead>
+              <tr class="text-[9px] font-black text-stone-500 uppercase tracking-[0.2em] bg-stone-50/50 border-b border-stone-200">
+                <th class="px-8 py-6">Student</th>
+                <th class="px-8 py-6">Question</th>
+                <th class="px-8 py-6">Matched FAQ</th>
+                <th class="px-8 py-6 text-right">Timestamp</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-stone-100 text-xs">
+              <tr v-for="conv in filteredConversations" :key="conv.id" class="hover:bg-stone-50 transition-all group">
+                <td class="px-8 py-6">
+                  <div class="font-black text-slate-800 uppercase tracking-tight text-xs whitespace-nowrap">{{ conv.student_name || 'Unknown' }}</div>
+                </td>
+                <td class="px-8 py-6 max-w-xs">
+                  <p class="font-bold text-slate-800 text-xs truncate">{{ conv.question }}</p>
+                  <p v-if="conv.answer" class="text-[9px] text-stone-400 mt-1 line-clamp-1">{{ conv.answer }}</p>
+                </td>
+                <td class="px-8 py-6">
+                  <span v-if="conv.matched_faq_id" class="px-2 py-0.5 bg-emerald-500 text-white text-[9px] font-black uppercase tracking-tighter">Matched #{{ conv.matched_faq_id }}</span>
+                  <span v-else class="px-2 py-0.5 bg-amber-400 text-slate-900 text-[9px] font-black uppercase tracking-tighter">Unmatched</span>
+                </td>
+                <td class="px-8 py-6 text-right text-stone-400 font-black tabular-nums text-[10px]">
+                  {{ conv.created_at ? new Date(conv.created_at).toLocaleString() : '---' }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </template>
       </div>
     </article>
   </div>

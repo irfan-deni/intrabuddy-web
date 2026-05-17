@@ -1,8 +1,8 @@
 <template>
-  <div class="space-y-12">
-    <header class="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-stone-200 pb-8">
+  <div class="space-y-6 md:space-y-12">
+    <header class="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-stone-200 pb-6 md:pb-8">
       <div>
-        <h1 class="text-4xl font-black text-slate-800 tracking-tight uppercase">Cohort Management</h1>
+        <h1 class="text-2xl md:text-4xl font-black text-slate-800 tracking-tight uppercase">Cohort Management</h1>
         <p class="text-stone-500 mt-2 font-bold uppercase text-[10px] tracking-widest">Academic semester configuration and lifecycle.</p>
       </div>
       <button
@@ -28,69 +28,88 @@
         <i class="pi pi-spin pi-spinner text-2xl text-sky-600"></i>
       </div>
 
-      <div class="overflow-x-auto">
-        <table class="w-full text-left min-w-[700px]">
-          <thead>
-            <tr class="text-[10px] font-black text-stone-500 uppercase tracking-[0.2em] bg-stone-50/50 border-b border-stone-200">
-              <th class="px-4 sm:px-8 py-4 sm:py-6">Cohort</th>
-              <th class="px-4 sm:px-8 py-4 sm:py-6">Period</th>
-              <th class="px-4 sm:px-8 py-4 sm:py-6">Status</th>
-              <th class="px-4 sm:px-8 py-4 sm:py-6">Created</th>
-              <th v-if="isSuperCoordinator" class="px-4 sm:px-8 py-4 sm:py-6 text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-stone-100 text-xs">
-            <tr v-if="cohorts.length === 0 && !isLoading">
-              <td :colspan="isSuperCoordinator ? 5 : 4" class="px-4 sm:px-8 py-12 sm:py-20 text-center text-stone-400 font-black uppercase tracking-widest">No cohorts defined</td>
-            </tr>
-            <tr v-for="cohort in cohorts" :key="cohort.id" class="hover:bg-stone-50 transition-all group">
-              <td class="px-4 sm:px-8 py-4 sm:py-6">
-                <div class="font-black text-slate-800 uppercase tracking-tight text-[11px] sm:text-xs">{{ cohort.name }}</div>
-              </td>
-              <td class="px-4 sm:px-8 py-4 sm:py-6">
-                <span class="font-bold text-stone-500 tabular-nums text-[11px] sm:text-xs">
-                  {{ new Date(cohort.start_date).toLocaleDateString() }} — {{ new Date(cohort.end_date).toLocaleDateString() }}
-                </span>
-              </td>
-              <td class="px-4 sm:px-8 py-4 sm:py-6">
-                <div class="flex items-center gap-2">
-                  <span
-                    class="px-2 py-0.5 text-[9px] font-black uppercase tracking-tighter"
-                    :class="cohort.is_active ? 'bg-emerald-500 text-white' : 'bg-stone-100 text-stone-400'"
-                  >
-                    {{ cohort.is_active ? 'Active' : 'Inactive' }}
-                  </span>
-                  <button
-                    v-if="isSuperCoordinator && !cohort.is_active"
-                    class="h-6 px-2 bg-sky-600 text-white text-[8px] font-black uppercase tracking-wider hover:brightness-110 transition-all"
-                    @click="activateCohort(cohort.id)"
-                  >
-                    Set Active
-                  </button>
-                </div>
-              </td>
-              <td class="px-4 sm:px-8 py-4 sm:py-6 text-stone-400 font-bold text-[10px]">
-                {{ cohort.created_at ? new Date(cohort.created_at).toLocaleDateString() : '---' }}
-              </td>
-              <td v-if="isSuperCoordinator" class="px-4 sm:px-8 py-4 sm:py-6 text-right">
-                <div class="flex items-center justify-end gap-2 transition-all">
-                  <button class="h-8 w-8 flex items-center justify-center bg-slate-900 text-white hover:brightness-150 transition-all" @click="openEditForm(cohort)">
-                    <i class="pi pi-pencil text-[10px]"></i>
-                  </button>
-                  <button
-                    class="h-8 w-8 flex items-center justify-center border border-slate-900 text-slate-800 hover:bg-slate-900 hover:text-white transition-all"
-                    :disabled="!!cohort.is_active"
-                    :title="cohort.is_active ? 'Cannot delete active cohort' : ''"
-                    @click="deleteCohort(cohort.id)"
-                  >
-                    <i class="pi pi-trash text-[10px]"></i>
-                  </button>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+      <div v-if="isLoading" class="p-12 text-center">
+        <i class="pi pi-spin pi-spinner text-2xl text-sky-600"></i>
       </div>
+
+      <div v-else-if="cohorts.length === 0" class="py-12 md:py-20 text-center text-stone-400 font-black uppercase tracking-widest text-[10px]">No cohorts defined</div>
+
+      <template v-else>
+        <div class="block md:hidden space-y-3 p-4">
+          <div v-for="cohort in cohorts" :key="cohort.id" class="border border-stone-200 p-4">
+            <div class="flex items-start justify-between mb-3">
+              <div class="font-black text-slate-800 uppercase tracking-tight text-sm">{{ cohort.name }}</div>
+              <div class="flex items-center gap-2 flex-shrink-0 ml-2">
+                <span class="px-2 py-0.5 text-[9px] font-black uppercase tracking-tighter whitespace-nowrap" :class="cohort.is_active ? 'bg-emerald-500 text-white' : 'bg-stone-100 text-stone-400'">
+                  {{ cohort.is_active ? 'Active' : 'Inactive' }}
+                </span>
+                <button v-if="isSuperCoordinator && !cohort.is_active" class="h-6 px-2 bg-sky-600 text-white text-[8px] font-black uppercase tracking-wider hover:brightness-110 transition-all" @click="activateCohort(cohort.id)">Set Active</button>
+              </div>
+            </div>
+            <div class="text-[10px] font-bold text-stone-500 tabular-nums mb-3">
+              {{ new Date(cohort.start_date).toLocaleDateString() }} — {{ new Date(cohort.end_date).toLocaleDateString() }}
+            </div>
+            <div v-if="isSuperCoordinator" class="flex items-center justify-between pt-3 border-t border-stone-100">
+              <span class="text-[9px] font-bold text-stone-400">Created: {{ cohort.created_at ? new Date(cohort.created_at).toLocaleDateString() : '---' }}</span>
+              <div class="flex gap-2">
+                <button class="h-7 w-7 bg-slate-900 text-white flex items-center justify-center" @click="openEditForm(cohort)">
+                  <i class="pi pi-pencil text-[8px]"></i>
+                </button>
+                <button class="h-7 w-7 border border-slate-900 text-slate-800 flex items-center justify-center" :disabled="!!cohort.is_active" @click="deleteCohort(cohort.id)">
+                  <i class="pi pi-trash text-[8px]"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="hidden md:block overflow-x-auto">
+          <table class="w-full text-left">
+            <thead>
+              <tr class="text-[10px] font-black text-stone-500 uppercase tracking-[0.2em] bg-stone-50/50 border-b border-stone-200">
+                <th class="px-8 py-6">Cohort</th>
+                <th class="px-8 py-6">Period</th>
+                <th class="px-8 py-6">Status</th>
+                <th class="px-8 py-6">Created</th>
+                <th v-if="isSuperCoordinator" class="px-8 py-6 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-stone-100 text-xs">
+              <tr v-for="cohort in cohorts" :key="cohort.id" class="hover:bg-stone-50 transition-all group">
+                <td class="px-8 py-6">
+                  <div class="font-black text-slate-800 uppercase tracking-tight text-xs">{{ cohort.name }}</div>
+                </td>
+                <td class="px-8 py-6">
+                  <span class="font-bold text-stone-500 tabular-nums text-xs">
+                    {{ new Date(cohort.start_date).toLocaleDateString() }} — {{ new Date(cohort.end_date).toLocaleDateString() }}
+                  </span>
+                </td>
+                <td class="px-8 py-6">
+                  <div class="flex items-center gap-2">
+                    <span class="px-2 py-0.5 text-[9px] font-black uppercase tracking-tighter" :class="cohort.is_active ? 'bg-emerald-500 text-white' : 'bg-stone-100 text-stone-400'">
+                      {{ cohort.is_active ? 'Active' : 'Inactive' }}
+                    </span>
+                    <button v-if="isSuperCoordinator && !cohort.is_active" class="h-6 px-2 bg-sky-600 text-white text-[8px] font-black uppercase tracking-wider hover:brightness-110 transition-all" @click="activateCohort(cohort.id)">Set Active</button>
+                  </div>
+                </td>
+                <td class="px-8 py-6 text-stone-400 font-bold text-[10px]">
+                  {{ cohort.created_at ? new Date(cohort.created_at).toLocaleDateString() : '---' }}
+                </td>
+                <td v-if="isSuperCoordinator" class="px-8 py-6 text-right">
+                  <div class="flex items-center justify-end gap-2">
+                    <button class="h-8 w-8 bg-slate-900 text-white hover:brightness-150 transition-all" @click="openEditForm(cohort)">
+                      <i class="pi pi-pencil text-[10px]"></i>
+                    </button>
+                    <button class="h-8 w-8 border border-slate-900 text-slate-800 hover:bg-slate-900 hover:text-white transition-all" :disabled="!!cohort.is_active" :title="cohort.is_active ? 'Cannot delete active cohort' : ''" @click="deleteCohort(cohort.id)">
+                      <i class="pi pi-trash text-[10px]"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </template>
     </article>
 
     <div v-if="showForm" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-4 sm:p-6">

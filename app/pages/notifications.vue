@@ -5,12 +5,12 @@
         <i class="pi pi-bell text-[120px] text-black"></i>
       </div>
 
-      <header class="mb-10">
-        <h1 class="text-3xl font-black text-slate-800 tracking-tight uppercase">Notification Center</h1>
+      <header class="mb-6 md:mb-10">
+        <h1 class="text-2xl md:text-3xl font-black text-slate-800 tracking-tight uppercase">Notification Center</h1>
         <p class="text-stone-500 mt-2 font-bold uppercase text-[10px] tracking-widest">View system notifications and send manual alerts.</p>
       </header>
 
-      <div v-if="isSuperCoordinator" class="max-w-3xl mb-12 p-8 border border-stone-200 bg-stone-50/50">
+      <div v-if="isSuperCoordinator" class="max-w-3xl mb-8 md:mb-12 p-4 md:p-6 lg:p-8 border border-stone-200 bg-stone-50/50">
         <h3 class="text-[11px] font-black text-slate-800 uppercase tracking-[0.2em] mb-6">Manual Alert Dispatch</h3>
         <form @submit.prevent="sendAlert" class="space-y-6">
           <div class="space-y-2">
@@ -45,50 +45,62 @@
         <span class="text-[8px] font-black text-stone-400 uppercase tracking-widest tabular-nums">{{ notifications.length }} Records</span>
       </div>
 
-      <div class="bg-white border border-stone-200 overflow-x-auto">
-        <table class="w-full text-left min-w-[600px]">
-          <thead>
-            <tr class="text-[9px] font-black text-stone-500 uppercase tracking-[0.2em] bg-stone-50/50">
-              <th class="px-4 sm:px-8 py-4 sm:py-6">Recipient</th>
-              <th class="px-4 sm:px-8 py-4 sm:py-6">Title</th>
-              <th class="px-4 sm:px-8 py-4 sm:py-6">Type</th>
-              <th class="px-4 sm:px-8 py-4 sm:py-6 text-right">Read</th>
-              <th class="px-4 sm:px-8 py-4 sm:py-6 text-right">Sent At</th>
-            </tr>
-          </thead>
-          <tbody class="text-xs divide-y divide-stone-100">
-            <tr v-if="isLoading">
-              <td colspan="5" class="px-4 sm:px-8 py-12 sm:py-16 text-center text-stone-400">
-                <i class="pi pi-spin pi-spinner text-xl text-sky-600 mr-2" />
-                <span class="text-[10px] font-black uppercase tracking-widest">Loading...</span>
-              </td>
-            </tr>
-            <tr v-else-if="notifications.length === 0">
-              <td colspan="5" class="px-4 sm:px-8 py-12 sm:py-20 text-center text-stone-400 font-black uppercase tracking-widest">No notifications recorded</td>
-            </tr>
-            <tr v-for="n in notifications" :key="n.id" class="hover:bg-stone-50 transition-all group">
-              <td class="px-4 sm:px-8 py-4 sm:py-6 font-black text-slate-800 uppercase tracking-tight text-[11px] sm:text-xs whitespace-nowrap">
-                {{ n.recipient_name || 'Unknown' }}
-              </td>
-              <td class="px-4 sm:px-8 py-4 sm:py-6">
-                <div class="font-black text-slate-800 uppercase tracking-tight text-[11px] sm:text-xs">{{ n.title }}</div>
-                <div class="text-[9px] text-stone-400 mt-1 line-clamp-1">{{ n.body }}</div>
-              </td>
-              <td class="px-4 sm:px-8 py-4 sm:py-6">
+      <div class="bg-white border border-stone-200">
+        <div v-if="isLoading" class="py-12 md:py-16 text-center text-stone-400">
+          <i class="pi pi-spin pi-spinner text-xl text-sky-600 mr-2" />
+          <span class="text-[10px] font-black uppercase tracking-widest">Loading...</span>
+        </div>
+
+        <div v-else-if="notifications.length === 0" class="py-12 md:py-20 text-center text-stone-400 font-black uppercase tracking-widest text-[10px]">No notifications recorded</div>
+
+        <template v-else>
+          <div class="block md:hidden space-y-3 p-4">
+            <div v-for="n in notifications" :key="n.id" class="border border-stone-200 p-4">
+              <div class="flex items-start justify-between mb-2">
+                <div class="font-black text-slate-800 uppercase tracking-tight text-sm">{{ n.recipient_name || 'Unknown' }}</div>
+                <span class="px-2 py-0.5 text-[9px] font-black whitespace-nowrap ml-2" :class="n.is_read ? 'bg-emerald-500 text-white' : 'bg-amber-400 text-slate-900'">{{ n.is_read ? 'Read' : 'Unread' }}</span>
+              </div>
+              <div class="font-black text-slate-800 uppercase tracking-tight text-xs mb-1">{{ n.title }}</div>
+              <div class="text-[9px] text-stone-400 line-clamp-2 mb-2">{{ n.body }}</div>
+              <div class="flex items-center justify-between pt-2 border-t border-stone-100">
                 <span class="px-2 py-0.5 bg-slate-900 text-white text-[8px] font-black uppercase tracking-tighter">{{ n.type || 'general' }}</span>
-              </td>
-              <td class="px-4 sm:px-8 py-4 sm:py-6 text-right">
-                <span
-                  class="px-2 py-0.5 text-[9px] font-black"
-                  :class="n.is_read ? 'bg-emerald-500 text-white' : 'bg-amber-400 text-slate-900'"
-                >{{ n.is_read ? 'Read' : 'Unread' }}</span>
-              </td>
-              <td class="px-4 sm:px-8 py-4 sm:py-6 text-right text-stone-400 font-black tabular-nums text-[10px]">
-                {{ n.created_at ? new Date(n.created_at).toLocaleString() : '---' }}
-              </td>
-            </tr>
-          </tbody>
-        </table>
+                <span class="text-[9px] font-black text-stone-400 tabular-nums">{{ n.created_at ? new Date(n.created_at).toLocaleString() : '---' }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="hidden md:block overflow-x-auto">
+            <table class="w-full text-left">
+              <thead>
+                <tr class="text-[9px] font-black text-stone-500 uppercase tracking-[0.2em] bg-stone-50/50">
+                  <th class="px-8 py-6">Recipient</th>
+                  <th class="px-8 py-6">Title</th>
+                  <th class="px-8 py-6">Type</th>
+                  <th class="px-8 py-6 text-right">Read</th>
+                  <th class="px-8 py-6 text-right">Sent At</th>
+                </tr>
+              </thead>
+              <tbody class="text-xs divide-y divide-stone-100">
+                <tr v-for="n in notifications" :key="n.id" class="hover:bg-stone-50 transition-all group">
+                  <td class="px-8 py-6 font-black text-slate-800 uppercase tracking-tight text-xs whitespace-nowrap">{{ n.recipient_name || 'Unknown' }}</td>
+                  <td class="px-8 py-6">
+                    <div class="font-black text-slate-800 uppercase tracking-tight text-xs">{{ n.title }}</div>
+                    <div class="text-[9px] text-stone-400 mt-1 line-clamp-1">{{ n.body }}</div>
+                  </td>
+                  <td class="px-8 py-6">
+                    <span class="px-2 py-0.5 bg-slate-900 text-white text-[8px] font-black uppercase tracking-tighter">{{ n.type || 'general' }}</span>
+                  </td>
+                  <td class="px-8 py-6 text-right">
+                    <span class="px-2 py-0.5 text-[9px] font-black" :class="n.is_read ? 'bg-emerald-500 text-white' : 'bg-amber-400 text-slate-900'">{{ n.is_read ? 'Read' : 'Unread' }}</span>
+                  </td>
+                  <td class="px-8 py-6 text-right text-stone-400 font-black tabular-nums text-[10px]">
+                    {{ n.created_at ? new Date(n.created_at).toLocaleString() : '---' }}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </template>
       </div>
     </section>
   </div>

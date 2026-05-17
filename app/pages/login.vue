@@ -1,7 +1,7 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-brand-bg px-6">
+  <div class="min-h-screen flex items-center justify-center bg-brand-bg px-4 sm:px-6">
     <div class="w-full max-w-md">
-      <div class="text-center mb-10">
+      <div class="text-center mb-8 md:mb-10">
         <div class="inline-flex items-center justify-center h-14 w-14 bg-slate-900 text-white mb-4">
           <i class="pi pi-graduation-cap text-2xl"></i>
         </div>

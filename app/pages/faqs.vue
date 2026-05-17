@@ -1,8 +1,8 @@
 <template>
-  <div class="space-y-10">
-    <header class="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-stone-200 pb-8">
+  <div class="space-y-6 md:space-y-10">
+    <header class="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-stone-200 pb-6 md:pb-8">
       <div>
-        <h1 class="text-4xl font-black text-slate-800 tracking-tight uppercase">Knowledge Base</h1>
+        <h1 class="text-2xl md:text-4xl font-black text-slate-800 tracking-tight uppercase">Knowledge Base</h1>
         <p class="text-stone-500 mt-2 font-bold uppercase text-[10px] tracking-widest">Self-service FAQ library for internship candidates.</p>
       </div>
       <button
@@ -56,7 +56,7 @@
       </button>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 relative">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 relative">
       <div v-if="isLoading" class="md:col-span-2 py-20 text-center flex flex-col items-center gap-4">
         <i class="pi pi-spin pi-spinner text-3xl text-sky-600"></i>
         <span class="text-[10px] font-black uppercase tracking-widest text-slate-800">Syncing Library</span>
@@ -70,7 +70,7 @@
       <div 
         v-for="faq in filteredFaqs" 
         :key="faq.id" 
-        class="bg-white p-8 border border-stone-200 hover:border-sky-600 transition-all group flex flex-col relative"
+        class="bg-white p-4 md:p-6 lg:p-8 border border-stone-200 hover:border-sky-600 transition-all group flex flex-col relative"
       >
         <div v-if="isSuperCoordinator" class="absolute top-0 right-0 p-4 flex gap-1 opacity-0 group-hover:opacity-100 transition-all">
           <button class="h-8 w-8 flex items-center justify-center bg-slate-900 text-white" @click="editFaq(faq)">

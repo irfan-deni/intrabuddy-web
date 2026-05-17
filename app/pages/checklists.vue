@@ -1,8 +1,8 @@
 <template>
-  <div class="space-y-12">
-    <header class="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-stone-200 pb-8">
+  <div class="space-y-6 md:space-y-12">
+    <header class="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-stone-200 pb-6 md:pb-8">
       <div>
-        <h1 class="text-4xl font-black text-slate-800 tracking-tight uppercase">Master Checklist</h1>
+        <h1 class="text-2xl md:text-4xl font-black text-slate-800 tracking-tight uppercase">Master Checklist</h1>
         <p class="text-stone-500 mt-2 font-bold uppercase text-[10px] tracking-widest">Global requirements template for the active cohort.</p>
       </div>
       <button
@@ -28,44 +28,72 @@
         <i class="pi pi-spin pi-spinner text-2xl text-sky-600"></i>
       </div>
 
-      <div class="overflow-x-auto">
-        <table class="w-full text-left min-w-[500px]">
-          <thead>
-            <tr class="text-[10px] font-black text-stone-500 uppercase tracking-[0.2em] bg-stone-50/50 border-b border-stone-200">
-              <th class="px-4 sm:px-8 py-4 sm:py-6">Order</th>
-              <th class="px-4 sm:px-8 py-4 sm:py-6">Requirement Title</th>
-              <th class="px-4 sm:px-8 py-4 sm:py-6">Mandatory</th>
-              <th v-if="isSuperCoordinator" class="px-4 sm:px-8 py-4 sm:py-6 text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-stone-100 text-xs">
-            <tr v-if="templates.length === 0 && !isLoading">
-              <td colspan="4" class="px-4 sm:px-8 py-12 sm:py-20 text-center text-stone-400 font-black uppercase tracking-widest">No templates defined</td>
-            </tr>
-            <tr v-for="item in templates" :key="item.id" class="hover:bg-stone-50 transition-all group">
-              <td class="px-4 sm:px-8 py-4 sm:py-6 font-black text-stone-400 tabular-nums">{{ item.display_order }}</td>
-              <td class="px-4 sm:px-8 py-4 sm:py-6">
-                <div class="font-black text-slate-800 uppercase tracking-tight text-[11px] sm:text-xs">{{ item.title }}</div>
+      <div v-if="isLoading" class="p-12 text-center">
+        <i class="pi pi-spin pi-spinner text-2xl text-sky-600"></i>
+      </div>
+
+      <div v-else-if="templates.length === 0" class="py-12 md:py-20 text-center text-stone-400 font-black uppercase tracking-widest text-[10px]">No templates defined</div>
+
+      <template v-else>
+        <div class="block md:hidden space-y-3 p-4">
+          <div v-for="item in templates" :key="item.id" class="border border-stone-200 p-4">
+            <div class="flex items-start justify-between gap-3">
+              <div class="min-w-0 flex-1">
+                <div class="font-black text-slate-800 uppercase tracking-tight text-sm">{{ item.title }}</div>
                 <div class="text-[9px] font-bold text-stone-400 uppercase tracking-tighter mt-1">{{ item.description || 'No additional details' }}</div>
-              </td>
-              <td class="px-4 sm:px-8 py-4 sm:py-6">
+              </div>
+              <div class="flex flex-col items-end gap-2 flex-shrink-0">
                 <span v-if="item.required" class="px-2 py-0.5 bg-slate-900 text-white text-[9px] font-black uppercase tracking-tighter">Required</span>
                 <span v-else class="text-stone-400 font-bold uppercase text-[9px]">Optional</span>
-              </td>
-              <td v-if="isSuperCoordinator" class="px-4 sm:px-8 py-4 sm:py-6 text-right">
-                <div class="flex items-center justify-end gap-2 transition-all">
-                  <button class="h-8 w-8 flex items-center justify-center bg-slate-900 text-white hover:brightness-150 transition-all" @click="openEditForm(item)">
-                    <i class="pi pi-pencil text-[10px]"></i>
+                <div v-if="isSuperCoordinator" class="flex gap-2 mt-2">
+                  <button class="h-7 w-7 bg-slate-900 text-white flex items-center justify-center" @click="openEditForm(item)">
+                    <i class="pi pi-pencil text-[8px]"></i>
                   </button>
-                  <button class="h-8 w-8 flex items-center justify-center border border-slate-900 text-slate-800 hover:bg-slate-900 hover:text-white transition-all" @click="deleteTemplate(item.id)">
-                    <i class="pi pi-trash text-[10px]"></i>
+                  <button class="h-7 w-7 border border-slate-900 text-slate-800 hover:bg-slate-900 hover:text-white flex items-center justify-center" @click="deleteTemplate(item.id)">
+                    <i class="pi pi-trash text-[8px]"></i>
                   </button>
                 </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="hidden md:block overflow-x-auto">
+          <table class="w-full text-left">
+            <thead>
+              <tr class="text-[10px] font-black text-stone-500 uppercase tracking-[0.2em] bg-stone-50/50 border-b border-stone-200">
+                <th class="px-8 py-6">Order</th>
+                <th class="px-8 py-6">Requirement Title</th>
+                <th class="px-8 py-6">Mandatory</th>
+                <th v-if="isSuperCoordinator" class="px-8 py-6 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-stone-100 text-xs">
+              <tr v-for="item in templates" :key="item.id" class="hover:bg-stone-50 transition-all group">
+                <td class="px-8 py-6 font-black text-stone-400 tabular-nums">{{ item.display_order }}</td>
+                <td class="px-8 py-6">
+                  <div class="font-black text-slate-800 uppercase tracking-tight text-xs">{{ item.title }}</div>
+                  <div class="text-[9px] font-bold text-stone-400 uppercase tracking-tighter mt-1">{{ item.description || 'No additional details' }}</div>
+                </td>
+                <td class="px-8 py-6">
+                  <span v-if="item.required" class="px-2 py-0.5 bg-slate-900 text-white text-[9px] font-black uppercase tracking-tighter">Required</span>
+                  <span v-else class="text-stone-400 font-bold uppercase text-[9px]">Optional</span>
+                </td>
+                <td v-if="isSuperCoordinator" class="px-8 py-6 text-right">
+                  <div class="flex items-center justify-end gap-2">
+                    <button class="h-8 w-8 bg-slate-900 text-white hover:brightness-150 transition-all" @click="openEditForm(item)">
+                      <i class="pi pi-pencil text-[10px]"></i>
+                    </button>
+                    <button class="h-8 w-8 border border-slate-900 text-slate-800 hover:bg-slate-900 hover:text-white transition-all" @click="deleteTemplate(item.id)">
+                      <i class="pi pi-trash text-[10px]"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </template>
     </article>
 
     <!-- Modal Form -->
