@@ -189,20 +189,22 @@ onUnmounted(() => {
   document.body.style.overflow = ''
 })
 
-const navigation = [
+const navigation = computed(() => [
   { name: 'Dashboard', path: '/', icon: 'pi pi-chart-bar' },
   { name: 'Students', path: '/students', icon: 'pi pi-users' },
+  ...(isSuperCoordinator.value ? [{ name: 'Coordinators', path: '/coordinators', icon: 'pi pi-user-plus' }] : []),
   { name: 'Broadcasts', path: '/broadcasts', icon: 'pi pi-megaphone' },
   { name: 'Logbooks', path: '/logbooks', icon: 'pi pi-file' },
   { name: 'Master Checklist', path: '/checklists', icon: 'pi pi-check-square' },
   { name: 'Knowledge Base', path: '/faqs', icon: 'pi pi-book' },
   { name: 'Cohorts', path: '/cohorts', icon: 'pi pi-calendar' },
   { name: 'Chatbot Logs', path: '/chatbot-conversations', icon: 'pi pi-comments' },
-  { name: 'Notifications', path: '/notifications', icon: 'pi pi-bell' }
-]
+  { name: 'Notifications', path: '/notifications', icon: 'pi pi-bell' },
+  { name: 'Settings', path: '/settings', icon: 'pi pi-cog' }
+])
 
 const currentPageName = computed(() => {
-  const item = navigation.find(n => n.path === route.path)
+  const item = navigation.value.find(n => n.path === route.path)
   return item ? item.name : 'View'
 })
 
