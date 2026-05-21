@@ -256,25 +256,26 @@ async function main() {
     console.log(`  Enrolled ${insertedStudentIds.length} students in "${activeCohort.name}"`)
   }
 
-  // Create checklist items for all students (skip existing)
-  const { data: existingChecklists } = await supabase
+  // Create checklist items for all students (randomized completion)
+  // First clear existing ones so we get a fresh randomized distribution
+  const { error: delClErr } = await supabase
     .from('student_checklists')
-    .select('student_id')
+    .delete()
     .in('student_id', insertedStudentIds)
 
-  const existingStudentIds = new Set(existingChecklists?.map(c => c.student_id) || [])
+  if (delClErr) {
+    console.error('  Failed to clear existing checklists:', delClErr.message)
+  }
 
-  const checklistInserts = insertedStudentIds
-    .filter(sid => !existingStudentIds.has(sid))
-    .flatMap(sid =>
-      templates.map(t => ({
-        student_id: sid,
-        checklist_item_id: t.id,
-        is_completed: Math.random() > 0.5,
-        completed_at: Math.random() > 0.5 ? now : null,
-        due_date: new Date(Date.now() + (t.due_offset_days || 14) * 86400000).toISOString()
-      }))
-    )
+  const checklistInserts = insertedStudentIds.flatMap(sid =>
+    templates.map(t => ({
+      student_id: sid,
+      checklist_item_id: t.id,
+      is_completed: Math.random() > 0.4,  // ~60% completion rate
+      completed_at: Math.random() > 0.4 ? now : null,
+      due_date: new Date(Date.now() + (t.due_offset_days || 14) * 86400000).toISOString()
+    }))
+  )
 
   let insertedChecklists = 0
   if (checklistInserts.length > 0) {
@@ -291,17 +292,50 @@ async function main() {
       }
     }
   }
-  console.log(`  Created ${insertedChecklists} new checklist items (${existingStudentIds.size} already had items)`)
+  console.log(`  Created ${insertedChecklists} checklist items (~60% completion rate)`)
 
-  // 5. Create job applications with varied statuses
-  console.log('\n[5/5] Creating job applications...')
+  // 5. Create job applications with varied placement statuses
+  console.log('\n[5/6] Creating job applications with varied placement statuses...')
 
-  const { data: existingApps } = await supabase
+  // Check if 'Accepted' is a valid enum value
+  const probeSid = insertedStudentIds[0]
+  const { error: probeErr } = await supabase
     .from('job_applications')
-    .select('student_id')
+    .insert({
+      student_id: probeSid,
+      company_name: '__PROBE__',
+      position: '__PROBE__',
+      status: 'Accepted'
+    })
+
+  const acceptedAvailable = !probeErr
+  if (probeErr) {
+    console.log('  NOTE: "Accepted" status not available in enum.')
+    console.log('  Run this SQL in Supabase SQL Editor to add it:')
+    console.log('    ALTER TYPE application_status ADD VALUE IF NOT EXISTS \'Accepted\';')
+    console.log('  Falling back to "Interview" for placed students\n')
+  } else {
+    // Clean up probe record
+    await supabase
+      .from('job_applications')
+      .delete()
+      .eq('company_name', '__PROBE__')
+    console.log('  "Accepted" status is available.\n')
+  }
+
+  const placedStatus = acceptedAvailable ? 'Accepted' : 'Interview'
+
+  // Delete existing apps for our students to ensure a clean distribution
+  const { error: delErr } = await supabase
+    .from('job_applications')
+    .delete()
     .in('student_id', insertedStudentIds)
 
-  const existingAppStudentIds = new Set(existingApps?.map(a => a.student_id) || [])
+  if (delErr) {
+    console.error('  Failed to clear existing apps:', delErr.message)
+  } else {
+    console.log('  Cleared existing job applications')
+  }
 
   interface AppConfig {
     startIdx: number
@@ -310,7 +344,7 @@ async function main() {
   }
 
   const configs: AppConfig[] = [
-    { startIdx: 0, count: 4, statuses: ['Accepted'] },
+    { startIdx: 0, count: 4, statuses: [placedStatus] },
     { startIdx: 4, count: 4, statuses: ['Interview', 'Pending'] },
     { startIdx: 8, count: 4, statuses: ['Rejected', 'Pending', 'Interview'] }
   ]
@@ -319,10 +353,6 @@ async function main() {
   for (const config of configs) {
     const studentSlice = insertedStudentIds.slice(config.startIdx, config.startIdx + config.count)
     for (const sid of studentSlice) {
-      if (existingAppStudentIds.has(sid)) {
-        console.log(`  SKIP (has apps): ${sid}`)
-        continue
-      }
       const numApps = 1 + Math.floor(Math.random() * 2)
       for (let a = 0; a < numApps; a++) {
         const company = COMPANIES[Math.floor(Math.random() * COMPANIES.length)]
@@ -348,14 +378,84 @@ async function main() {
     }
   }
 
-  console.log(`  Created ${appCount} new job applications`)
+  console.log(`  Created ${appCount} job applications`)
+  console.log('  Placement distribution:')
+  console.log(`    Indices  0-3 → ${placedStatus} (placed)`)
+  console.log('    Indices  4-7 → Interview / Pending')
+  console.log('    Indices  8-11 → Rejected / Pending')
+  console.log('    Indices 12-19 → No apps (Searching)')
+
+  // 6. Create weekly logbook tracking data
+  console.log('\n[6/6] Creating logbook tracking data...')
+
+  const { error: delLogErr } = await supabase
+    .from('weekly_logbook_tracking')
+    .delete()
+    .in('student_id', insertedStudentIds)
+
+  if (delLogErr) {
+    console.error('  Failed to clear existing logbooks:', delLogErr.message)
+  }
+
+  // Create 8 weeks of logbook entries per student
+  const logbookEntries: Array<{
+    student_id: string
+    cohort_id: number
+    week_number: number
+    week_end_date: string
+    is_submitted: boolean
+    submitted_at: string | null
+    reminder_sent: boolean
+  }> = []
+
+  const cohortStart = new Date(activeCohort.start_date)
+  for (const sid of insertedStudentIds) {
+    for (let week = 1; week <= 8; week++) {
+      const weekEnd = new Date(cohortStart)
+      weekEnd.setDate(weekEnd.getDate() + week * 7)
+
+      // First 4 weeks submitted, next 2 late, last 2 not submitted
+      const isSubmitted = week <= 4
+      const isLate = week === 5 || week === 6
+      const isOverdue = week >= 7
+
+      logbookEntries.push({
+        student_id: sid,
+        cohort_id: activeCohort.id,
+        week_number: week,
+        week_end_date: weekEnd.toISOString().split('T')[0],
+        is_submitted: isSubmitted,
+        submitted_at: isSubmitted
+          ? new Date(weekEnd.getTime() - 86400000).toISOString()
+          : null,
+        reminder_sent: isLate || isOverdue
+      })
+    }
+  }
+
+  const batchSize = 50
+  let insertedLogbooks = 0
+  for (let i = 0; i < logbookEntries.length; i += batchSize) {
+    const batch = logbookEntries.slice(i, i + batchSize)
+    const { error: lbErr } = await supabase
+      .from('weekly_logbook_tracking')
+      .insert(batch)
+    if (lbErr) {
+      console.error(`  Logbook batch ${i / batchSize} failed:`, lbErr.message)
+    } else {
+      insertedLogbooks += batch.length
+    }
+  }
+
+  console.log(`  Created ${insertedLogbooks} logbook entries (${logbookEntries.length / insertedStudentIds.length} weeks × ${insertedStudentIds.length} students)`)
 
   // Summary
   console.log('\n=== Seed Complete! ===')
   console.log(`  Students:          ${insertedStudentIds.length}`)
   console.log(`  Active cohort:     ${activeCohort.name} (ID: ${activeCohort.id})`)
-  console.log(`  Checklist items:   ${insertedChecklists + existingStudentIds.size} total (${insertedChecklists} new)`)
-  console.log(`  Job applications:  ${appCount} new`)
+  console.log(`  Checklist items:   ${insertedChecklists} total`)
+  console.log(`  Job applications:  ${appCount}`)
+  console.log(`  Logbook entries:   ${insertedLogbooks}`)
   console.log(`\n  All student passwords: ${DEFAULT_PASSWORD}`)
 }
 

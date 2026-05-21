@@ -46,7 +46,8 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 500, statusMessage: 'Logbook sync failed' })
     }
 
-    const today = new Date().toISOString().split('T')[0]
+    const today = new Date().toISOString().split('T')[0] as string
+    const staleThreshold = 7 // days past week_end_date before considered stale
 
     const results = (logbooks || []).map((entry: any) => {
       let statusLabel = 'Not Submitted'
@@ -55,6 +56,10 @@ export default defineEventHandler(async (event) => {
       } else if (entry.week_end_date < today) {
         statusLabel = 'Late'
       }
+
+      const weekEnd = new Date(entry.week_end_date).getTime()
+      const daysLate = Math.floor((Date.now() - weekEnd) / (1000 * 60 * 60 * 24))
+      const isStale = !entry.is_submitted && daysLate > staleThreshold
 
       return {
         id: entry.id,
@@ -66,6 +71,7 @@ export default defineEventHandler(async (event) => {
         isSubmitted: entry.is_submitted,
         submittedAt: entry.submitted_at,
         statusLabel,
+        isStale,
         reminderSent: entry.reminder_sent || false
       }
     })

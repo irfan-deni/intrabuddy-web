@@ -178,9 +178,14 @@ const loadTemplates = async () => {
       .from('cohorts')
       .select('id')
       .eq('is_active', true)
-      .single()
+      .maybeSingle()
       
     if (cohortError) throw cohortError
+    if (!cohort) {
+      errorMessage.value = 'No active cohort set'
+      isLoading.value = false
+      return
+    }
     activeCohortId.value = cohort.id
     
     const { data, error } = await supabase

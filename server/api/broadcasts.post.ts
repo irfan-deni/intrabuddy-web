@@ -55,6 +55,34 @@ export default defineEventHandler(async (event) => {
       })
     }
 
+    // 2. Create in-app notifications for targeted students
+    const shouldNotifyStudents = body.target_roles?.includes('student') ?? true
+    if (shouldNotifyStudents) {
+      const { data: activeCohort } = await supabase
+        .from('cohorts')
+        .select('id')
+        .eq('is_active', true)
+        .maybeSingle()
+
+      if (activeCohort) {
+        const { data: enrolled } = await supabase
+          .from('student_cohorts')
+          .select('student_id')
+          .eq('cohort_id', activeCohort.id)
+
+        const studentIds = enrolled?.map(e => e.student_id).filter(Boolean) as string[]
+        if (studentIds.length > 0) {
+          const notificationRows = studentIds.map(studentId => ({
+            recipient_id: studentId,
+            title: body.title,
+            body: body.body,
+            type: 'broadcast'
+          }))
+          await supabase.from('notifications').insert(notificationRows)
+        }
+      }
+    }
+
     return { success: true, queued: 1 }
   } catch (error: any) {
     if (error.statusCode) throw error

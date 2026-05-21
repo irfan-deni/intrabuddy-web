@@ -10,7 +10,9 @@
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
     "generate:icons": "node ./scripts/generate-icons.js",
-    "seed": "npx tsx scripts/seed-students.ts"
+    "seed": "npx tsx scripts/seed-students.ts",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@nuxtjs/supabase": "^2.0.4",
@@ -22,6 +24,7 @@
     "vue-router": "^5.0.3"
   },
   "devDependencies": {
+    "@nuxt/test-utils": "^4.0.3",
     "@vue/test-utils": "^2.4.10",
     "happy-dom": "^20.9.0",
     "sharp": "^0.32.1",

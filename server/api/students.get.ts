@@ -56,7 +56,9 @@ export default defineEventHandler(async (event) => {
       let placementStatus = 'Searching'
       if (studentApps.some(app => app.status === 'Accepted')) {
         placementStatus = 'Accepted'
-      } else if (studentApps.length > 0) {
+      } else if (studentApps.some(app => app.status === 'Interview')) {
+        placementStatus = 'Interview'
+      } else if (studentApps.length > 0 && studentApps[0]) {
         placementStatus = studentApps[0].status || 'Pending'
       }
 

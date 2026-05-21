@@ -6,6 +6,13 @@
         <p class="text-stone-500 mt-1.5 font-bold uppercase text-[10px] tracking-widest">Account configuration and security.</p>
       </header>
 
+      <div v-if="successMessage" class="p-4 bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest">
+        {{ successMessage }}
+      </div>
+      <div v-if="errorMessage" class="p-4 bg-rose-50 border border-rose-100 text-rose-700 text-[10px] font-black uppercase tracking-widest">
+        {{ errorMessage }}
+      </div>
+
       <article class="bg-white border border-stone-200 shadow-sm">
         <div class="px-6 md:px-10 py-6 border-b border-stone-100">
           <h2 class="text-sm font-black text-slate-800 uppercase tracking-widest">Personal Information</h2>
@@ -23,7 +30,13 @@
             </div>
           </div>
           <div class="pt-2">
-            <button class="bg-sky-600 text-white h-12 px-8 font-black text-[10px] uppercase tracking-[0.2em] hover:brightness-110 transition-all">Save Profile</button>
+            <button
+              class="bg-sky-600 text-white h-12 px-8 font-black text-[10px] uppercase tracking-[0.2em] hover:brightness-110 transition-all disabled:opacity-30"
+              :disabled="isSavingProfile"
+              @click="saveProfile"
+            >
+              {{ isSavingProfile ? 'Saving...' : 'Save Profile' }}
+            </button>
           </div>
         </div>
       </article>
@@ -45,7 +58,13 @@
             </div>
           </div>
           <div class="pt-2">
-            <button class="bg-sky-600 text-white h-12 px-8 font-black text-[10px] uppercase tracking-[0.2em] hover:brightness-110 transition-all">Update Password</button>
+            <button
+              class="bg-sky-600 text-white h-12 px-8 font-black text-[10px] uppercase tracking-[0.2em] hover:brightness-110 transition-all disabled:opacity-30"
+              :disabled="isUpdatingPassword"
+              @click="updatePassword"
+            >
+              {{ isUpdatingPassword ? 'Updating...' : 'Update Password' }}
+            </button>
           </div>
         </div>
       </article>
@@ -54,19 +73,85 @@
 </template>
 
 <script setup lang="ts">
+import type { Database } from '~/types/supabase'
+
 definePageMeta({
   requiredRole: 'coordinator'
 })
 
+const supabase = useSupabaseClient<Database>()
+const { profile, loadProfile } = useCurrentProfile()
+
 const profileForm = reactive({
-  fullName: 'Dr. Sarah Chen',
-  phone: '+60 12-345 6789'
+  fullName: profile.value?.full_name || '',
+  phone: profile.value?.phone_number || ''
 })
 
 const passwordForm = reactive({
   newPassword: '',
   confirmPassword: ''
 })
+
+const isSavingProfile = ref(false)
+const isUpdatingPassword = ref(false)
+const successMessage = ref('')
+const errorMessage = ref('')
+
+const saveProfile = async () => {
+  isSavingProfile.value = true
+  successMessage.value = ''
+  errorMessage.value = ''
+  try {
+    const { data: userData } = await supabase.auth.getUser()
+    if (!userData.user?.id) throw new Error('Not authenticated')
+    const { error } = await supabase
+      .from('users')
+      .update({
+        full_name: profileForm.fullName,
+        phone_number: profileForm.phone || null
+      })
+      .eq('id', userData.user.id)
+    if (error) throw error
+    await loadProfile()
+    successMessage.value = 'Profile updated'
+  } catch (error: any) {
+    errorMessage.value = error.message || 'Failed to save profile'
+  } finally {
+    isSavingProfile.value = false
+  }
+}
+
+const updatePassword = async () => {
+  if (!passwordForm.newPassword) {
+    errorMessage.value = 'New password is required'
+    return
+  }
+  if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+    errorMessage.value = 'Passwords do not match'
+    return
+  }
+  if (passwordForm.newPassword.length < 6) {
+    errorMessage.value = 'Password must be at least 6 characters'
+    return
+  }
+
+  isUpdatingPassword.value = true
+  successMessage.value = ''
+  errorMessage.value = ''
+  try {
+    const { error } = await supabase.auth.updateUser({
+      password: passwordForm.newPassword
+    })
+    if (error) throw error
+    successMessage.value = 'Password updated'
+    passwordForm.newPassword = ''
+    passwordForm.confirmPassword = ''
+  } catch (error: any) {
+    errorMessage.value = error.message || 'Failed to update password'
+  } finally {
+    isUpdatingPassword.value = false
+  }
+}
 
 const inputClass = 'w-full bg-stone-50 border border-stone-200 px-5 py-4 text-xs font-black uppercase focus:border-sky-600 focus:ring-1 focus:ring-sky-600 outline-none transition-all text-slate-800'
 

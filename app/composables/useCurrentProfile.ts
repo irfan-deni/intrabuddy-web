@@ -23,7 +23,7 @@ export function useCurrentProfile() {
     try {
       const { data, error } = await supabase
         .from('users')
-        .select('id, full_name, role, student_id, phone_number, avatar_url')
+        .select('id, email, full_name, role, student_id, phone_number, avatar_url, created_at, updated_at')
         .eq('id', user.value.id || (user.value as any).sub)
         .single()
 

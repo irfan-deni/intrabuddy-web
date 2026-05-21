@@ -142,11 +142,6 @@ const handleLogin = async () => {
 
     if (error) throw error
 
-    const { data: claimsData } = await supabase.auth.getClaims()
-    if (claimsData?.claims) {
-      useSupabaseUser().value = claimsData.claims
-    }
-
     await navigateTo('/')
   } catch (error: any) {
     errorMessage.value = error.message || 'Authentication failed'

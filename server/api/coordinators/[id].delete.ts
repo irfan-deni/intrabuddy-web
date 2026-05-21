@@ -17,7 +17,7 @@ export default defineEventHandler(async (event) => {
   const { data: actor } = await supabase
     .from('users')
     .select('role')
-    .eq('id', user.sub)
+    .eq('id', user.id)
     .single()
 
   if (!actor || actor.role !== 'coordinator') {

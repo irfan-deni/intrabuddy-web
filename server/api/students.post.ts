@@ -1,9 +1,9 @@
-import { serverSupabaseClient, serverSupabaseSession } from '#supabase/server'
+import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server'
 import type { Database } from '~/types/supabase'
 
 export default defineEventHandler(async (event) => {
-  const session = await serverSupabaseSession(event)
-  if (!session) {
+  const user = await serverSupabaseUser(event)
+  if (!user) {
     throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
   }
 
@@ -13,7 +13,7 @@ export default defineEventHandler(async (event) => {
   const { data: actor } = await supabase
     .from('users')
     .select('role')
-    .eq('id', session.user.id)
+    .eq('id', user.id)
     .single()
 
   if (!actor || actor.role !== 'coordinator') {

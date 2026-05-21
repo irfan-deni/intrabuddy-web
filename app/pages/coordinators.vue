@@ -7,7 +7,7 @@
           <p class="text-stone-500 text-xs font-semibold mt-2 uppercase tracking-wider">Manage intra coordinator accounts</p>
         </div>
 
-        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
+        <div v-if="isSuperCoordinator" class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
           <button
             class="bg-sky-600 text-white px-6 md:px-8 py-4 font-black text-[10px] uppercase tracking-[0.2em] hover:brightness-110 transition-all flex items-center justify-center gap-3 shadow-xl shadow-black/10"
             @click="openAddModal"
@@ -116,9 +116,14 @@
 </template>
 
 <script setup lang="ts">
+import { useCoordinatorPrivileges } from '~/composables/useCoordinatorPrivileges'
+
 definePageMeta({
-  requiredRole: 'coordinator'
+  requiredRole: 'coordinator',
+  superCoordinatorOnly: true
 })
+
+const { isSuperCoordinator } = useCoordinatorPrivileges()
 
 const coordinators = ref<any[]>([])
 const isLoading = ref(true)

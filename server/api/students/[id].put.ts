@@ -1,32 +1,18 @@
-import { serverSupabaseClient, serverSupabaseSession } from '#supabase/server'
+import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server'
 import type { Database } from '~/types/supabase'
 
 export default defineEventHandler(async (event) => {
-  const session = await serverSupabaseSession(event)
-  if (!session) {
+  const user = await serverSupabaseUser(event)
+  if (!user) {
     throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
   }
 
   const supabase = await serverSupabaseClient<Database>(event)
 
-  let userId = session.user?.id || (session as any).sub || (session as any).user?.sub
-  if (!userId && session.access_token) {
-    try {
-      const payload = JSON.parse(Buffer.from(session.access_token.split('.')[1], 'base64').toString())
-      userId = payload.sub
-    } catch (e) {
-      // ignore
-    }
-  }
-
-  if (!userId) {
-    throw createError({ statusCode: 500, statusMessage: 'Session has no user ID' })
-  }
-
   const { data: actor, error: actorError } = await supabase
     .from('users')
     .select('role')
-    .eq('id', userId)
+    .eq('id', user.id)
     .single()
 
   if (actorError || actor.role !== 'coordinator') {

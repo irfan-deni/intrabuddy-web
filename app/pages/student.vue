@@ -162,11 +162,11 @@
         <button class="absolute top-6 right-6 text-stone-400 hover:text-slate-800 transition-colors" @click="showChecklistOverride = false">
           <i class="pi pi-times"></i>
         </button>
-        <h2 class="text-lg font-black text-slate-800 uppercase tracking-widest mb-6">Override Checklist Item</h2>
+        <h2 class="text-lg font-black text-slate-800 uppercase tracking-widest mb-6">{{ checklistOverrideTarget?.is_completed ? 'Revert Checklist Item' : 'Override Checklist Item' }}</h2>
         <p class="text-xs font-bold text-stone-500 uppercase tracking-wider mb-6">{{ checklistOverrideTarget?.title }}</p>
         <form @submit.prevent="confirmChecklistOverride" class="space-y-6">
           <div class="space-y-2">
-            <label class="text-[9px] font-black text-stone-500 uppercase tracking-widest">Override Reason</label>
+            <label class="text-[9px] font-black text-stone-500 uppercase tracking-widest">{{ checklistOverrideTarget?.is_completed ? 'Revert Reason' : 'Override Reason' }}</label>
             <textarea v-model="checklistOverrideReason" rows="3" required placeholder="Explain why this item is being manually overridden..."
               class="w-full bg-white border border-stone-200 rounded-none px-4 py-3 text-xs font-bold uppercase tracking-widest focus:border-sky-600 focus:ring-1 focus:ring-sky-600 outline-none transition-all resize-none text-slate-800"></textarea>
           </div>
@@ -313,7 +313,6 @@ const loadStudentData = async () => {
 
 const overrideChecklist = async (item: ChecklistItem) => {
   if (!isSuperCoordinator.value) return
-  if (item.is_completed) return
   checklistOverrideTarget.value = item
   checklistOverrideReason.value = ''
   showChecklistOverride.value = true
@@ -325,12 +324,14 @@ const confirmChecklistOverride = async () => {
   try {
     const { data: user } = await supabase.auth.getUser()
     const adminId = user?.user?.id || null
+    const target = checklistOverrideTarget.value
+    const nowCompleted = !target.is_completed
     const { error } = await supabase.from('student_checklists').update({
-      is_completed: true,
-      completed_at: new Date().toISOString(),
-      override_reason: checklistOverrideReason.value,
+      is_completed: nowCompleted,
+      completed_at: nowCompleted ? new Date().toISOString() : null,
+      override_reason: nowCompleted ? checklistOverrideReason.value : null,
       updated_by_admin: adminId
-    }).eq('id', checklistOverrideTarget.value.id)
+    }).eq('id', target.id)
 
     if (error) throw error
     showChecklistOverride.value = false

@@ -1,15 +1,15 @@
-import { serverSupabaseClient, serverSupabaseSession } from '#supabase/server'
+import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server'
 import type { Database } from '~/types/supabase'
 
 export default defineEventHandler(async (event) => {
   try {
-    const session = await serverSupabaseSession(event)
-    if (!session) {
+    const user = await serverSupabaseUser(event)
+    if (!user) {
       throw createError({ statusCode: 401, statusMessage: 'Session missing' })
     }
 
     const supabase = await serverSupabaseClient<Database>(event)
-    const userId = session.user?.id
+    const userId = user.id
 
     // 1. Permissive Profile Lookup
     // We try to get the role, but we won't crash if it's missing or blocked by RLS.
@@ -53,7 +53,7 @@ export default defineEventHandler(async (event) => {
         .from('job_applications')
         .select('student_id')
         .in('student_id', studentIds)
-        .eq('status', 'Accepted')
+        .in('status', ['Accepted', 'Interview'])
       
       placedStudents = new Set(applications?.map(app => app.student_id)).size
     }

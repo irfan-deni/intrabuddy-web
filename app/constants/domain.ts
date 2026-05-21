@@ -2,18 +2,20 @@ export const USER_ROLES = ['student', 'coordinator'] as const
 export type UserRole = (typeof USER_ROLES)[number]
 
 export const INTERNSHIP_STATUSES = [
-  'preparing',
-  'searching',
-  'placed',
-  'completed'
+  'Searching',
+  'Pending',
+  'Accepted',
+  'Rejected',
+  'Offer Declined'
 ] as const
 export type InternshipStatus = (typeof INTERNSHIP_STATUSES)[number]
 
 export const APPLICATION_STATUSES = [
-  'pending',
-  'interviewing',
-  'rejected',
-  'offer_accepted'
+  'Pending',
+  'Interview',
+  'Accepted',
+  'Rejected',
+  'Offer Declined'
 ] as const
 export type ApplicationStatus = (typeof APPLICATION_STATUSES)[number]
 
