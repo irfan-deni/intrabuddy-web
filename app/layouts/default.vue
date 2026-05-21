@@ -5,12 +5,15 @@
       :class="collapsed ? 'w-20' : 'w-72'"
     >
       <div :class="collapsed ? 'p-5' : 'p-8'">
-        <div class="flex items-center" :class="collapsed ? 'justify-center' : 'gap-3'">
+        <div class="flex items-center gap-3" :class="collapsed ? 'justify-center' : ''">
           <div class="bg-white p-1.5 flex-shrink-0">
             <i class="pi pi-graduation-cap text-slate-900 text-xl"></i>
           </div>
           <Transition name="fade-text">
-            <span v-if="!collapsed" class="text-lg font-black tracking-[0.3em] uppercase text-white whitespace-nowrap">INTRA Buddy</span>
+            <div v-if="!collapsed" class="flex flex-col">
+              <span class="text-lg font-black tracking-[0.3em] uppercase text-white whitespace-nowrap">INTRA BUDDY</span>
+              <span class="text-[10px] text-slate-400 uppercase tracking-widest font-semibold mt-1">COORDINATOR PORTAL</span>
+            </div>
           </Transition>
         </div>
       </div>
@@ -83,7 +86,10 @@
           <div class="bg-white p-1.5 flex-shrink-0">
             <i class="pi pi-graduation-cap text-slate-900 text-xl"></i>
           </div>
-          <span class="text-lg font-black tracking-[0.3em] uppercase text-white whitespace-nowrap">INTRA Buddy</span>
+          <div class="flex flex-col">
+            <span class="text-lg font-black tracking-[0.3em] uppercase text-white whitespace-nowrap">INTRA BUDDY</span>
+            <span class="text-[10px] text-slate-400 uppercase tracking-widest font-semibold mt-0.5">COORDINATOR PORTAL</span>
+          </div>
         </div>
         <button class="h-8 w-8 flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 transition-all rounded-lg" @click="mobileOpen = false">
           <i class="pi pi-times text-sm"></i>
