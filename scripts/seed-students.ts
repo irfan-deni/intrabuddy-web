@@ -1,0 +1,365 @@
+import { readFileSync } from 'fs'
+import { resolve, dirname } from 'path'
+import { fileURLToPath } from 'url'
+import { createClient } from '@supabase/supabase-js'
+import type { Database } from '../app/types/supabase'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
+const envPath = resolve(__dirname, '..', '.env')
+
+function loadEnv() {
+  const content = readFileSync(envPath, 'utf-8')
+  const vars: Record<string, string> = {}
+  for (const line of content.split('\n')) {
+    const trimmed = line.trim()
+    if (!trimmed || trimmed.startsWith('#')) continue
+    const eqIdx = trimmed.indexOf('=')
+    if (eqIdx === -1) continue
+    const key = trimmed.slice(0, eqIdx).trim()
+    let value = trimmed.slice(eqIdx + 1).trim()
+    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+      value = value.slice(1, -1)
+    }
+    vars[key] = value
+  }
+  return vars
+}
+
+const env = loadEnv()
+const supabaseUrl = env.SUPABASE_URL
+const supabaseServiceKey = env.SUPABASE_SERVICE_KEY
+
+if (!supabaseUrl || !supabaseServiceKey) {
+  console.error('Missing SUPABASE_URL or SUPABASE_SERVICE_KEY in .env')
+  process.exit(1)
+}
+
+const supabase = createClient<Database>(supabaseUrl, supabaseServiceKey, {
+  auth: { autoRefreshToken: false, persistSession: false }
+})
+
+const now = new Date().toISOString()
+const DEFAULT_PASSWORD = 'Test123!'
+
+// 11-digit UNIKL matric numbers
+const STUDENTS = [
+  { full_name: 'Ahmad bin Ismail', student_id: '52213224401', email: 'ahmad.ismail@example.com', phone_number: '012-3456789' },
+  { full_name: 'Nurul Farhana bt Salleh', student_id: '52213224402', email: 'nurul.farhana@example.com', phone_number: '012-3456790' },
+  { full_name: 'Muhammad Faiz bin Razak', student_id: '52213224403', email: 'faiz.razak@example.com', phone_number: '012-3456791' },
+  { full_name: 'Siti Aisyah bt Abdullah', student_id: '52213224404', email: 'aisyah.abdullah@example.com', phone_number: '012-3456792' },
+  { full_name: 'Lim Wei Jie', student_id: '52213224405', email: 'weijie.lim@example.com', phone_number: '012-3456793' },
+  { full_name: 'Priya a/p Rajendran', student_id: '52213224406', email: 'priya.rajendran@example.com', phone_number: '012-3456794' },
+  { full_name: 'Mohammad Khairul bin Azman', student_id: '52213224407', email: 'khairul.azman@example.com', phone_number: '012-3456795' },
+  { full_name: 'Tan Sze Ying', student_id: '52213224408', email: 'szying.tan@example.com', phone_number: '012-3456796' },
+  { full_name: 'Amirah bt Ruslan', student_id: '52213224409', email: 'amirah.ruslan@example.com', phone_number: '012-3456797' },
+  { full_name: 'Ravi a/l Muthusamy', student_id: '52213224410', email: 'ravi.muthusamy@example.com', phone_number: '012-3456798' },
+  { full_name: 'Nur Aliya bt Zainal', student_id: '52213224411', email: 'aliya.zainal@example.com', phone_number: '013-1234567' },
+  { full_name: 'Farid bin Hassan', student_id: '52213224412', email: 'farid.hassan@example.com', phone_number: '013-1234568' },
+  { full_name: 'Chan Kah Mun', student_id: '52213224413', email: 'kahmun.chan@example.com', phone_number: '013-1234569' },
+  { full_name: 'Siti Zubaidah bt Mohd Nor', student_id: '52213224414', email: 'zubaidah.nor@example.com', phone_number: '013-1234570' },
+  { full_name: 'Hafizul bin Kamaruddin', student_id: '52213224415', email: 'hafizul.kamaruddin@example.com', phone_number: '013-1234571' },
+  { full_name: 'Dewi Sri a/p Subramaniam', student_id: '52213224416', email: 'dewi.subra@example.com', phone_number: '013-1234572' },
+  { full_name: 'Arif bin Zakaria', student_id: '52213224417', email: 'arif.zakaria@example.com', phone_number: '013-1234573' },
+  { full_name: 'Nur Izzati bt Ramli', student_id: '52213224418', email: 'izzati.ramli@example.com', phone_number: '013-1234574' },
+  { full_name: 'Syafiq bin Mohd Yusof', student_id: '52213224419', email: 'syafiq.yusof@example.com', phone_number: '013-1234575' },
+  { full_name: 'Wong Sing Yee', student_id: '52213224420', email: 'singyee.wong@example.com', phone_number: '013-1234576' }
+]
+
+const COMPANIES = [
+  { name: 'Petronas', positions: ['Software Engineer Intern', 'Data Analyst Intern', 'IT Support Intern'] },
+  { name: 'Tenaga Nasional Berhad', positions: ['Engineering Intern', 'Systems Analyst Intern'] },
+  { name: 'CIMB Bank', positions: ['Software Developer Intern', 'Business Analyst Intern'] },
+  { name: 'AirAsia', positions: ['Full Stack Developer Intern', 'DevOps Intern'] },
+  { name: 'Maxis Berhad', positions: ['Network Engineering Intern', 'Mobile Dev Intern'] },
+  { name: 'Top Glove', positions: ['Automation Intern', 'Supply Chain Intern'] },
+  { name: 'Grab Malaysia', positions: ['Backend Engineer Intern', 'Product Management Intern'] },
+  { name: 'Dell Technologies', positions: ['Software Engineering Intern', 'Cloud Intern'] }
+]
+
+async function main() {
+  console.log('=== INTRA Buddy Seed Script ===\n')
+
+  // 1. Ensure active cohort exists
+  console.log('[1/5] Checking active cohort...')
+  let { data: activeCohort } = await supabase
+    .from('cohorts')
+    .select('*')
+    .eq('is_active', true)
+    .maybeSingle()
+
+  if (!activeCohort) {
+    console.log('  No active cohort found. Creating one...')
+    const { data: newCohort, error: cohortErr } = await supabase
+      .from('cohorts')
+      .insert({
+        name: 'Julai 2026',
+        start_date: '2026-07-01',
+        end_date: '2026-09-30',
+        is_active: true,
+        created_at: now
+      })
+      .select()
+      .single()
+
+    if (cohortErr) {
+      console.error('  Failed to create cohort:', cohortErr.message)
+      process.exit(1)
+    }
+    activeCohort = newCohort
+    console.log(`  Created cohort: "${activeCohort.name}" (ID: ${activeCohort.id})`)
+  } else {
+    console.log(`  Found active cohort: "${activeCohort.name}" (ID: ${activeCohort.id})`)
+  }
+
+  // 2. Ensure checklist templates exist for the cohort
+  console.log('\n[2/5] Checking checklist templates...')
+  let { data: templates } = await supabase
+    .from('checklist_templates')
+    .select('*')
+    .eq('cohort_id', activeCohort.id)
+
+  if (!templates || templates.length === 0) {
+    console.log('  No templates found. Creating default templates...')
+    const defaultTemplates = [
+      { title: 'Upload Resume/CV', description: 'Submit your updated resume', required: true, display_order: 1, due_offset_days: 14, cohort_id: activeCohort.id },
+      { title: 'Company Registration', description: 'Complete company registration form', required: true, display_order: 2, due_offset_days: 21, cohort_id: activeCohort.id },
+      { title: 'Offer Letter Upload', description: 'Upload signed offer letter', required: true, display_order: 3, due_offset_days: 30, cohort_id: activeCohort.id },
+      { title: 'Insurance Form', description: 'Submit insurance coverage form', required: false, display_order: 4, due_offset_days: 14, cohort_id: activeCohort.id },
+      { title: 'Emergency Contact', description: 'Provide emergency contact details', required: true, display_order: 5, due_offset_days: 7, cohort_id: activeCohort.id },
+      { title: 'Health Declaration', description: 'Complete health declaration form', required: false, display_order: 6, due_offset_days: 14, cohort_id: activeCohort.id },
+      { title: 'Academic Transcript', description: 'Upload latest academic transcript', required: true, display_order: 7, due_offset_days: 21, cohort_id: activeCohort.id }
+    ]
+
+    const { data: newTemplates, error: tmplErr } = await supabase
+      .from('checklist_templates')
+      .insert(defaultTemplates)
+      .select()
+
+    if (tmplErr) {
+      console.error('  Failed to create templates:', tmplErr.message)
+      process.exit(1)
+    }
+    templates = newTemplates
+    console.log(`  Created ${templates.length} default templates`)
+  } else {
+    console.log(`  Found ${templates.length} existing templates`)
+  }
+
+  // 3. Create auth users + insert/update public.users
+  console.log('\n[3/5] Creating auth users and student profiles...')
+  const insertedStudentIds: string[] = []
+
+  // First, find which students already exist in public.users
+  const emails = STUDENTS.map(s => s.email)
+  const { data: existingUsers } = await supabase
+    .from('users')
+    .select('id, email')
+    .in('email', emails)
+
+  const existingByEmail = new Map(existingUsers?.map(u => [u.email, u.id]) || [])
+
+  for (const s of STUDENTS) {
+    const existingId = existingByEmail.get(s.email)
+
+    if (existingId) {
+      // User exists — just update their profile
+      const { error: upsertErr } = await supabase
+        .from('users')
+        .update({
+          full_name: s.full_name,
+          student_id: s.student_id,
+          phone_number: s.phone_number,
+          updated_at: now
+        })
+        .eq('id', existingId)
+
+      if (upsertErr) {
+        console.error(`  FAILED: ${s.full_name} — ${upsertErr.message}`)
+      } else {
+        insertedStudentIds.push(existingId)
+        console.log(`  UPDATED: ${s.full_name.padEnd(30)} ${s.student_id}`)
+      }
+      continue
+    }
+
+    // New student — create auth user
+    const { data: authUser, error: authErr } = await supabase.auth.admin.createUser({
+      email: s.email,
+      password: DEFAULT_PASSWORD,
+      email_confirm: true,
+      user_metadata: { full_name: s.full_name }
+    })
+
+    if (authErr) {
+      console.error(`  FAILED: ${s.full_name} — ${authErr.message}`)
+      continue
+    }
+
+    if (!authUser?.user) {
+      console.error(`  FAILED: ${s.full_name} — no user returned`)
+      continue
+    }
+
+    const uid = authUser.user.id
+
+    // Insert into public.users (trigger may have created a stub record)
+    const { error: upsertErr } = await supabase
+      .from('users')
+      .upsert({
+        id: uid,
+        role: 'student',
+        full_name: s.full_name,
+        student_id: s.student_id,
+        email: s.email,
+        phone_number: s.phone_number,
+        created_at: now,
+        updated_at: now
+      }, { onConflict: 'id' })
+
+    if (upsertErr) {
+      console.error(`  FAILED: ${s.full_name} — ${upsertErr.message}`)
+      continue
+    }
+
+    insertedStudentIds.push(uid)
+    console.log(`  NEW: ${s.full_name.padEnd(30)} ${s.student_id}  ${s.email}`)
+  }
+
+  console.log(`\n  Successfully processed ${insertedStudentIds.length}/${STUDENTS.length} students`)
+
+  if (insertedStudentIds.length === 0) {
+    console.error('No students were processed. Aborting.')
+    process.exit(1)
+  }
+
+  // 4. Enroll in cohort + create checklist items
+  console.log('\n[4/5] Enrolling students in cohort and creating checklist items...')
+
+  const cohortEntries = insertedStudentIds.map(sid => ({
+    student_id: sid,
+    cohort_id: activeCohort.id,
+    enrolled_at: now
+  }))
+
+  const { error: enrollErr } = await supabase
+    .from('student_cohorts')
+    .insert(cohortEntries)
+
+  if (enrollErr) {
+    // If some already enrolled, that's okay
+    if (enrollErr.message.includes('duplicate') || enrollErr.message.includes('unique')) {
+      console.log('  Some students already enrolled (skipped duplicates)')
+    } else {
+      console.error('  Cohort enrollment failed:', enrollErr.message)
+    }
+  } else {
+    console.log(`  Enrolled ${insertedStudentIds.length} students in "${activeCohort.name}"`)
+  }
+
+  // Create checklist items for all students (skip existing)
+  const { data: existingChecklists } = await supabase
+    .from('student_checklists')
+    .select('student_id')
+    .in('student_id', insertedStudentIds)
+
+  const existingStudentIds = new Set(existingChecklists?.map(c => c.student_id) || [])
+
+  const checklistInserts = insertedStudentIds
+    .filter(sid => !existingStudentIds.has(sid))
+    .flatMap(sid =>
+      templates.map(t => ({
+        student_id: sid,
+        checklist_item_id: t.id,
+        is_completed: Math.random() > 0.5,
+        completed_at: Math.random() > 0.5 ? now : null,
+        due_date: new Date(Date.now() + (t.due_offset_days || 14) * 86400000).toISOString()
+      }))
+    )
+
+  let insertedChecklists = 0
+  if (checklistInserts.length > 0) {
+    const batchSize = 50
+    for (let i = 0; i < checklistInserts.length; i += batchSize) {
+      const batch = checklistInserts.slice(i, i + batchSize)
+      const { error: clErr } = await supabase
+        .from('student_checklists')
+        .insert(batch)
+      if (clErr) {
+        console.error(`  Checklist batch ${i / batchSize} failed:`, clErr.message)
+      } else {
+        insertedChecklists += batch.length
+      }
+    }
+  }
+  console.log(`  Created ${insertedChecklists} new checklist items (${existingStudentIds.size} already had items)`)
+
+  // 5. Create job applications with varied statuses
+  console.log('\n[5/5] Creating job applications...')
+
+  const { data: existingApps } = await supabase
+    .from('job_applications')
+    .select('student_id')
+    .in('student_id', insertedStudentIds)
+
+  const existingAppStudentIds = new Set(existingApps?.map(a => a.student_id) || [])
+
+  interface AppConfig {
+    startIdx: number
+    count: number
+    statuses: string[]
+  }
+
+  const configs: AppConfig[] = [
+    { startIdx: 0, count: 4, statuses: ['Accepted'] },
+    { startIdx: 4, count: 4, statuses: ['Interview', 'Pending'] },
+    { startIdx: 8, count: 4, statuses: ['Rejected', 'Pending', 'Interview'] }
+  ]
+
+  let appCount = 0
+  for (const config of configs) {
+    const studentSlice = insertedStudentIds.slice(config.startIdx, config.startIdx + config.count)
+    for (const sid of studentSlice) {
+      if (existingAppStudentIds.has(sid)) {
+        console.log(`  SKIP (has apps): ${sid}`)
+        continue
+      }
+      const numApps = 1 + Math.floor(Math.random() * 2)
+      for (let a = 0; a < numApps; a++) {
+        const company = COMPANIES[Math.floor(Math.random() * COMPANIES.length)]
+        const position = company.positions[Math.floor(Math.random() * company.positions.length)]
+        const status = config.statuses[Math.min(a, config.statuses.length - 1)]
+
+        const appDate = new Date(Date.now() - Math.floor(Math.random() * 60) * 86400000).toISOString()
+
+        const { error: appErr } = await supabase
+          .from('job_applications')
+          .insert({
+            student_id: sid,
+            company_name: company.name,
+            position,
+            application_date: appDate,
+            status,
+            created_at: now,
+            updated_at: now
+          })
+
+        if (!appErr) appCount++
+      }
+    }
+  }
+
+  console.log(`  Created ${appCount} new job applications`)
+
+  // Summary
+  console.log('\n=== Seed Complete! ===')
+  console.log(`  Students:          ${insertedStudentIds.length}`)
+  console.log(`  Active cohort:     ${activeCohort.name} (ID: ${activeCohort.id})`)
+  console.log(`  Checklist items:   ${insertedChecklists + existingStudentIds.size} total (${insertedChecklists} new)`)
+  console.log(`  Job applications:  ${appCount} new`)
+  console.log(`\n  All student passwords: ${DEFAULT_PASSWORD}`)
+}
+
+main().catch(err => {
+  console.error('Unexpected error:', err)
+  process.exit(1)
+})
