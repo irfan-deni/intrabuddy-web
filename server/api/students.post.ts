@@ -1,5 +1,14 @@
-import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server'
+import { serverSupabaseClient, serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
 import type { Database } from '~/types/supabase'
+
+function generateTempPassword(): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$'
+  let password = ''
+  for (let i = 0; i < 16; i++) {
+    password += chars.charAt(Math.floor(Math.random() * chars.length))
+  }
+  return password
+}
 
 export default defineEventHandler(async (event) => {
   const user = await serverSupabaseUser(event)
@@ -21,7 +30,7 @@ export default defineEventHandler(async (event) => {
   }
 
   const body = await readBody(event)
-  const { full_name, student_id, email, id } = body
+  const { full_name, student_id, email } = body
 
   if (!full_name || !email) {
     throw createError({ statusCode: 400, statusMessage: 'Full name and Email are required' })
@@ -38,27 +47,42 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: 'No active cohort found' })
   }
 
-  // 2. Insert into public.users (using provided ID or generating one)
-  // Note: In production, you'd usually create an Auth user first.
-  const userPayload = {
-    id: id || crypto.randomUUID(), // Fallback if no ID provided
-    role: 'student' as const,
-    full_name,
-    student_id: student_id || null,
-    email: email
+  // 2. Create auth user first (required for FK constraint users.id -> auth.users)
+  const serviceRole = serverSupabaseServiceRole(event)
+  const tempPassword = generateTempPassword()
+
+  const { data: authData, error: authError } = await serviceRole.auth.admin.createUser({
+    email,
+    password: tempPassword,
+    email_confirm: true,
+    user_metadata: { full_name, role: 'student' }
+  })
+
+  if (authError || !authData?.user) {
+    throw createError({ statusCode: 500, statusMessage: `Auth user creation failed: ${authError?.message}` })
   }
 
-  const { data: newUser, error: userError } = await supabase
+  const authId = authData.user.id
+
+  // 3. Upsert into public.users (trigger may already have created the row)
+  const { data: newUser, error: userError } = await serviceRole
     .from('users')
-    .insert(userPayload)
+    .upsert({
+      id: authId,
+      role: 'student' as const,
+      full_name,
+      student_id: student_id || null,
+      email
+    })
     .select('id')
     .single()
 
   if (userError || !newUser) {
-    throw createError({ statusCode: 500, statusMessage: `User creation failed: ${userError?.message}` })
+    await serviceRole.auth.admin.deleteUser(authId).catch(() => {})
+    throw createError({ statusCode: 500, statusMessage: `Profile creation failed: ${userError?.message}` })
   }
 
-  // 3. Enroll in active cohort via student_cohorts
+  // 4. Enroll in active cohort via student_cohorts
   const { error: cohortError } = await supabase
     .from('student_cohorts')
     .insert({
@@ -67,11 +91,12 @@ export default defineEventHandler(async (event) => {
     })
 
   if (cohortError) {
-    await supabase.from('users').delete().eq('id', newUser.id)
+    await serviceRole.from('users').delete().eq('id', newUser.id).catch(() => {})
+    await serviceRole.auth.admin.deleteUser(authId).catch(() => {})
     throw createError({ statusCode: 500, statusMessage: 'Cohort enrollment failed' })
   }
 
-  // 4. Initialize Checklist from templates
+  // 5. Initialize Checklist from templates
   const { data: templates } = await supabase
     .from('checklist_templates')
     .select('id, required')

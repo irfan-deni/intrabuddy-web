@@ -1,4 +1,4 @@
-import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server'
+import { serverSupabaseClient, serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
 import type { Database } from '~/types/supabase'
 
 export default defineEventHandler(async (event) => {
@@ -24,15 +24,21 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: 'Student ID is required' })
   }
 
-  // Soft delete or hard delete based on preference. 
-  // Let's hard delete from public.users for now, which triggers cascade deletes.
-  const { error } = await supabase
+  const serviceRole = serverSupabaseServiceRole(event)
+
+  // Delete from public.users first, then auth.users
+  const { error: deleteError } = await serviceRole
     .from('users')
     .delete()
     .eq('id', studentId)
 
-  if (error) {
-    throw createError({ statusCode: 500, statusMessage: `Failed to delete student: ${error.message}` })
+  if (deleteError) {
+    throw createError({ statusCode: 500, statusMessage: `Failed to delete student: ${deleteError.message}` })
+  }
+
+  const { error: authError } = await serviceRole.auth.admin.deleteUser(studentId)
+  if (authError) {
+    console.error('[Student Delete] Failed to delete auth user:', authError.message)
   }
 
   return { success: true }
