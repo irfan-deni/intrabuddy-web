@@ -131,22 +131,32 @@ const passwordPt = {
 }
 
 const handleLogin = async () => {
+  console.log('Login attempt started for:', email.value)
   loading.value = true
   errorMessage.value = ''
 
   try {
-    const { error } = await supabase.auth.signInWithPassword({
+    console.log('Calling Supabase signInWithPassword...')
+    const { data, error } = await supabase.auth.signInWithPassword({
       email: email.value,
       password: password.value
     })
 
-    if (error) throw error
+    if (error) {
+      console.error('Supabase Auth error:', error)
+      throw error
+    }
 
+    console.log('Auth successful, user:', data.user?.id)
+    console.log('Redirecting to /...')
     await navigateTo('/')
+    console.log('Navigation call finished')
   } catch (error: any) {
+    console.error('Login process caught error:', error)
     errorMessage.value = error.message || 'Authentication failed'
   } finally {
     loading.value = false
+    console.log('Login process finished')
   }
 }
 </script>
