@@ -62,6 +62,16 @@ npm run dev
 ```
 The app will be live at `http://localhost:3000`.
 
+### 🐳 Using Docker
+If you prefer to run the app in a container (especially useful on Windows to avoid local dependency issues):
+
+1. **Build and Run**:
+   ```bash
+   docker-compose up --build
+   ```
+2. **Access the App**: The application will be available at `http://localhost:3000`.
+3. **Note**: Ensure your `.env` file is populated with Supabase credentials as Docker will use them during the build/run process.
+
 ## 🪟 Windows Troubleshooting
 
 If you prefer **Native Windows** (PowerShell/CMD) over WSL2, please ensure:
