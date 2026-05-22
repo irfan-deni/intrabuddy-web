@@ -22,31 +22,52 @@ INTRA Buddy is an enterprise-grade university web application designed to stream
 
 ## 💻 Setup & Installation
 
-1. **Install dependencies:**
-   ```bash
-   npm install
-   ```
+Follow these steps to get the project running on your local machine.
 
-2. **Configure Environment Variables:**
-   Create a `.env` file in the root directory and ensure your Supabase credentials are set:
-   ```env
-   SUPABASE_URL=your_supabase_url
-   SUPABASE_KEY=your_supabase_anon_key
-   ```
+### 1. Prerequisites
+- **Node.js**: Version `22.11.0` (LTS) or higher is recommended.
+- **Git**: To clone the repository.
+- **Supabase Account**: A free project on [Supabase](https://supabase.com/).
 
-3. **Apply Database Setup SQL (Supabase SQL Editor):**
-   - Apply `docs/core-database-setup.sql` first (core tables + RLS + auth trigger).
-   - Apply `docs/mobile-notifications-setup.sql` next if you want mobile notification APIs.
+### 2. Environment Setup
+Clone the repository and install dependencies:
 
-4. **(Optional) Seed Demo Coordinator Auth User:**
-   Ensure the Auth user `coordinator@intrabuddy.my` exists in Supabase Auth.
-   The core SQL script will upsert a matching coordinator profile in `public.users`.
+```bash
+git clone <repository-url>
+cd intrabuddy-web
+npm install
+```
 
-5. **Run the Development Server:**
-   ```bash
-   npm run dev
-   ```
-   The application will be available at `http://localhost:3000`.
+> **Windows Users**: If you encounter issues during `npm install` (especially with `sharp` or build tools), we highly recommend using **WSL2 (Windows Subsystem for Linux)** with a Linux distribution like Ubuntu. It provides a more stable environment for Nuxt/Nitro development.
+
+### 3. Configuration
+Create a `.env` file in the root directory:
+
+```env
+SUPABASE_URL=your_supabase_url
+SUPABASE_KEY=your_supabase_anon_key
+# Optional: Override the super coordinator email for local testing
+NUXT_PUBLIC_SUPER_COORDINATOR_EMAILS=your-email@example.com
+```
+
+### 4. Database Initialization
+1.  Go to your Supabase Project -> **SQL Editor**.
+2.  Apply `docs/core-database-setup.sql` first (creates tables, RLS, and auth triggers).
+3.  Apply `docs/mobile-notifications-setup.sql` if you need notification functionality.
+4.  *(Important)*: To login locally, ensure the Auth user `coordinator@intrabuddy.my` exists in **Supabase Auth**. After creating it, run the `core-database-setup.sql` again to sync the profile.
+
+### 5. Start Development
+```bash
+npm run dev
+```
+The app will be live at `http://localhost:3000`.
+
+## 🪟 Windows Troubleshooting
+
+If you prefer **Native Windows** (PowerShell/CMD) over WSL2, please ensure:
+- **Build Tools**: You have installed the [C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/) (required for native modules like `sharp`).
+- **Node Version Management**: Use `nvm-windows` to manage Node versions easily.
+- **Execution Policy**: If scripts fail to run, try `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser` in PowerShell.
 
 ## 🔑 Demo Credentials
 
