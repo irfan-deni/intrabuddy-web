@@ -26,6 +26,8 @@
   "devDependencies": {
     "@nuxt/test-utils": "^4.0.3",
     "@vue/test-utils": "^2.4.10",
+    "commander": "^13.1.0",
+    "crossws": "^0.4.5",
     "happy-dom": "^20.9.0",
     "playwright": "1.52",
     "sharp": "^0.32.1",
