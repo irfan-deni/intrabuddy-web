@@ -13,10 +13,12 @@ INTRA Buddy is an enterprise-grade university web application designed to stream
 
 ## 🛠 Tech Stack
 
-- **Frontend Framework**: [Nuxt 3](https://nuxt.com/) (using the `app/` directory structure)
+- **Frontend Framework**: [Nuxt 4](https://nuxt.com/) (using the `app/` directory structure)
+- **State Management & Auth**: [Supabase](https://supabase.com/) (PostgreSQL + Row Level Security)
 - **Styling**: [Tailwind CSS](https://tailwindcss.com/)
-- **UI Components**: [PrimeVue](https://primevue.org/) (Configured in headless mode using Tailwind for styling)
-- **Backend & Auth**: [Supabase](https://supabase.com/) (PostgreSQL + Row Level Security)
+- **UI Components**: [PrimeVue](https://primevue.org/) (Configured in Tailwind-first mode)
+- **Language**: [TypeScript](https://www.typescriptlang.org/)
+- **Testing**: [Vitest](https://vitest.dev/) (Unit/Component) & [Playwright](https://playwright.dev/) (E2E)
 
 ## 💻 Setup & Installation
 
