@@ -6,7 +6,6 @@
         <p class="text-stone-500 mt-2 font-bold uppercase text-[10px] tracking-widest">Self-service FAQ library for internship candidates.</p>
       </div>
       <button
-        v-if="isSuperCoordinator"
         class="bg-sky-600 text-white px-6 py-3 rounded-none font-black text-[10px] uppercase tracking-[0.2em] hover:brightness-110 transition-all flex items-center gap-3"
         @click="openAddModal"
       >
@@ -48,7 +47,6 @@
         {{ cat.name }}
       </button>
       <button
-        v-if="isSuperCoordinator"
         class="px-4 py-2 text-[9px] font-black uppercase tracking-widest border border-dashed border-stone-300 text-stone-400 hover:border-slate-900 hover:text-slate-800 transition-all"
         @click="showCategoryForm = true"
       >
@@ -72,7 +70,7 @@
         :key="faq.id" 
         class="bg-white p-4 md:p-6 lg:p-8 border border-stone-200 hover:border-sky-600 transition-all group flex flex-col relative"
       >
-        <div v-if="isSuperCoordinator" class="absolute top-0 right-0 p-4 flex gap-1 opacity-0 group-hover:opacity-100 transition-all">
+        <div class="absolute top-0 right-0 p-4 flex gap-1 opacity-0 group-hover:opacity-100 transition-all">
           <button class="h-8 w-8 flex items-center justify-center bg-slate-900 text-white" @click="editFaq(faq)">
             <i class="pi pi-pencil text-[10px]"></i>
           </button>
@@ -195,8 +193,6 @@
 
 <script setup lang="ts">
 import type { Database } from '~/types/supabase'
-import { useCoordinatorPrivileges } from '~/composables/useCoordinatorPrivileges'
-
 definePageMeta({
   requiredRole: 'coordinator'
 })
@@ -205,7 +201,6 @@ type FaqRow = Database['public']['Tables']['faqs']['Row']
 type CategoryRow = Database['public']['Tables']['faq_categories']['Row']
 
 const supabase = useSupabaseClient<Database>()
-const { isSuperCoordinator } = useCoordinatorPrivileges()
 
 const faqs = ref<FaqRow[]>([])
 const categories = ref<CategoryRow[]>([])
