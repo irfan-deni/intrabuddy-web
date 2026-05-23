@@ -35,15 +35,22 @@
         </div>
 
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 pt-4">
-          <div class="flex items-center gap-6">
-            <label class="flex items-center gap-3 cursor-pointer group">
-              <input type="checkbox" v-model="form.target_roles" value="student" class="h-4 w-4 appearance-none rounded-none border-2 border-stone-400 checked:border-sky-600 checked:bg-sky-600 focus:ring-0">
-              <span class="text-[9px] font-black uppercase tracking-widest text-stone-500 group-hover:text-slate-800 transition-colors">Target Students</span>
-            </label>
-            <label class="flex items-center gap-3 cursor-pointer group">
-              <input type="checkbox" v-model="form.target_roles" value="coordinator" class="h-4 w-4 appearance-none rounded-none border-2 border-stone-400 checked:border-sky-600 checked:bg-sky-600 focus:ring-0">
-              <span class="text-[9px] font-black uppercase tracking-widest text-stone-500 group-hover:text-slate-800 transition-colors">Internal Only</span>
-            </label>
+          <div class="flex flex-col gap-2">
+            <label class="text-xs font-bold tracking-widest uppercase text-slate-500">TARGET AUDIENCE</label>
+            <select
+              v-model="form.target_audience"
+              class="w-full md:w-80 bg-white border border-slate-300 text-slate-700 text-sm rounded-md focus:ring-2 focus:ring-sky-500 focus:border-sky-500 block p-2.5 cursor-pointer transition-all"
+            >
+              <optgroup label="Student Broadcasts">
+                <option value="students_all">All Students</option>
+                <option value="students_unplaced">Unplaced Students Only</option>
+                <option value="students_placed">Placed Students Only</option>
+                <option value="students_late_logbooks">Students with Late Logbooks</option>
+              </optgroup>
+              <optgroup label="Internal Broadcasts">
+                <option value="coordinators_all">All Coordinators</option>
+              </optgroup>
+            </select>
           </div>
 
           <button 
@@ -79,7 +86,7 @@
           </div>
           <div class="flex items-center justify-between pt-3 border-t border-stone-100">
             <div class="flex gap-2">
-              <span v-for="role in msg.target_roles" :key="role" class="px-2 py-0.5 bg-slate-900 text-white text-[8px] font-black uppercase tracking-tighter">{{ role }}</span>
+              <span v-for="role in msg.target_roles" :key="role" class="px-2 py-0.5 bg-slate-900 text-white text-[8px] font-black uppercase tracking-tighter">{{ audienceLabels[role] || role }}</span>
             </div>
             <span class="text-[10px] font-black text-stone-400 tabular-nums uppercase">{{ msg.sent_at ? new Date(msg.sent_at).toLocaleDateString() : 'Unknown' }}</span>
           </div>
@@ -106,7 +113,7 @@
               </td>
               <td class="px-10 py-8">
                 <div class="flex gap-2">
-                  <span v-for="role in msg.target_roles" :key="role" class="px-2 py-0.5 bg-slate-900 text-white text-[8px] font-black uppercase tracking-tighter">{{ role }}</span>
+                  <span v-for="role in msg.target_roles" :key="role" class="px-2 py-0.5 bg-slate-900 text-white text-[8px] font-black uppercase tracking-tighter">{{ audienceLabels[role] || role }}</span>
                 </div>
               </td>
               <td class="px-10 py-8 text-right text-stone-400 font-black tabular-nums group-hover:text-slate-800 transition-colors uppercase text-xs">
@@ -142,6 +149,14 @@ definePageMeta({
   requiredRole: 'coordinator'
 })
 
+const audienceLabels: Record<string, string> = {
+  students_all: 'All Students',
+  students_unplaced: 'Unplaced Students',
+  students_placed: 'Placed Students',
+  students_late_logbooks: 'Late Logbooks',
+  coordinators_all: 'All Coordinators'
+}
+
 const broadcasts = ref<any[]>([])
 const isLoading = ref(true)
 const isSending = ref(false)
@@ -150,7 +165,7 @@ const successToast = ref(false)
 const form = ref({
   title: '',
   body: '',
-  target_roles: ['student']
+  target_audience: 'students_all'
 })
 
 const fetchBroadcasts = async () => {
@@ -176,20 +191,19 @@ const deleteBroadcast = async (id: number) => {
 }
 
 const sendBroadcast = async () => {
-  if (form.value.target_roles.length === 0) {
-    alert('Select at least one recipient group.')
-    return
-  }
-
   isSending.value = true
   try {
     await $fetch('/api/broadcasts', {
       method: 'POST',
-      body: form.value
+      body: {
+        title: form.value.title,
+        body: form.value.body,
+        target_roles: [form.value.target_audience]
+      }
     })
     
     // Reset form
-    form.value = { title: '', body: '', target_roles: ['student'] }
+    form.value = { title: '', body: '', target_audience: 'students_all' }
     
     // Show Toast
     successToast.value = true

@@ -1,11 +1,20 @@
 import { serverSupabaseClient } from '#supabase/server'
 import type { Database } from '~/types/supabase'
 
+type Audience = 'students_all' | 'students_unplaced' | 'students_placed' | 'students_late_logbooks' | 'coordinators_all'
+
+const STUDENT_AUDIENCES: Audience[] = ['students_all', 'students_unplaced', 'students_placed', 'students_late_logbooks']
+
 export default defineEventHandler(async (event) => {
   try {
-    const body = await readBody<{ title: string; body: string; target_roles: string[] }>(event)
+    const body = await readBody<{ title: string; body: string; target_roles: Audience[] }>(event)
     if (!body.title || !body.body) {
       throw createError({ statusCode: 400, statusMessage: 'Title and body are required.' })
+    }
+
+    const audience = body.target_roles?.[0]
+    if (!audience) {
+      throw createError({ statusCode: 400, statusMessage: 'Target audience is required.' })
     }
 
     const supabase = await serverSupabaseClient<Database>(event)
@@ -42,7 +51,7 @@ export default defineEventHandler(async (event) => {
         coordinator_id: userId,
         title: body.title,
         body: body.body,
-        target_roles: body.target_roles || ['student'],
+        target_roles: [audience],
         sent_at: new Date().toISOString()
       })
       .select()
@@ -55,9 +64,10 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    // 2. Create in-app notifications for targeted students
-    const shouldNotifyStudents = body.target_roles?.includes('student') ?? true
-    if (shouldNotifyStudents) {
+    // 2. Resolve targeted user IDs
+    let targetUserIds: string[] = []
+
+    if (STUDENT_AUDIENCES.includes(audience)) {
       const { data: activeCohort } = await supabase
         .from('cohorts')
         .select('id')
@@ -70,20 +80,59 @@ export default defineEventHandler(async (event) => {
           .select('student_id')
           .eq('cohort_id', activeCohort.id)
 
-        const studentIds = enrolled?.map(e => e.student_id).filter(Boolean) as string[]
-        if (studentIds.length > 0) {
-          const notificationRows = studentIds.map(studentId => ({
-            recipient_id: studentId,
-            title: body.title,
-            body: body.body,
-            type: 'broadcast'
-          }))
-          await supabase.from('notifications').insert(notificationRows)
+        let candidateIds = enrolled?.map(e => e.student_id).filter(Boolean) as string[] || []
+
+        if (audience === 'students_unplaced') {
+          const { data: placed } = await supabase
+            .from('job_applications')
+            .select('student_id')
+            .in('student_id', candidateIds)
+            .eq('status', 'Accepted')
+
+          const placedIds = new Set(placed?.map(p => p.student_id) || [])
+          candidateIds = candidateIds.filter(id => !placedIds.has(id))
+        } else if (audience === 'students_placed') {
+          const { data: placed } = await supabase
+            .from('job_applications')
+            .select('student_id')
+            .in('student_id', candidateIds)
+            .eq('status', 'Accepted')
+
+          const placedIds = new Set(placed?.map(p => p.student_id) || [])
+          candidateIds = candidateIds.filter(id => placedIds.has(id))
+        } else if (audience === 'students_late_logbooks') {
+          const { data: late } = await supabase
+            .from('weekly_logbook_tracking')
+            .select('student_id')
+            .in('student_id', candidateIds)
+            .eq('is_submitted', false)
+
+          candidateIds = late?.map(l => l.student_id).filter(Boolean) as string[] || []
         }
+
+        targetUserIds = candidateIds
       }
+    } else if (audience === 'coordinators_all') {
+      const { data: coordinators } = await supabase
+        .from('users')
+        .select('id')
+        .eq('role', 'coordinator')
+
+      targetUserIds = coordinators?.map(c => c.id).filter(Boolean) as string[] || []
     }
 
-    return { success: true, queued: 1 }
+    // 3. Create in-app notifications for targeted users
+    if (targetUserIds.length > 0) {
+      const notificationRows = targetUserIds.map(userId => ({
+        recipient_id: userId,
+        title: body.title,
+        body: body.body,
+        type: 'broadcast'
+      }))
+      await supabase.from('notifications').insert(notificationRows)
+    }
+
+    return { success: true, queued: targetUserIds.length }
   } catch (error: any) {
     if (error.statusCode) throw error
     throw createError({ statusCode: 500, statusMessage: `Unexpected error: ${error.message || String(error)}` })
