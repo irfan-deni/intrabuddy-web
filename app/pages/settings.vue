@@ -21,6 +21,16 @@
         <div class="px-6 md:px-10 py-8 space-y-6">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="space-y-1.5">
+              <label class="text-[9px] font-black text-stone-500 uppercase tracking-widest">Email Address</label>
+              <input :value="profile?.email" type="text" readonly class="w-full bg-slate-100 text-slate-500 cursor-not-allowed border border-stone-200 px-5 py-4 text-xs font-black uppercase outline-none">
+            </div>
+            <div class="space-y-1.5">
+              <label class="text-[9px] font-black text-stone-500 uppercase tracking-widest">System Role</label>
+              <input :value="role" type="text" readonly class="w-full bg-slate-100 text-slate-500 cursor-not-allowed border border-stone-200 px-5 py-4 text-xs font-black uppercase outline-none">
+            </div>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="space-y-1.5">
               <label class="text-[9px] font-black text-stone-500 uppercase tracking-widest">Full Name</label>
               <input v-model="profileForm.fullName" type="text" class="w-full bg-stone-50 border border-stone-200 px-5 py-4 text-xs font-black uppercase focus:border-sky-600 focus:ring-1 focus:ring-sky-600 outline-none transition-all text-slate-800">
             </div>
@@ -47,6 +57,13 @@
           <p class="text-stone-400 text-[10px] font-bold uppercase tracking-wider mt-1">Change your account password.</p>
         </div>
         <div class="px-6 md:px-10 py-8 space-y-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="space-y-1.5">
+              <label class="text-[9px] font-black text-stone-500 uppercase tracking-widest">Current Password</label>
+              <Password v-model="passwordForm.currentPassword" toggleMask :feedback="false" :pt="passwordPt" />
+            </div>
+            <div class="space-y-1.5"></div>
+          </div>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="space-y-1.5">
               <label class="text-[9px] font-black text-stone-500 uppercase tracking-widest">New Password</label>
@@ -88,6 +105,7 @@ const profileForm = reactive({
 })
 
 const passwordForm = reactive({
+  currentPassword: '',
   newPassword: '',
   confirmPassword: ''
 })
@@ -121,7 +139,17 @@ const saveProfile = async () => {
   }
 }
 
+const role = computed(() => {
+  if (profile.value?.role === 'super_coordinator') return 'Super Coordinator'
+  if (profile.value?.role === 'coordinator') return 'Coordinator'
+  return profile.value?.role || '—'
+})
+
 const updatePassword = async () => {
+  if (!passwordForm.currentPassword) {
+    errorMessage.value = 'Current password is required'
+    return
+  }
   if (!passwordForm.newPassword) {
     errorMessage.value = 'New password is required'
     return
@@ -139,11 +167,18 @@ const updatePassword = async () => {
   successMessage.value = ''
   errorMessage.value = ''
   try {
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: profile.value?.email || '',
+      password: passwordForm.currentPassword
+    })
+    if (signInError) throw new Error('Current password is incorrect')
+
     const { error } = await supabase.auth.updateUser({
       password: passwordForm.newPassword
     })
     if (error) throw error
     successMessage.value = 'Password updated'
+    passwordForm.currentPassword = ''
     passwordForm.newPassword = ''
     passwordForm.confirmPassword = ''
   } catch (error: any) {
