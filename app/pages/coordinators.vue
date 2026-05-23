@@ -136,7 +136,8 @@ const fetchCoordinators = async () => {
   try {
     const data = await $fetch<{ coordinators: any[] }>('/api/coordinators')
     coordinators.value = data.coordinators || []
-  } catch {
+  } catch (error) {
+    console.error('Failed to fetch coordinators:', error)
     coordinators.value = []
   } finally {
     isLoading.value = false

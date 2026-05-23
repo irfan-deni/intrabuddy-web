@@ -1,4 +1,4 @@
-import { serverSupabaseClient, serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
+import { serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
 import type { Database } from '~/types/supabase'
 
 const parseSuperCoordinatorEmails = (value: string | undefined) => {
@@ -12,15 +12,17 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
   }
 
-  const supabase = await serverSupabaseClient<Database>(event)
+  const userId = user.id || (user as any).sub
+  const serviceRole = serverSupabaseServiceRole<Database>(event)
 
-  const { data: actor } = await supabase
+  // Use service role for actor check to bypass RLS
+  const { data: actor, error: actorError } = await serviceRole
     .from('users')
     .select('role')
-    .eq('id', user.id)
+    .eq('id', userId)
     .single()
 
-  if (!actor || actor.role !== 'coordinator') {
+  if (actorError || !actor || actor.role !== 'coordinator') {
     throw createError({ statusCode: 403, statusMessage: 'Forbidden' })
   }
 
@@ -35,8 +37,6 @@ export default defineEventHandler(async (event) => {
   if (!id) {
     throw createError({ statusCode: 400, statusMessage: 'Coordinator ID is required' })
   }
-
-  const serviceRole = serverSupabaseServiceRole(event)
 
   const { data: target } = await serviceRole
     .from('users')

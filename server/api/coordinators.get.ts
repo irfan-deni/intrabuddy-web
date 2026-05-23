@@ -1,4 +1,4 @@
-import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server'
+import { serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
 import type { Database } from '~/types/supabase'
 
 export default defineEventHandler(async (event) => {
@@ -7,27 +7,34 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
   }
 
-  const supabase = await serverSupabaseClient<Database>(event)
+  const userId = user.id || (user as any).sub
+  const serviceRole = serverSupabaseServiceRole<Database>(event)
 
-  const { data: actor } = await supabase
+  const { data: actor, error: actorError } = await serviceRole
     .from('users')
     .select('role')
-    .eq('id', user.id)
+    .eq('id', userId)
     .single()
 
-  if (!actor || actor.role !== 'coordinator') {
+  console.log(`[Coordinators API] Actor lookup: ID=${userId}, Role=${actor?.role}`)
+
+  if (actorError || !actor || actor.role !== 'coordinator') {
+    console.error('[Coordinators API] Actor lookup error or unauthorized:', actorError)
     throw createError({ statusCode: 403, statusMessage: 'Forbidden' })
   }
 
-  const { data: coordinators, error } = await supabase
+  const { data: coordinators, error } = await serviceRole
     .from('users')
     .select('id, full_name, email, created_at')
     .eq('role', 'coordinator')
     .order('created_at', { ascending: false })
 
   if (error) {
+    console.error('[Coordinators API] Fetch error:', error)
     throw createError({ statusCode: 500, statusMessage: 'Failed to fetch coordinators' })
   }
+
+  console.log(`[Coordinators API] Found ${coordinators?.length || 0} coordinators`)
 
   return { coordinators: coordinators || [] }
 })
