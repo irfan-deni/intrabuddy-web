@@ -2,7 +2,7 @@
   <section class="space-y-6 md:space-y-8">
     <header class="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-stone-200 pb-6 md:pb-8">
       <div>
-        <h1 class="text-2xl md:text-4xl font-black text-slate-800 tracking-tight uppercase">Logbook Review</h1>
+        <h1 class="text-2xl md:text-4xl font-black text-slate-800 tracking-tight uppercase">Logbook Status</h1>
         <p class="text-stone-500 mt-2 font-bold uppercase text-[10px] tracking-widest">Monitor cohort logbook compliance and send reminders.</p>
       </div>
     </header>

@@ -200,7 +200,7 @@ const navigation = computed(() => [
   { name: 'Students', path: '/students', icon: 'pi pi-users' },
   ...(isSuperCoordinator.value ? [{ name: 'Coordinators', path: '/coordinators', icon: 'pi pi-user-plus' }] : []),
   { name: 'Broadcasts', path: '/broadcasts', icon: 'pi pi-megaphone' },
-  { name: 'Logbooks', path: '/logbooks', icon: 'pi pi-file' },
+  { name: 'Logbook Status', path: '/logbooks', icon: 'pi pi-file' },
   { name: 'Master Checklist', path: '/checklists', icon: 'pi pi-check-square' },
   { name: 'Knowledge Base', path: '/faqs', icon: 'pi pi-book' },
   { name: 'Cohorts', path: '/cohorts', icon: 'pi pi-calendar' },
