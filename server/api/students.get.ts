@@ -9,44 +9,69 @@ export default defineEventHandler(async (event) => {
     }
 
     const supabase = await serverSupabaseClient<Database>(event)
-    
-    // 1. Get Active Cohort
-    const { data: activeCohort } = await supabase
-      .from('cohorts')
-      .select('id')
-      .eq('is_active', true)
-      .maybeSingle()
 
-    if (!activeCohort) {
-      return { students: [], totalCount: 0 }
+    // Determine target cohort from query param
+    const { cohort_id } = getQuery(event)
+    let targetStudentIds: string[] | null = null
+
+    if (cohort_id && cohort_id !== 'all') {
+      // Filter by specific cohort
+      const { data: studentCohorts } = await supabase
+        .from('student_cohorts')
+        .select('student_id')
+        .eq('cohort_id', Number(cohort_id))
+
+      if (!studentCohorts || studentCohorts.length === 0) {
+        return { students: [], totalCount: 0 }
+      }
+
+      targetStudentIds = studentCohorts.map(sc => sc.student_id).filter(Boolean) as string[]
+    } else if (!cohort_id) {
+      // Default: filter by active cohort
+      const { data: activeCohort } = await supabase
+        .from('cohorts')
+        .select('id')
+        .eq('is_active', true)
+        .maybeSingle()
+
+      if (!activeCohort) {
+        return { students: [], totalCount: 0 }
+      }
+
+      const { data: studentCohorts } = await supabase
+        .from('student_cohorts')
+        .select('student_id')
+        .eq('cohort_id', activeCohort.id)
+
+      if (!studentCohorts || studentCohorts.length === 0) {
+        return { students: [], totalCount: 0 }
+      }
+
+      targetStudentIds = studentCohorts.map(sc => sc.student_id).filter(Boolean) as string[]
     }
+    // cohort_id === 'all' → targetStudentIds stays null → all students
 
-    // 2. Get students in active cohort
-    const { data: studentCohorts } = await supabase
-      .from('student_cohorts')
-      .select('student_id')
-      .eq('cohort_id', activeCohort.id)
-
-    if (!studentCohorts || studentCohorts.length === 0) {
-      return { students: [], totalCount: 0 }
-    }
-
-    const activeStudentIds = studentCohorts.map(sc => sc.student_id).filter(Boolean) as string[]
-
-    // 3. Fetch student profiles
-    const { data: studentsData, error: studentsError } = await supabase
+    // 3. Build student profile query
+    let profileQuery = supabase
       .from('users')
       .select('id, full_name, student_id, email')
       .eq('role', 'student')
-      .in('id', activeStudentIds)
+
+    if (targetStudentIds) {
+      profileQuery = profileQuery.in('id', targetStudentIds)
+    }
+
+    const { data: studentsData, error: studentsError } = await profileQuery
 
     if (studentsError) throw studentsError
 
+    const allStudentIds = (studentsData || []).map(s => s.id)
+
     // 4. Fetch related data in parallel for efficiency
     const [appsRes, checklistRes, walletRes] = await Promise.all([
-      supabase.from('job_applications').select('student_id, status').in('student_id', activeStudentIds),
-      supabase.from('student_checklists').select('student_id, is_completed').in('student_id', activeStudentIds),
-      supabase.from('digital_wallet_items').select('student_id').in('student_id', activeStudentIds)
+      supabase.from('job_applications').select('student_id, status').in('student_id', allStudentIds),
+      supabase.from('student_checklists').select('student_id, is_completed').in('student_id', allStudentIds),
+      supabase.from('digital_wallet_items').select('student_id').in('student_id', allStudentIds)
     ])
 
     // Process and merge data

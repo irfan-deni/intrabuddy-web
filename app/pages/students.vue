@@ -17,6 +17,11 @@
         </div>
         
         <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
+          <select v-model="cohortFilter" @change="fetchStudents" class="bg-white border border-stone-200 px-5 py-4 text-[10px] font-black uppercase tracking-widest outline-none focus:border-sky-600 focus:ring-1 focus:ring-sky-600 cursor-pointer shadow-sm min-w-[180px]">
+            <option value="">Active Cohort</option>
+            <option v-for="c in cohorts" :key="c.id" :value="c.id">{{ c.name }}</option>
+            <option value="all">All Cohorts</option>
+          </select>
           <select v-model="statusFilter" class="bg-white border border-stone-200 px-5 py-4 text-[10px] font-black uppercase tracking-widest outline-none focus:border-sky-600 focus:ring-1 focus:ring-sky-600 cursor-pointer shadow-sm">
             <option value="all">Status: All</option>
             <option value="Accepted">Status: Placed</option>
@@ -260,11 +265,14 @@ definePageMeta({
 
 const { isSuperCoordinator } = useCoordinatorPrivileges()
 
+const supabase = useSupabaseClient()
 const students = ref<any[]>([])
+const cohorts = ref<any[]>([])
 const isLoading = ref(true)
 const isSaving = ref(false)
 const searchQuery = ref('')
 const statusFilter = ref('all')
+const cohortFilter = ref<number | string>('')
 
 const showModal = ref(false)
 const selectedStudent = ref<any>(null)
@@ -284,13 +292,21 @@ const filteredStudents = computed(() => {
 const fetchStudents = async () => {
   isLoading.value = true
   try {
-    const { students: data } = await $fetch<{ students: any[] }>('/api/students')
+    const params = new URLSearchParams()
+    if (cohortFilter.value) params.set('cohort_id', String(cohortFilter.value))
+    const qs = params.toString()
+    const { students: data } = await $fetch<{ students: any[] }>(`/api/students${qs ? `?${qs}` : ''}`)
     students.value = data || []
   } catch (error) {
     console.error('Fetch failed')
   } finally {
     isLoading.value = false
   }
+}
+
+const fetchCohorts = async () => {
+  const { data } = await supabase.from('cohorts').select('*').order('created_at', { ascending: false })
+  cohorts.value = data || []
 }
 
 const selectStudent = (student: any) => {
@@ -342,7 +358,9 @@ const closeModal = () => {
   editingId.value = null
 }
 
-onMounted(fetchStudents)
+onMounted(async () => {
+  await Promise.all([fetchCohorts(), fetchStudents()])
+})
 </script>
 
 <style scoped>
