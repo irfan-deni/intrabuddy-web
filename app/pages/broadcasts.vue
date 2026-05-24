@@ -34,12 +34,12 @@
           ></textarea>
         </div>
 
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 pt-4">
-          <div class="flex flex-col gap-2">
-            <label class="text-[9px] font-black text-stone-500 uppercase tracking-widest">Target Audience</label>
+        <div class="space-y-2 pt-4">
+          <label class="text-[9px] font-black text-stone-500 uppercase tracking-widest">Target Audience</label>
+          <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
             <select
               v-model="form.target_audience"
-              class="w-full md:w-80 bg-white border border-stone-200 px-5 py-4 text-[10px] font-black uppercase tracking-widest outline-none focus:border-sky-600 focus:ring-1 focus:ring-sky-600 cursor-pointer shadow-sm"
+              class="w-72 bg-white border border-stone-200 px-5 py-4 text-[10px] font-black uppercase tracking-widest outline-none focus:border-sky-600 focus:ring-1 focus:ring-sky-600 cursor-pointer shadow-sm"
             >
               <optgroup label="Student Broadcasts">
                 <option value="students_all">All Students</option>
@@ -51,16 +51,16 @@
                 <option value="coordinators_all">All Coordinators</option>
               </optgroup>
             </select>
-          </div>
 
-          <button 
-            type="submit" 
-            :disabled="isSending" 
-            class="bg-sky-600 text-white px-10 py-4 font-black text-[10px] uppercase tracking-[0.3em] hover:brightness-110 transition-all flex items-center gap-3 disabled:opacity-30"
-          >
-            <i class="pi pi-send"></i>
-            {{ isSending ? 'Broadcasting...' : 'Confirm Dispatch' }}
-          </button>
+            <button 
+              type="submit" 
+              :disabled="isSending" 
+              class="bg-sky-600 text-white px-10 py-4 font-black text-[10px] uppercase tracking-[0.3em] hover:brightness-110 transition-all flex items-center justify-center gap-3 disabled:opacity-30 whitespace-nowrap"
+            >
+              <i class="pi pi-send"></i>
+              {{ isSending ? 'Broadcasting...' : 'Confirm Dispatch' }}
+            </button>
+          </div>
         </div>
       </form>
     </section>
