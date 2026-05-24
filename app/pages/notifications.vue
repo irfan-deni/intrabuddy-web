@@ -13,13 +13,44 @@
       <div v-if="isSuperCoordinator" class="max-w-3xl mb-8 md:mb-12 p-4 md:p-6 lg:p-8 border border-stone-200 bg-stone-50/50">
         <h3 class="text-[11px] font-black text-slate-800 uppercase tracking-[0.2em] mb-6">Manual Alert Dispatch</h3>
         <form @submit.prevent="sendAlert" class="space-y-6">
-          <div class="space-y-2">
+          <div class="space-y-2 relative">
             <label class="text-[9px] font-black text-stone-500 uppercase tracking-widest">Recipient</label>
-            <select v-model="alertForm.recipient_id" required
-              class="w-full bg-white border border-stone-200 rounded-none px-4 py-3 text-xs font-black uppercase tracking-widest focus:border-sky-600 focus:ring-1 focus:ring-sky-600 outline-none transition-all cursor-pointer text-slate-800">
-              <option :value="null">Select Student...</option>
-              <option v-for="s in students" :key="s.id" :value="s.id">{{ s.full_name }} ({{ s.student_id || 'N/A' }})</option>
-            </select>
+            <div class="relative">
+              <input
+                ref="searchInputRef"
+                v-model="studentSearch"
+                type="text"
+                placeholder="Search for a student..."
+                required
+                class="w-full bg-white border border-stone-200 rounded-none px-4 py-3 text-xs font-black uppercase tracking-widest focus:border-sky-600 focus:ring-1 focus:ring-sky-600 outline-none transition-all text-slate-800"
+                @focus="isDropdownOpen = true"
+                @input="isDropdownOpen = true"
+              />
+              <button
+                v-if="studentSearch"
+                type="button"
+                class="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-slate-800 transition-colors"
+                @click="clearSelection"
+              >
+                <i class="pi pi-times text-xs"></i>
+              </button>
+            </div>
+            <ul
+              v-if="isDropdownOpen"
+              class="absolute z-10 w-full mt-1 bg-white border border-slate-300 rounded shadow-lg max-h-60 overflow-y-auto"
+            >
+              <li
+                v-for="s in filteredStudents"
+                :key="s.id"
+                class="px-4 py-3 text-xs font-black uppercase tracking-widest cursor-pointer hover:bg-sky-600 hover:text-white transition-all text-slate-800"
+                @click="selectStudent(s)"
+              >
+                {{ s.full_name }} ({{ s.student_id || 'N/A' }})
+              </li>
+              <li v-if="filteredStudents.length === 0" class="px-4 py-3 text-xs text-stone-400 font-bold uppercase tracking-widest cursor-default">
+                No matches
+              </li>
+            </ul>
           </div>
           <div class="space-y-2">
             <label class="text-[9px] font-black text-stone-500 uppercase tracking-widest">Title</label>
@@ -142,6 +173,43 @@ type NotificationWithBroadcast = NotificationRow & {
 const supabase = useSupabaseClient<Database>()
 const { isSuperCoordinator } = useCoordinatorPrivileges()
 const { decrementCount } = useNotifications()
+
+const searchInputRef = ref<HTMLInputElement | null>(null)
+const studentSearch = ref('')
+const isDropdownOpen = ref(false)
+
+const filteredStudents = computed(() => {
+  const q = studentSearch.value.toLowerCase().trim()
+  if (!q) return students.value
+  return students.value.filter(
+    (s: any) =>
+      (s.full_name || '').toLowerCase().includes(q) ||
+      (s.student_id || '').toLowerCase().includes(q)
+  )
+})
+
+const selectStudent = (s: any) => {
+  alertForm.value.recipient_id = s.id
+  studentSearch.value = `${s.full_name} (${s.student_id || 'N/A'})`
+  isDropdownOpen.value = false
+}
+
+const clearSelection = () => {
+  alertForm.value.recipient_id = null
+  studentSearch.value = ''
+  searchInputRef.value?.focus()
+  isDropdownOpen.value = true
+}
+
+// Close dropdown on outside click
+onMounted(() => {
+  document.addEventListener('click', (e: MouseEvent) => {
+    const target = e.target as HTMLElement
+    if (!target.closest('.space-y-2.relative')) {
+      isDropdownOpen.value = false
+    }
+  })
+})
 
 type NotificationDisplay = NotificationWithBroadcast & { recipient_name: string | null }
 
