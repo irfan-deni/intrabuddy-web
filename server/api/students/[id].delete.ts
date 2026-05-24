@@ -1,4 +1,4 @@
-import { serverSupabaseClient, serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
+import { serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
 import type { Database } from '~/types/supabase'
 
 export default defineEventHandler(async (event) => {
@@ -7,12 +7,17 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
   }
 
-  const supabase = await serverSupabaseClient<Database>(event)
+  const userId = user.id || (user as any).sub
+  if (!userId) {
+    throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
+  }
 
-  const { data: actor, error: actorError } = await supabase
+  const serviceRole = serverSupabaseServiceRole<Database>(event)
+
+  const { data: actor, error: actorError } = await serviceRole
     .from('users')
     .select('role')
-    .eq('id', user.id)
+    .eq('id', userId)
     .single()
 
   if (actorError || actor.role !== 'coordinator') {
@@ -24,9 +29,12 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: 'Student ID is required' })
   }
 
-  const serviceRole = serverSupabaseServiceRole(event)
+  // Delete related records first to avoid FK constraint violations
+  await serviceRole.from('student_cohorts').delete().eq('student_id', studentId)
+  await serviceRole.from('notifications').delete().eq('recipient_id', studentId)
+  await serviceRole.from('job_applications').delete().eq('student_id', studentId)
 
-  // Delete from public.users first, then auth.users
+  // Delete from public.users
   const { error: deleteError } = await serviceRole
     .from('users')
     .delete()
@@ -36,6 +44,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 500, statusMessage: `Failed to delete student: ${deleteError.message}` })
   }
 
+  // Attempt to delete from auth.users
   const { error: authError } = await serviceRole.auth.admin.deleteUser(studentId)
   if (authError) {
     console.error('[Student Delete] Failed to delete auth user:', authError.message)
