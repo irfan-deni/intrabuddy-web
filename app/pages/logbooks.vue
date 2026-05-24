@@ -11,6 +11,21 @@
       {{ errorMessage }}
     </p>
 
+    <div class="grid grid-cols-3 gap-4 md:gap-6">
+      <div class="bg-white border border-stone-200 shadow-sm p-5 md:p-6 flex flex-col items-center justify-center">
+        <span class="text-[9px] font-black text-stone-400 uppercase tracking-widest mb-1">Total Expected</span>
+        <span class="text-2xl md:text-3xl font-black text-slate-800 tabular-nums">{{ totalCount }}</span>
+      </div>
+      <div class="bg-white border border-emerald-200 shadow-sm p-5 md:p-6 flex flex-col items-center justify-center">
+        <span class="text-[9px] font-black text-emerald-600 uppercase tracking-widest mb-1">Submitted</span>
+        <span class="text-2xl md:text-3xl font-black text-emerald-700 tabular-nums">{{ submittedCount }}</span>
+      </div>
+      <div class="bg-white border border-amber-200 shadow-sm p-5 md:p-6 flex flex-col items-center justify-center">
+        <span class="text-[9px] font-black text-amber-600 uppercase tracking-widest mb-1">Late / Pending</span>
+        <span class="text-2xl md:text-3xl font-black text-amber-700 tabular-nums">{{ lateCount }}</span>
+      </div>
+    </div>
+
     <article class="bg-white border border-stone-200 shadow-sm relative">
       <div class="flex flex-wrap items-center justify-between gap-4 border-b border-stone-200 bg-stone-50/50 p-4 md:p-6">
         <h2 class="text-[11px] font-black text-slate-800 uppercase tracking-[0.2em]">Logbook Submissions</h2>
@@ -250,6 +265,16 @@ const remindAll = async () => {
     isRemindingAll.value = false
   }
 }
+
+const totalCount = computed(() => logbooks.value.length)
+
+const submittedCount = computed(() =>
+  logbooks.value.filter(e => e.statusLabel === 'Submitted').length
+)
+
+const lateCount = computed(() =>
+  logbooks.value.filter(e => e.statusLabel === 'Late' || e.statusLabel === 'Not Submitted').length
+)
 
 const formatDate = (value: string) => {
   return new Date(value).toLocaleString('en-US', {
