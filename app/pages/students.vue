@@ -181,10 +181,14 @@
               <span class="text-xs font-bold text-stone-400 tabular-nums uppercase">{{ selectedStudent.student_id }}</span>
             </div>
             
-            <div class="grid grid-cols-2 gap-6 md:gap-8 pt-6 md:pt-8 border-t border-white/10">
+            <div class="grid grid-cols-3 gap-6 md:gap-8 pt-6 md:pt-8 border-t border-white/10">
               <div>
                 <p class="text-[8px] font-black text-stone-500 uppercase tracking-widest mb-2">Email Access</p>
                 <p class="text-xs font-bold truncate text-stone-400">{{ selectedStudent.email || 'N/A' }}</p>
+              </div>
+              <div>
+                <p class="text-[8px] font-black text-stone-500 uppercase tracking-widest mb-2">Phone Number</p>
+                <p class="text-xs font-bold trunate text-stone-400">{{ selectedStudent.phone_number || 'N/A' }}</p>
               </div>
               <div>
                 <p class="text-[8px] font-black text-stone-500 uppercase tracking-widest mb-2">Market Status</p>
@@ -247,6 +251,10 @@
               <input v-model="form.email" type="email" required class="w-full bg-stone-50 border border-stone-200 px-5 py-4 text-xs font-black uppercase focus:border-sky-600 focus:ring-1 focus:ring-sky-600 outline-none transition-all">
             </div>
           </div>
+          <div class="space-y-2">
+            <label class="text-[9px] font-black text-stone-500 uppercase tracking-widest">Phone Number</label>
+            <input v-model="form.phone_number" type="text" placeholder="+60 12-345 6789" class="w-full bg-stone-50 border border-stone-200 px-5 py-4 text-xs font-black uppercase focus:border-sky-600 focus:ring-1 focus:ring-sky-600 outline-none transition-all">
+          </div>
           <button type="submit" :disabled="isSaving" class="w-full bg-sky-600 text-white h-16 font-black text-[10px] uppercase tracking-[0.4em] hover:brightness-110 transition-all disabled:opacity-30">
             {{ isSaving ? 'Syncing...' : 'Confirm Enrollment' }}
           </button>
@@ -277,7 +285,7 @@ const cohortFilter = ref<number | string>('')
 const showModal = ref(false)
 const selectedStudent = ref<any>(null)
 const editingId = ref<string | null>(null)
-const form = ref({ full_name: '', student_id: '', email: '' })
+const form = ref({ full_name: '', student_id: '', email: '', phone_number: '' })
 
 const filteredStudents = computed(() => {
   let list = students.value
@@ -332,7 +340,7 @@ const saveStudent = async () => {
 
 const editStudent = (student: any) => {
   editingId.value = student.id
-  form.value = { full_name: student.full_name, student_id: student.student_id || '', email: student.email || '' }
+  form.value = { full_name: student.full_name, student_id: student.student_id || '', email: student.email || '', phone_number: student.phone_number || '' }
   showModal.value = true
 }
 
@@ -349,7 +357,7 @@ const deleteStudent = async (id: string) => {
 
 const openAddModal = () => {
   editingId.value = null
-  form.value = { full_name: '', student_id: '', email: '' }
+  form.value = { full_name: '', student_id: '', email: '', phone_number: '' }
   showModal.value = true
 }
 

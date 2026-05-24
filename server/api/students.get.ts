@@ -54,7 +54,7 @@ export default defineEventHandler(async (event) => {
     // 3. Build student profile query
     let profileQuery = supabase
       .from('users')
-      .select('id, full_name, student_id, email')
+      .select('id, full_name, student_id, email, phone_number')
       .eq('role', 'student')
 
     if (targetStudentIds) {
@@ -101,6 +101,7 @@ export default defineEventHandler(async (event) => {
         full_name: student.full_name,
         student_id: student.student_id,
         email: student.email,
+        phone_number: student.phone_number,
         placementStatus,
         completionPercent,
         documentCount
