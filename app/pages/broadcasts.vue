@@ -73,6 +73,7 @@
 
       <div v-if="broadcasts.length === 0" class="py-12 md:py-20 text-center text-[10px] font-black text-stone-400 uppercase tracking-widest bg-white border border-stone-200">No previous transmissions recorded</div>
 
+      <div v-else class="space-y-3">
       <div class="block md:hidden space-y-3">
         <div v-for="msg in broadcasts" :key="msg.id" class="bg-white border border-stone-200 p-4">
           <div class="flex items-start justify-between mb-3">
@@ -127,6 +128,7 @@
             </tr>
           </tbody>
         </table>
+      </div>
       </div>
     </section>
 
