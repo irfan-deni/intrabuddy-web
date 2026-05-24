@@ -335,32 +335,35 @@ export type Database = {
         Row: {
           id: number
           recipient_id: string | null
-          title: string
-          body: string
+          title: string | null
+          body: string | null
           type: string | null
           is_read: boolean | null
           created_at: string | null
           scheduled_for: string | null
+          broadcast_id: number | null
         }
         Insert: {
           id?: number
           recipient_id?: string | null
-          title: string
-          body: string
+          title?: string | null
+          body?: string | null
           type?: string | null
           is_read?: boolean | null
           created_at?: string | null
           scheduled_for?: string | null
+          broadcast_id?: number | null
         }
         Update: {
           id?: number
           recipient_id?: string | null
-          title?: string
-          body?: string
+          title?: string | null
+          body?: string | null
           type?: string | null
           is_read?: boolean | null
           created_at?: string | null
           scheduled_for?: string | null
+          broadcast_id?: number | null
         }
         Relationships: [
           {
@@ -368,6 +371,13 @@ export type Database = {
             columns: ["recipient_id"]
             isOneToOne: false
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_broadcast_id_fkey"
+            columns: ["broadcast_id"]
+            isOneToOne: false
+            referencedRelation: "broadcast_messages"
             referencedColumns: ["id"]
           }
         ]

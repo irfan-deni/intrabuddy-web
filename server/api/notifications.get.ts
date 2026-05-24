@@ -12,7 +12,7 @@ export default defineEventHandler(async (event) => {
 
     const { data: notifications, error } = await supabase
       .from('notifications')
-      .select('*')
+      .select('*, broadcast:broadcast_messages(title, body)')
       .order('created_at', { ascending: false })
       .limit(200)
 

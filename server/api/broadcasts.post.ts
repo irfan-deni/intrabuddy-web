@@ -40,7 +40,7 @@ export default defineEventHandler(async (event) => {
     }
 
     // 1. Insert into broadcast_messages
-    const { error: broadcastError } = await serviceRole
+    const { error: broadcastError, data: broadcast } = await serviceRole
       .from('broadcast_messages')
       .insert({
         coordinator_id: userId,
@@ -49,6 +49,7 @@ export default defineEventHandler(async (event) => {
         target_roles: [audience],
         sent_at: new Date().toISOString()
       })
+      .select('id')
 
     if (broadcastError) {
       console.error('[Broadcasts API] Insert error:', broadcastError)
@@ -57,6 +58,8 @@ export default defineEventHandler(async (event) => {
         statusMessage: `Broadcast Insert Error: ${broadcastError.message} (Code: ${broadcastError.code})`
       })
     }
+
+    const broadcastId = broadcast?.[0]?.id
 
     // 2. Resolve targeted user IDs
     let targetUserIds: string[] = []
@@ -117,11 +120,10 @@ export default defineEventHandler(async (event) => {
     }
 
     // 3. Create in-app notifications for targeted users
-    if (targetUserIds.length > 0) {
+    if (targetUserIds.length > 0 && broadcastId) {
       const notificationRows = targetUserIds.map(id => ({
         recipient_id: id,
-        title: body.title,
-        body: body.body,
+        broadcast_id: broadcastId,
         type: 'broadcast' as const
       }))
       await serviceRole.from('notifications').insert(notificationRows)

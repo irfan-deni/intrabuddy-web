@@ -70,8 +70,8 @@
                   <span class="px-2 py-0.5 text-[9px] font-black whitespace-nowrap" :class="n.is_read ? 'bg-emerald-500 text-white' : 'bg-amber-400 text-slate-900'">{{ n.is_read ? 'Read' : 'Unread' }}</span>
                 </div>
               </div>
-              <div class="font-black text-slate-800 uppercase tracking-tight text-xs mb-1">{{ n.title }}</div>
-              <div class="text-[9px] text-stone-400 line-clamp-2 mb-2">{{ n.body }}</div>
+              <div class="font-black text-slate-800 uppercase tracking-tight text-xs mb-1">{{ displayTitle(n) }}</div>
+              <div class="text-[9px] text-stone-400 line-clamp-2 mb-2">{{ displayBody(n) }}</div>
               <div class="flex items-center justify-between pt-2 border-t border-stone-100">
                 <span class="px-2 py-0.5 bg-slate-900 text-white text-[8px] font-black uppercase tracking-tighter">{{ n.type || 'general' }}</span>
                 <span class="text-[9px] font-black text-stone-400 tabular-nums">{{ n.created_at ? new Date(n.created_at).toLocaleString() : '---' }}</span>
@@ -94,8 +94,8 @@
                 <tr v-for="n in notifications" :key="n.id" class="transition-all group" :class="n.is_read ? 'bg-white' : 'bg-amber-50/40'">
                   <td class="px-8 py-6 font-black text-slate-800 uppercase tracking-tight text-xs whitespace-nowrap">{{ n.recipient_name || 'Unknown' }}</td>
                   <td class="px-8 py-6">
-                    <div class="font-black text-slate-800 uppercase tracking-tight text-xs">{{ n.title }}</div>
-                    <div class="text-[9px] text-stone-400 mt-1 line-clamp-1">{{ n.body }}</div>
+                    <div class="font-black text-slate-800 uppercase tracking-tight text-xs">{{ displayTitle(n) }}</div>
+                    <div class="text-[9px] text-stone-400 mt-1 line-clamp-1">{{ displayBody(n) }}</div>
                   </td>
                   <td class="px-8 py-6">
                     <span class="px-2 py-0.5 bg-slate-900 text-white text-[8px] font-black uppercase tracking-tighter">{{ n.type || 'general' }}</span>
@@ -135,12 +135,15 @@ definePageMeta({
 })
 
 type NotificationRow = Database['public']['Tables']['notifications']['Row']
+type NotificationWithBroadcast = NotificationRow & {
+  broadcast: { title: string | null; body: string | null } | null
+}
 
 const supabase = useSupabaseClient<Database>()
 const { isSuperCoordinator } = useCoordinatorPrivileges()
 const { decrementCount } = useNotifications()
 
-type NotificationDisplay = NotificationRow & { recipient_name: string | null }
+type NotificationDisplay = NotificationWithBroadcast & { recipient_name: string | null }
 
 const notifications = ref<NotificationDisplay[]>([])
 const students = ref<any[]>([])
@@ -158,14 +161,14 @@ const loadData = async () => {
   isLoading.value = true
   try {
     const [notifRes, studentRes] = await Promise.all([
-      supabase.from('notifications').select('*').order('created_at', { ascending: false }).limit(200),
+      supabase.from('notifications').select('*, broadcast:broadcast_messages(title, body)').order('created_at', { ascending: false }).limit(200),
       supabase.from('users').select('id, full_name, student_id').eq('role', 'student').order('full_name')
     ])
 
     if (notifRes.error) throw notifRes.error
     students.value = studentRes.data || []
 
-    const rows = (notifRes.data || []) as NotificationRow[]
+    const rows = (notifRes.data || []) as NotificationWithBroadcast[]
     const recipientIds = rows.map(r => r.recipient_id).filter(Boolean) as string[]
     let nameMap: Record<string, string> = {}
     if (recipientIds.length > 0) {
@@ -205,6 +208,12 @@ const sendAlert = async () => {
     isSending.value = false
   }
 }
+
+const displayTitle = (n: NotificationDisplay) =>
+  n.type === 'broadcast' ? n.broadcast?.title : n.title
+
+const displayBody = (n: NotificationDisplay) =>
+  n.type === 'broadcast' ? n.broadcast?.body : n.body
 
 const markAsRead = async (notification: NotificationDisplay) => {
   try {
