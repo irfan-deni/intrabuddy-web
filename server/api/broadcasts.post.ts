@@ -1,4 +1,4 @@
-import { serverSupabaseClient } from '#supabase/server'
+import { serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
 import type { Database } from '~/types/supabase'
 
 type Audience = 'students_all' | 'students_unplaced' | 'students_placed' | 'students_late_logbooks' | 'coordinators_all'
@@ -17,20 +17,15 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 400, statusMessage: 'Target audience is required.' })
     }
 
-    const supabase = await serverSupabaseClient<Database>(event)
-
-    const { data: userData, error: userError } = await supabase.auth.getUser()
-    const userId = userData.user?.id
-
-    if (userError) {
-      throw createError({ statusCode: 500, statusMessage: `Failed to read auth user: ${userError.message}` })
-    }
+    const serviceRole = serverSupabaseServiceRole<Database>(event)
+    const authUser = await serverSupabaseUser(event)
+    const userId = authUser?.id || (authUser as any)?.sub
 
     if (!userId) {
       throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
     }
 
-    const { data: actor, error: actorError } = await supabase
+    const { data: actor, error: actorError } = await serviceRole
       .from('users')
       .select('role')
       .eq('id', userId)
@@ -45,7 +40,7 @@ export default defineEventHandler(async (event) => {
     }
 
     // 1. Insert into broadcast_messages
-    const { error: broadcastError, data } = await supabase
+    const { error: broadcastError } = await serviceRole
       .from('broadcast_messages')
       .insert({
         coordinator_id: userId,
@@ -54,13 +49,12 @@ export default defineEventHandler(async (event) => {
         target_roles: [audience],
         sent_at: new Date().toISOString()
       })
-      .select()
 
     if (broadcastError) {
       console.error('[Broadcasts API] Insert error:', broadcastError)
-      throw createError({ 
-        statusCode: 500, 
-        statusMessage: `Broadcast Insert Error: ${broadcastError.message} (Code: ${broadcastError.code})` 
+      throw createError({
+        statusCode: 500,
+        statusMessage: `Broadcast Insert Error: ${broadcastError.message} (Code: ${broadcastError.code})`
       })
     }
 
@@ -68,14 +62,14 @@ export default defineEventHandler(async (event) => {
     let targetUserIds: string[] = []
 
     if (STUDENT_AUDIENCES.includes(audience)) {
-      const { data: activeCohort } = await supabase
+      const { data: activeCohort } = await serviceRole
         .from('cohorts')
         .select('id')
         .eq('is_active', true)
         .maybeSingle()
 
       if (activeCohort) {
-        const { data: enrolled } = await supabase
+        const { data: enrolled } = await serviceRole
           .from('student_cohorts')
           .select('student_id')
           .eq('cohort_id', activeCohort.id)
@@ -83,7 +77,7 @@ export default defineEventHandler(async (event) => {
         let candidateIds = enrolled?.map(e => e.student_id).filter(Boolean) as string[] || []
 
         if (audience === 'students_unplaced') {
-          const { data: placed } = await supabase
+          const { data: placed } = await serviceRole
             .from('job_applications')
             .select('student_id')
             .in('student_id', candidateIds)
@@ -92,7 +86,7 @@ export default defineEventHandler(async (event) => {
           const placedIds = new Set(placed?.map(p => p.student_id) || [])
           candidateIds = candidateIds.filter(id => !placedIds.has(id))
         } else if (audience === 'students_placed') {
-          const { data: placed } = await supabase
+          const { data: placed } = await serviceRole
             .from('job_applications')
             .select('student_id')
             .in('student_id', candidateIds)
@@ -101,7 +95,7 @@ export default defineEventHandler(async (event) => {
           const placedIds = new Set(placed?.map(p => p.student_id) || [])
           candidateIds = candidateIds.filter(id => placedIds.has(id))
         } else if (audience === 'students_late_logbooks') {
-          const { data: late } = await supabase
+          const { data: late } = await serviceRole
             .from('weekly_logbook_tracking')
             .select('student_id')
             .in('student_id', candidateIds)
@@ -113,23 +107,24 @@ export default defineEventHandler(async (event) => {
         targetUserIds = candidateIds
       }
     } else if (audience === 'coordinators_all') {
-      const { data: coordinators } = await supabase
+      const { data: coordinators } = await serviceRole
         .from('users')
         .select('id')
         .eq('role', 'coordinator')
+        .neq('id', userId)
 
       targetUserIds = coordinators?.map(c => c.id).filter(Boolean) as string[] || []
     }
 
     // 3. Create in-app notifications for targeted users
     if (targetUserIds.length > 0) {
-      const notificationRows = targetUserIds.map(userId => ({
-        recipient_id: userId,
+      const notificationRows = targetUserIds.map(id => ({
+        recipient_id: id,
         title: body.title,
         body: body.body,
-        type: 'broadcast'
+        type: 'broadcast' as const
       }))
-      await supabase.from('notifications').insert(notificationRows)
+      await serviceRole.from('notifications').insert(notificationRows)
     }
 
     return { success: true, queued: targetUserIds.length }

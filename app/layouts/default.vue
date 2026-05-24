@@ -35,6 +35,13 @@
           <Transition name="fade-text">
             <span v-if="!collapsed">{{ item.name }}</span>
           </Transition>
+          <span
+            v-if="item.path === '/notifications' && unreadCount > 0"
+            class="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold text-white bg-red-500 rounded-full animate-pulse"
+            :class="collapsed ? '' : 'ml-auto'"
+          >
+            {{ unreadCount > 99 ? '99+' : unreadCount }}
+          </span>
         </NuxtLink>
       </nav>
 
@@ -111,6 +118,12 @@
         >
           <i :class="[item.icon, 'text-lg flex-shrink-0']"></i>
           <span>{{ item.name }}</span>
+          <span
+            v-if="item.path === '/notifications' && unreadCount > 0"
+            class="ml-auto inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold text-white bg-red-500 rounded-full animate-pulse"
+          >
+            {{ unreadCount > 99 ? '99+' : unreadCount }}
+          </span>
         </NuxtLink>
       </nav>
 
@@ -174,6 +187,7 @@ const route = useRoute()
 const supabase = useSupabaseClient()
 const { profile, role, clearProfile } = useCurrentProfile()
 const { isSuperCoordinator } = useCoordinatorPrivileges()
+const { unreadCount, fetchInitialCount, setupRealtimeListener, cleanup } = useNotifications()
 
 const collapsed = ref(false)
 const mobileOpen = ref(false)
@@ -184,7 +198,10 @@ watch(mobileOpen, (val) => {
   document.body.style.overflow = val ? 'hidden' : ''
 })
 
-onMounted(() => {
+onMounted(async () => {
+  await fetchInitialCount()
+  setupRealtimeListener()
+
   const handler = (e: KeyboardEvent) => {
     if (e.key === 'Escape') mobileOpen.value = false
   }
@@ -193,6 +210,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   document.body.style.overflow = ''
+  cleanup()
 })
 
 const navigation = computed(() => [

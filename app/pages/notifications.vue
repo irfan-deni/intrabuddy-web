@@ -55,10 +55,20 @@
 
         <template v-else>
           <div class="block md:hidden space-y-3 p-4">
-            <div v-for="n in notifications" :key="n.id" class="border border-stone-200 p-4">
+            <div v-for="n in notifications" :key="n.id" class="border border-stone-200 p-4 transition-all" :class="n.is_read ? 'bg-white' : 'bg-amber-50/40'">
               <div class="flex items-start justify-between mb-2">
                 <div class="font-black text-slate-800 uppercase tracking-tight text-sm">{{ n.recipient_name || 'Unknown' }}</div>
-                <span class="px-2 py-0.5 text-[9px] font-black whitespace-nowrap ml-2" :class="n.is_read ? 'bg-emerald-500 text-white' : 'bg-amber-400 text-slate-900'">{{ n.is_read ? 'Read' : 'Unread' }}</span>
+                <div class="flex items-center gap-1.5 ml-2">
+                  <button
+                    v-if="!n.is_read"
+                    class="h-6 w-6 flex items-center justify-center bg-sky-600 hover:bg-sky-700 text-white rounded transition-all"
+                    title="Mark as read"
+                    @click="markAsRead(n)"
+                  >
+                    <i class="pi pi-check text-[9px]"></i>
+                  </button>
+                  <span class="px-2 py-0.5 text-[9px] font-black whitespace-nowrap" :class="n.is_read ? 'bg-emerald-500 text-white' : 'bg-amber-400 text-slate-900'">{{ n.is_read ? 'Read' : 'Unread' }}</span>
+                </div>
               </div>
               <div class="font-black text-slate-800 uppercase tracking-tight text-xs mb-1">{{ n.title }}</div>
               <div class="text-[9px] text-stone-400 line-clamp-2 mb-2">{{ n.body }}</div>
@@ -81,7 +91,7 @@
                 </tr>
               </thead>
               <tbody class="text-xs divide-y divide-stone-100">
-                <tr v-for="n in notifications" :key="n.id" class="hover:bg-stone-50 transition-all group">
+                <tr v-for="n in notifications" :key="n.id" class="transition-all group" :class="n.is_read ? 'bg-white' : 'bg-amber-50/40'">
                   <td class="px-8 py-6 font-black text-slate-800 uppercase tracking-tight text-xs whitespace-nowrap">{{ n.recipient_name || 'Unknown' }}</td>
                   <td class="px-8 py-6">
                     <div class="font-black text-slate-800 uppercase tracking-tight text-xs">{{ n.title }}</div>
@@ -91,7 +101,17 @@
                     <span class="px-2 py-0.5 bg-slate-900 text-white text-[8px] font-black uppercase tracking-tighter">{{ n.type || 'general' }}</span>
                   </td>
                   <td class="px-8 py-6 text-right">
-                    <span class="px-2 py-0.5 text-[9px] font-black" :class="n.is_read ? 'bg-emerald-500 text-white' : 'bg-amber-400 text-slate-900'">{{ n.is_read ? 'Read' : 'Unread' }}</span>
+                    <div class="flex items-center justify-end gap-2">
+                      <button
+                        v-if="!n.is_read"
+                        class="h-7 w-7 flex items-center justify-center bg-sky-600 hover:bg-sky-700 text-white rounded transition-all"
+                        title="Mark as read"
+                        @click="markAsRead(n)"
+                      >
+                        <i class="pi pi-check text-[10px]"></i>
+                      </button>
+                      <span class="px-2 py-0.5 text-[9px] font-black" :class="n.is_read ? 'bg-emerald-500 text-white' : 'bg-amber-400 text-slate-900'">{{ n.is_read ? 'Read' : 'Unread' }}</span>
+                    </div>
                   </td>
                   <td class="px-8 py-6 text-right text-stone-400 font-black tabular-nums text-[10px]">
                     {{ n.created_at ? new Date(n.created_at).toLocaleString() : '---' }}
@@ -118,6 +138,7 @@ type NotificationRow = Database['public']['Tables']['notifications']['Row']
 
 const supabase = useSupabaseClient<Database>()
 const { isSuperCoordinator } = useCoordinatorPrivileges()
+const { decrementCount } = useNotifications()
 
 type NotificationDisplay = NotificationRow & { recipient_name: string | null }
 
@@ -182,6 +203,19 @@ const sendAlert = async () => {
     alert('Failed to send alert')
   } finally {
     isSending.value = false
+  }
+}
+
+const markAsRead = async (notification: NotificationDisplay) => {
+  try {
+    await $fetch(`/api/notifications/${notification.id}/read`, { method: 'PATCH' })
+    const idx = notifications.value.findIndex(n => n.id === notification.id)
+    if (idx !== -1) {
+      notifications.value[idx] = { ...notifications.value[idx], is_read: true }
+    }
+    decrementCount()
+  } catch {
+    // silently fail — the badge will update on next page load
   }
 }
 
