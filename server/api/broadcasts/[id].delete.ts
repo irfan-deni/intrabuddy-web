@@ -1,4 +1,4 @@
-import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server'
+import { serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
 import type { Database } from '~/types/supabase'
 
 export default defineEventHandler(async (event) => {
@@ -7,17 +7,13 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
   }
 
-  const supabase = await serverSupabaseClient<Database>(event)
+  const userId = user.id || (user as any).sub
 
-  const { data: actor, error: actorError } = await supabase
-    .from('users')
-    .select('role')
-    .eq('id', user.id)
-    .single()
-
-  if (actorError || actor.role !== 'coordinator') {
-    throw createError({ statusCode: 403, statusMessage: 'Forbidden' })
-  }
+  const runtimeConfig = useRuntimeConfig()
+  const superEmails = (runtimeConfig.public?.superCoordinatorEmails as string || '')
+    .split(',')
+    .map((e: string) => e.trim().toLowerCase())
+  const isSuper = user.email ? superEmails.includes(user.email.toLowerCase()) : false
 
   const broadcastId = getRouterParam(event, 'id')
   if (!broadcastId) {
@@ -29,10 +25,18 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: 'Invalid broadcast ID' })
   }
 
-  const { error } = await supabase
+  const serviceRole = serverSupabaseServiceRole<Database>(event)
+
+  const query = serviceRole
     .from('broadcast_messages')
     .delete()
     .eq('id', id)
+
+  if (!isSuper) {
+    query.eq('coordinator_id', userId)
+  }
+
+  const { error } = await query
 
   if (error) {
     throw createError({ statusCode: 500, statusMessage: `Failed to delete broadcast: ${error.message}` })
