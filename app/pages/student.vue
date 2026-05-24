@@ -1,9 +1,14 @@
 <template>
   <div class="space-y-6 md:space-y-12">
     <header class="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-stone-200 pb-6 md:pb-8">
-      <div>
-        <h1 class="text-2xl md:text-4xl font-black text-slate-800 tracking-tight uppercase">Student Dossier</h1>
-        <p class="text-stone-500 mt-2 font-bold uppercase text-[10px] tracking-widest">Comprehensive performance and compliance tracking.</p>
+      <div class="flex items-center gap-4">
+        <NuxtLink to="/students" class="h-10 w-10 border border-stone-200 flex items-center justify-center hover:bg-slate-900 hover:text-white transition-all text-stone-400">
+          <i class="pi pi-arrow-left text-sm"></i>
+        </NuxtLink>
+        <div>
+          <h1 class="text-2xl md:text-4xl font-black text-slate-800 tracking-tight uppercase">Student Dossier</h1>
+          <p class="text-stone-500 mt-2 font-bold uppercase text-[10px] tracking-widest">Comprehensive performance and compliance tracking.</p>
+        </div>
       </div>
       <div v-if="studentId" class="flex items-center gap-3">
         <div class="h-12 px-6 bg-stone-50 border border-stone-200 flex items-center gap-2">
