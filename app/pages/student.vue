@@ -5,11 +5,17 @@
         <h1 class="text-2xl md:text-4xl font-black text-slate-800 tracking-tight uppercase">Student Dossier</h1>
         <p class="text-stone-500 mt-2 font-bold uppercase text-[10px] tracking-widest">Comprehensive performance and compliance tracking.</p>
       </div>
-      <div v-if="studentId" class="flex items-center gap-4">
+      <div v-if="studentId" class="flex items-center gap-3">
         <div class="h-12 px-6 bg-stone-50 border border-stone-200 flex items-center gap-2">
           <span class="text-[10px] font-black text-stone-400 uppercase tracking-widest">Status:</span>
           <span class="text-[10px] font-black text-slate-800 uppercase tracking-widest">{{ isLoading ? 'Syncing...' : 'Active' }}</span>
         </div>
+        <button
+          class="h-12 px-6 bg-sky-600 hover:bg-sky-700 text-white text-[10px] font-black uppercase tracking-widest transition-all"
+          @click="openAlertModal"
+        >
+          <i class="pi pi-bell mr-2"></i> Send Alert
+        </button>
       </div>
     </header>
 
@@ -214,6 +220,38 @@
         </form>
       </div>
     </div>
+    <!-- Send Alert Modal -->
+    <div v-if="isAlertModalOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-4 sm:p-6">
+      <div class="bg-white w-full max-w-md p-6 sm:p-8 border border-stone-200 shadow-2xl relative">
+        <button class="absolute top-6 right-6 text-stone-400 hover:text-slate-800 transition-colors" @click="isAlertModalOpen = false">
+          <i class="pi pi-times"></i>
+        </button>
+        <h2 class="text-lg font-black text-slate-800 uppercase tracking-widest mb-2">Send Alert</h2>
+        <p class="text-xs font-bold text-stone-500 uppercase tracking-wider mb-6">Dispatch a manual alert to this student.</p>
+        <div class="mb-6 p-4 bg-stone-50 border border-stone-200">
+          <p class="text-[9px] font-black text-stone-400 uppercase tracking-widest mb-1">Recipient</p>
+          <p class="text-sm font-black text-slate-800 uppercase tracking-tight">{{ studentName }}</p>
+        </div>
+        <form @submit.prevent="sendAlert" class="space-y-6">
+          <div class="space-y-2">
+            <label class="text-[9px] font-black text-stone-500 uppercase tracking-widest">Title</label>
+            <input v-model="alertTitle" type="text" required placeholder="e.g., Urgent Reminder"
+              class="w-full bg-white border border-stone-200 rounded-none px-4 py-3 text-xs font-black uppercase tracking-widest focus:border-sky-600 focus:ring-1 focus:ring-sky-600 outline-none transition-all text-slate-800">
+          </div>
+          <div class="space-y-2">
+            <label class="text-[9px] font-black text-stone-500 uppercase tracking-widest">Message</label>
+            <textarea v-model="alertBody" rows="4" required placeholder="Enter alert message..."
+              class="w-full bg-white border border-stone-200 rounded-none px-4 py-3 text-xs font-bold uppercase tracking-widest focus:border-sky-600 focus:ring-1 focus:ring-sky-600 outline-none transition-all resize-none text-slate-800"></textarea>
+          </div>
+          <div class="flex gap-4">
+            <button type="button" class="flex-1 h-12 border border-stone-200 text-stone-500 font-black text-[10px] uppercase tracking-widest hover:bg-stone-50 transition-all" @click="isAlertModalOpen = false">Cancel</button>
+            <button type="submit" :disabled="isSendingAlert" class="flex-1 h-12 bg-sky-600 text-white font-black text-[10px] uppercase tracking-widest hover:brightness-110 transition-all disabled:opacity-30">
+              {{ isSendingAlert ? 'Sending...' : 'Send Alert' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
     </div>
   </div>
 </template>
@@ -248,6 +286,13 @@ const isLoading = ref(false)
 const errorMessage = ref('')
 const isSavingOverride = ref(false)
 
+// Alert modal state
+const isAlertModalOpen = ref(false)
+const alertTitle = ref('')
+const alertBody = ref('')
+const isSendingAlert = ref(false)
+const studentName = ref('')
+
 const checklists = ref<ChecklistItem[]>([])
 const applications = ref<ApplicationRow[]>([])
 const logbookEntries = ref<LogbookRow[]>([])
@@ -277,6 +322,9 @@ const loadStudentData = async () => {
   errorMessage.value = ''
 
   try {
+    const { data: profile } = await supabase.from('users').select('full_name').eq('id', studentId.value).single()
+    studentName.value = profile?.full_name || 'Unknown Student'
+
     const [chkRes, appRes, logRes, walletRes] = await Promise.all([
       supabase.from('student_checklists').select('id, is_completed, checklist_item_id, override_reason, updated_by_admin').eq('student_id', studentId.value),
       supabase.from('job_applications').select('*').eq('student_id', studentId.value).order('application_date', { ascending: false }),
@@ -370,6 +418,34 @@ const confirmAppOverride = async () => {
     alert('Override failed')
   } finally {
     isSavingOverride.value = false
+  }
+}
+
+const openAlertModal = () => {
+  alertTitle.value = ''
+  alertBody.value = ''
+  isAlertModalOpen.value = true
+}
+
+const sendAlert = async () => {
+  if (!studentId.value || !alertTitle.value || !alertBody.value) return
+  isSendingAlert.value = true
+  try {
+    await $fetch('/api/notifications', {
+      method: 'POST',
+      body: {
+        recipient_id: studentId.value,
+        title: alertTitle.value,
+        body: alertBody.value,
+        type: 'manual_alert'
+      }
+    })
+    isAlertModalOpen.value = false
+    alert('Alert sent')
+  } catch {
+    alert('Failed to send alert')
+  } finally {
+    isSendingAlert.value = false
   }
 }
 
