@@ -76,64 +76,28 @@
     <Card class="bg-white shadow-sm border border-stone-200">
       <template #content>
         <div class="p-4 md:p-8">
-          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4 md:mb-6">
-            <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider">Logbook Intelligence</h2>
-            <div class="flex items-center gap-4 w-full sm:w-auto">
-              <select v-model="statusFilter" class="text-xs font-semibold border border-stone-200 rounded-lg px-3 md:px-4 py-2 bg-white text-slate-800 outline-none focus:border-sky-600 focus:ring-1 focus:ring-sky-600 transition-all w-full sm:w-auto">
-                <option value="all">All Submissions</option>
-                <option value="Submitted">Approved</option>
-                <option value="Late">Pending/Late</option>
-              </select>
-            </div>
-          </div>
+          <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider mb-6 md:mb-8">Logbook Intelligence</h2>
 
           <div v-if="logbooks.length === 0" class="text-center py-12 md:py-16 text-sm font-semibold text-stone-400">No activity data available</div>
 
-          <template v-for="entry in logbooks" :key="entry.id">
-            <div class="block md:hidden bg-stone-50 rounded-lg p-4 mb-3 border border-stone-200">
-              <div class="flex items-start justify-between mb-3">
-                <div>
-                  <div class="font-semibold text-slate-800 text-sm">{{ entry.studentName }}</div>
-                  <div class="text-xs text-stone-500 mt-0.5 tabular-nums">{{ entry.studentMatric || 'MATRIC_PENDING' }}</div>
-                </div>
-                <span v-if="entry.statusLabel === 'Submitted'" class="inline-flex px-2.5 py-1 bg-emerald-500 text-white text-xs font-semibold rounded whitespace-nowrap">Approved</span>
-                <span v-else class="inline-flex px-2.5 py-1 bg-amber-400 text-slate-900 text-xs font-semibold rounded whitespace-nowrap">{{ entry.statusLabel }}</span>
-              </div>
-              <div class="flex items-center justify-between text-xs text-stone-500">
-                <span class="font-semibold text-slate-800">Week {{ entry.weekNumber }}</span>
-                <span class="tabular-nums">{{ entry.submittedAt ? new Date(entry.submittedAt).toLocaleDateString() : 'WAITING' }}</span>
-              </div>
+          <template v-else>
+            <div class="flex items-end justify-between mb-2">
+              <span class="text-xs font-semibold text-stone-500 uppercase tracking-wider">Overall Cohort Compliance</span>
+              <span class="text-2xl font-bold text-slate-800 tabular-nums">{{ complianceRate }}%</span>
             </div>
-          </template>
 
-          <div class="hidden md:block overflow-x-auto">
-            <table class="w-full text-left">
-              <thead>
-                <tr class="text-xs font-semibold text-stone-500 uppercase tracking-wider bg-stone-50">
-                  <th class="px-6 py-4">Student Identity</th>
-                  <th class="px-6 py-4">Period</th>
-                  <th class="px-6 py-4">Status</th>
-                  <th class="px-6 py-4 text-right">Activity</th>
-                </tr>
-              </thead>
-              <tbody class="text-sm divide-y divide-stone-100">
-                <tr v-for="entry in logbooks" :key="entry.id" class="hover:bg-stone-50 transition-colors">
-                  <td class="px-6 py-5">
-                    <div class="font-semibold text-slate-800">{{ entry.studentName }}</div>
-                    <div class="text-xs text-stone-500 mt-0.5 tabular-nums">{{ entry.studentMatric || 'MATRIC_PENDING' }}</div>
-                  </td>
-                  <td class="px-6 py-5 text-slate-800 font-semibold">Week {{ entry.weekNumber }}</td>
-                  <td class="px-6 py-5">
-                    <span v-if="entry.statusLabel === 'Submitted'" class="inline-flex px-3 py-1 bg-emerald-500 text-white text-xs font-semibold rounded">Approved</span>
-                    <span v-else class="inline-flex px-3 py-1 bg-amber-400 text-slate-900 text-xs font-semibold rounded">{{ entry.statusLabel }}</span>
-                  </td>
-                  <td class="px-6 py-5 text-right text-stone-500 tabular-nums hover:text-slate-800 transition-colors">
-                    {{ entry.submittedAt ? new Date(entry.submittedAt).toLocaleDateString() : 'WAITING' }}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+            <div class="w-full bg-slate-200 rounded-full h-4 mt-4 mb-4 overflow-hidden">
+              <div
+                class="h-full rounded-full transition-all duration-1000 ease-out"
+                :class="complianceRate > 80 ? 'bg-emerald-500' : complianceRate > 50 ? 'bg-amber-400' : 'bg-red-500'"
+                :style="{ width: complianceRate + '%' }"
+              ></div>
+            </div>
+
+            <p class="text-sm text-stone-600">
+              {{ totalSubmitted }} of {{ totalExpected }} expected logbooks submitted this week.
+            </p>
+          </template>
         </div>
       </template>
     </Card>
@@ -163,7 +127,16 @@ const placementPercentage = ref(0)
 const isLoading = ref(true)
 
 const logbooks = ref<any[]>([])
-const statusFilter = ref('all')
+
+const totalExpected = computed(() => logbooks.value.length)
+
+const totalSubmitted = computed(() =>
+  logbooks.value.filter(e => e.statusLabel === 'Submitted').length
+)
+
+const complianceRate = computed(() =>
+  totalExpected.value > 0 ? Math.round((totalSubmitted.value / totalExpected.value) * 100) : 0
+)
 
 const stats = computed(() => [
   { label: 'Total Students', value: totalStudents.value, icon: 'pi pi-users' },
@@ -177,7 +150,7 @@ const fetchData = async () => {
   try {
     const [dash, logs] = await Promise.all([
       $fetch<DashboardResponse>('/api/dashboard'),
-      $fetch<any[]>(`/api/logbooks${statusFilter.value !== 'all' ? '?status=' + statusFilter.value : ''}`)
+      $fetch<any[]>('/api/logbooks')
     ])
 
     cohortName.value = dash.cohortName
@@ -193,6 +166,5 @@ const fetchData = async () => {
   }
 }
 
-watch(statusFilter, fetchData)
 onMounted(fetchData)
 </script>
