@@ -98,7 +98,7 @@
                 {{ entry.isSendingReminder ? '...' : 'Remind' }}
               </button>
               <button
-                v-if="isSuperCoordinator"
+                v-if="!entry.isSubmitted && isSuperCoordinator"
                 class="flex-1 h-9 bg-slate-900 text-white text-[8px] font-black uppercase tracking-wider hover:brightness-150 transition-all flex items-center justify-center gap-1"
                 :disabled="entry.isSubmitting"
                 @click="markSubmitted(entry)"
@@ -151,7 +151,7 @@
                       {{ entry.isSendingReminder ? '...' : 'Remind' }}
                     </button>
                     <button
-                      v-if="isSuperCoordinator"
+                      v-if="!entry.isSubmitted && isSuperCoordinator"
                       class="h-8 px-3 bg-slate-900 text-white text-[8px] font-black uppercase tracking-wider hover:brightness-150 transition-all"
                       :disabled="entry.isSubmitting"
                       @click="markSubmitted(entry)"
