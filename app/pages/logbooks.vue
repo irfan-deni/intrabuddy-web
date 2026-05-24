@@ -27,7 +27,16 @@
           </select>
 
           <button
-            class="h-8 px-3 md:px-4 bg-slate-900 text-white text-[9px] font-black uppercase tracking-widest hover:brightness-150 transition-all"
+            class="h-8 px-3 md:px-4 bg-amber-400 text-slate-900 text-[9px] font-black uppercase tracking-widest hover:brightness-110 transition-all disabled:opacity-30"
+            :disabled="isLoading || isRemindingAll"
+            @click="remindAll"
+          >
+            <i class="pi pi-bell mr-1"></i>
+            {{ isRemindingAll ? 'Sending...' : 'Remind All' }}
+          </button>
+
+          <button
+            class="h-8 px-3 md:px-4 bg-stone-600 text-white text-[9px] font-black uppercase tracking-widest hover:brightness-150 transition-all"
             :disabled="isLoading"
             @click="loadLogbooks"
           >
@@ -175,6 +184,7 @@ const { isSuperCoordinator } = useCoordinatorPrivileges()
 
 const logbooks = ref<LogbookEntry[]>([])
 const isLoading = ref(false)
+const isRemindingAll = ref(false)
 const errorMessage = ref('')
 
 const statusFilter = ref('all')
@@ -225,6 +235,19 @@ const markSubmitted = async (entry: LogbookEntry) => {
     alert('Failed to mark as submitted')
   } finally {
     entry.isSubmitting = false
+  }
+}
+
+const remindAll = async () => {
+  isRemindingAll.value = true
+  try {
+    const result = await $fetch<{ reminded: number }>('/api/logbooks/remind-all', { method: 'POST' })
+    alert(`Reminders sent to ${result.reminded} student(s)`)
+    await loadLogbooks()
+  } catch {
+    alert('Failed to send bulk reminders')
+  } finally {
+    isRemindingAll.value = false
   }
 }
 
