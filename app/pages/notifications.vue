@@ -99,6 +99,13 @@
                     <i class="pi pi-check text-[9px]"></i>
                   </button>
                   <span class="px-2 py-0.5 text-[9px] font-black whitespace-nowrap" :class="n.is_read ? 'bg-emerald-500 text-white' : 'bg-amber-400 text-slate-900'">{{ n.is_read ? 'Read' : 'Unread' }}</span>
+                  <button
+                    class="h-6 w-6 flex items-center justify-center border border-red-300 text-red-400 hover:bg-red-500 hover:text-white rounded transition-all"
+                    title="Delete"
+                    @click="deleteNotification(n.id)"
+                  >
+                    <i class="pi pi-trash text-[8px]"></i>
+                  </button>
                 </div>
               </div>
               <div class="font-black text-slate-800 uppercase tracking-tight text-xs mb-1">{{ displayTitle(n) }}</div>
@@ -142,6 +149,13 @@
                         <i class="pi pi-check text-[10px]"></i>
                       </button>
                       <span class="px-2 py-0.5 text-[9px] font-black" :class="n.is_read ? 'bg-emerald-500 text-white' : 'bg-amber-400 text-slate-900'">{{ n.is_read ? 'Read' : 'Unread' }}</span>
+                      <button
+                        class="h-7 w-7 flex items-center justify-center border border-red-300 text-red-400 hover:bg-red-500 hover:text-white rounded transition-all"
+                        title="Delete"
+                        @click="deleteNotification(n.id)"
+                      >
+                        <i class="pi pi-trash text-[9px]"></i>
+                      </button>
                     </div>
                   </td>
                   <td class="px-8 py-6 text-right text-stone-400 font-black tabular-nums text-[10px]">
@@ -278,10 +292,10 @@ const sendAlert = async () => {
 }
 
 const displayTitle = (n: NotificationDisplay) =>
-  n.type === 'broadcast' ? n.broadcast?.title : n.title
+  n.title || n.broadcast?.title || 'No Title'
 
 const displayBody = (n: NotificationDisplay) =>
-  n.type === 'broadcast' ? n.broadcast?.body : n.body
+  n.body || n.broadcast?.body
 
 const markAsRead = async (notification: NotificationDisplay) => {
   try {
@@ -293,6 +307,15 @@ const markAsRead = async (notification: NotificationDisplay) => {
     decrementCount()
   } catch {
     // silently fail — the badge will update on next page load
+  }
+}
+
+const deleteNotification = async (id: number) => {
+  try {
+    await $fetch(`/api/notifications/${id}`, { method: 'DELETE' })
+    notifications.value = notifications.value.filter(n => n.id !== id)
+  } catch {
+    // silently fail
   }
 }
 
