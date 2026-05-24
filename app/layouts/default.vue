@@ -216,13 +216,13 @@ onUnmounted(() => {
 const navigation = computed(() => [
   { name: 'Dashboard', path: '/', icon: 'pi pi-chart-bar' },
   { name: 'Students', path: '/students', icon: 'pi pi-users' },
-  ...(isSuperCoordinator.value ? [{ name: 'Coordinators', path: '/coordinators', icon: 'pi pi-user-plus' }] : []),
-  { name: 'Broadcasts', path: '/broadcasts', icon: 'pi pi-megaphone' },
   { name: 'Logbook Status', path: '/logbooks', icon: 'pi pi-file' },
+  { name: 'Broadcasts', path: '/broadcasts', icon: 'pi pi-megaphone' },
+  { name: 'Notifications', path: '/notifications', icon: 'pi pi-bell' },
   { name: 'Master Checklist', path: '/checklists', icon: 'pi pi-check-square' },
   { name: 'Knowledge Base', path: '/faqs', icon: 'pi pi-book' },
   { name: 'Cohorts', path: '/cohorts', icon: 'pi pi-calendar' },
-  { name: 'Notifications', path: '/notifications', icon: 'pi pi-bell' },
+  ...(isSuperCoordinator.value ? [{ name: 'Coordinators', path: '/coordinators', icon: 'pi pi-user-plus' }] : []),
   { name: 'Settings', path: '/settings', icon: 'pi pi-cog' }
 ])
 
