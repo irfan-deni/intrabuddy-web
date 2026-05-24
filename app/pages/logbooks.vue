@@ -11,54 +11,54 @@
       {{ errorMessage }}
     </p>
 
-    <div class="grid grid-cols-3 gap-4 md:gap-6">
-      <div class="bg-white border border-stone-200 shadow-sm p-5 md:p-6 flex flex-col items-center justify-center">
-        <span class="text-[9px] font-black text-stone-400 uppercase tracking-widest mb-1">Total Expected</span>
-        <span class="text-2xl md:text-3xl font-black text-slate-800 tabular-nums">{{ totalCount }}</span>
+    <div class="grid grid-cols-3 gap-3 md:gap-6">
+      <div class="bg-white border border-stone-200 shadow-sm p-4 md:p-6 flex flex-col items-center justify-center">
+        <span class="text-[9px] font-black text-stone-400 uppercase tracking-widest mb-1">Expected</span>
+        <span class="text-xl md:text-3xl font-black text-slate-800 tabular-nums">{{ totalCount }}</span>
       </div>
-      <div class="bg-white border border-emerald-200 shadow-sm p-5 md:p-6 flex flex-col items-center justify-center">
+      <div class="bg-white border border-emerald-200 shadow-sm p-4 md:p-6 flex flex-col items-center justify-center">
         <span class="text-[9px] font-black text-emerald-600 uppercase tracking-widest mb-1">Submitted</span>
-        <span class="text-2xl md:text-3xl font-black text-emerald-700 tabular-nums">{{ submittedCount }}</span>
+        <span class="text-xl md:text-3xl font-black text-emerald-700 tabular-nums">{{ submittedCount }}</span>
       </div>
-      <div class="bg-white border border-amber-200 shadow-sm p-5 md:p-6 flex flex-col items-center justify-center">
+      <div class="bg-white border border-amber-200 shadow-sm p-4 md:p-6 flex flex-col items-center justify-center">
         <span class="text-[9px] font-black text-amber-600 uppercase tracking-widest mb-1">Late / Pending</span>
-        <span class="text-2xl md:text-3xl font-black text-amber-700 tabular-nums">{{ lateCount }}</span>
+        <span class="text-xl md:text-3xl font-black text-amber-700 tabular-nums">{{ lateCount }}</span>
       </div>
     </div>
 
     <article class="bg-white border border-stone-200 shadow-sm relative">
-      <div class="flex flex-wrap items-center justify-between gap-4 border-b border-stone-200 bg-stone-50/50 p-4 md:p-6">
-        <h2 class="text-[11px] font-black text-slate-800 uppercase tracking-[0.2em]">Logbook Submissions</h2>
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-stone-200 bg-stone-50/50 p-4 md:p-6">
+          <h2 class="text-[11px] font-black text-slate-800 uppercase tracking-[0.2em]">Logbook Submissions</h2>
 
-        <div class="flex items-center gap-3 md:gap-4">
-          <select
-            v-model="statusFilter"
-            class="text-[10px] font-black border border-stone-200 rounded-none px-3 md:px-4 py-2 bg-white uppercase tracking-widest outline-none focus:border-sky-600 focus:ring-1 focus:ring-sky-600 transition-all cursor-pointer"
-          >
-            <option value="all">All Statuses</option>
-            <option value="Submitted">Submitted</option>
-            <option value="Not Submitted">Not Submitted</option>
-            <option value="Late">Late</option>
-          </select>
+          <div class="flex items-center gap-2 md:gap-4 w-full sm:w-auto">
+            <select
+              v-model="statusFilter"
+              class="flex-1 sm:flex-none text-[10px] font-black border border-stone-200 rounded-none px-3 py-2 bg-white uppercase tracking-widest outline-none focus:border-sky-600 focus:ring-1 focus:ring-sky-600 transition-all cursor-pointer"
+            >
+              <option value="all">All Statuses</option>
+              <option value="Submitted">Submitted</option>
+              <option value="Not Submitted">Not Submitted</option>
+              <option value="Late">Late</option>
+            </select>
 
-          <button
-            class="h-8 px-3 md:px-4 bg-amber-400 text-slate-900 text-[9px] font-black uppercase tracking-widest hover:brightness-110 transition-all disabled:opacity-30"
-            :disabled="isLoading || isRemindingAll"
-            @click="remindAll"
-          >
-            <i class="pi pi-bell mr-1"></i>
-            {{ isRemindingAll ? 'Sending...' : 'Remind All' }}
-          </button>
+            <button
+              class="flex-1 sm:flex-none h-9 sm:h-8 px-3 bg-amber-400 text-slate-900 text-[9px] font-black uppercase tracking-widest hover:brightness-110 transition-all disabled:opacity-30 flex items-center justify-center gap-1"
+              :disabled="isLoading || isRemindingAll"
+              @click="remindAll"
+            >
+              <i class="pi pi-bell"></i>
+              <span class="hidden xs:inline">{{ isRemindingAll ? 'Sending...' : 'Remind All' }}</span>
+            </button>
 
-          <button
-            class="h-8 px-3 md:px-4 bg-stone-600 text-white text-[9px] font-black uppercase tracking-widest hover:brightness-150 transition-all"
-            :disabled="isLoading"
-            @click="loadLogbooks"
-          >
-            Refresh
-          </button>
+            <button
+              class="flex-1 sm:flex-none h-9 sm:h-8 px-3 bg-stone-600 text-white text-[9px] font-black uppercase tracking-widest hover:brightness-150 transition-all flex items-center justify-center"
+              :disabled="isLoading"
+              @click="loadLogbooks"
+            >
+              Refresh
+            </button>
+          </div>
         </div>
-      </div>
 
       <div v-if="isLoading" class="py-12 md:py-16 text-center text-stone-400">
         <i class="pi pi-spin pi-spinner text-xl text-sky-600 mr-2" />

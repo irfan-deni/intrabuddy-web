@@ -11,15 +11,15 @@
         </div>
       </div>
       <div v-if="studentId" class="flex items-center gap-3">
-        <div class="h-12 px-6 bg-stone-50 border border-stone-200 flex items-center gap-2">
-          <span class="text-[10px] font-black text-stone-400 uppercase tracking-widest">Status:</span>
-          <span class="text-[10px] font-black text-slate-800 uppercase tracking-widest">{{ isLoading ? 'Syncing...' : 'Active' }}</span>
+        <div class="h-10 md:h-12 px-4 md:px-6 bg-stone-50 border border-stone-200 flex items-center gap-2">
+          <span class="text-[9px] md:text-[10px] font-black text-stone-400 uppercase tracking-widest">Status:</span>
+          <span class="text-[9px] md:text-[10px] font-black text-slate-800 uppercase tracking-widest">{{ isLoading ? 'Syncing...' : 'Active' }}</span>
         </div>
         <button
-          class="h-12 px-6 bg-sky-600 hover:bg-sky-700 text-white text-[10px] font-black uppercase tracking-widest transition-all"
+          class="h-10 md:h-12 px-4 md:px-6 bg-sky-600 hover:bg-sky-700 text-white text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap"
           @click="openAlertModal"
         >
-          <i class="pi pi-bell mr-2"></i> Send Alert
+          <i class="pi pi-bell mr-1.5 md:mr-2"></i> Send Alert
         </button>
       </div>
     </header>

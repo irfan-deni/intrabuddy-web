@@ -39,7 +39,7 @@
           <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
             <select
               v-model="form.target_audience"
-              class="w-72 bg-white border border-stone-200 px-5 py-4 text-[10px] font-black uppercase tracking-widest outline-none focus:border-sky-600 focus:ring-1 focus:ring-sky-600 cursor-pointer shadow-sm"
+              class="w-full sm:w-72 bg-white border border-stone-200 px-5 py-4 text-[10px] font-black uppercase tracking-widest outline-none focus:border-sky-600 focus:ring-1 focus:ring-sky-600 cursor-pointer shadow-sm"
             >
               <optgroup label="Student Broadcasts">
                 <option value="students_all">All Students</option>
@@ -55,7 +55,7 @@
             <button 
               type="submit" 
               :disabled="isSending" 
-              class="bg-sky-600 text-white px-10 py-4 font-black text-[10px] uppercase tracking-[0.3em] hover:brightness-110 transition-all flex items-center justify-center gap-3 disabled:opacity-30 whitespace-nowrap"
+              class="w-full sm:w-auto bg-sky-600 text-white px-10 py-4 font-black text-[10px] uppercase tracking-[0.3em] hover:brightness-110 transition-all flex items-center justify-center gap-3 disabled:opacity-30 whitespace-nowrap"
             >
               <i class="pi pi-send"></i>
               {{ isSending ? 'Broadcasting...' : 'Confirm Dispatch' }}

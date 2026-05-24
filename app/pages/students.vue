@@ -17,12 +17,12 @@
         </div>
         
         <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
-          <select v-model="cohortFilter" @change="fetchStudents" class="bg-white border border-stone-200 px-5 py-4 text-[10px] font-black uppercase tracking-widest outline-none focus:border-sky-600 focus:ring-1 focus:ring-sky-600 cursor-pointer shadow-sm min-w-[180px]">
+          <select v-model="cohortFilter" @change="fetchStudents" class="bg-white border border-stone-200 px-4 md:px-5 py-3 md:py-4 text-[10px] font-black uppercase tracking-widest outline-none focus:border-sky-600 focus:ring-1 focus:ring-sky-600 cursor-pointer shadow-sm min-w-0 sm:min-w-[180px]">
             <option value="">Active Cohort</option>
             <option v-for="c in cohorts" :key="c.id" :value="c.id">{{ c.name }}</option>
             <option value="all">All Cohorts</option>
           </select>
-          <select v-model="statusFilter" class="bg-white border border-stone-200 px-5 py-4 text-[10px] font-black uppercase tracking-widest outline-none focus:border-sky-600 focus:ring-1 focus:ring-sky-600 cursor-pointer shadow-sm">
+          <select v-model="statusFilter" class="bg-white border border-stone-200 px-4 md:px-5 py-3 md:py-4 text-[10px] font-black uppercase tracking-widest outline-none focus:border-sky-600 focus:ring-1 focus:ring-sky-600 cursor-pointer shadow-sm">
             <option value="all">Status: All</option>
             <option value="Accepted">Status: Placed</option>
             <option value="Searching">Status: Searching</option>
@@ -31,7 +31,7 @@
           
           <button 
             v-if="isSuperCoordinator"
-            class="bg-sky-600 text-white px-6 md:px-8 py-4 font-black text-[10px] uppercase tracking-[0.2em] hover:brightness-110 transition-all flex items-center justify-center gap-3 shadow-xl shadow-black/10"
+            class="bg-sky-600 text-white px-6 md:px-8 py-3 md:py-4 font-black text-[10px] uppercase tracking-[0.2em] hover:brightness-110 transition-all flex items-center justify-center gap-3 shadow-xl shadow-black/10"
             @click="openAddModal"
           >
             <i class="pi pi-user-plus"></i>
