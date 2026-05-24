@@ -36,10 +36,10 @@
 
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 pt-4">
           <div class="flex flex-col gap-2">
-            <label class="text-xs font-bold tracking-widest uppercase text-slate-500">TARGET AUDIENCE</label>
+            <label class="text-[9px] font-black text-stone-500 uppercase tracking-widest">Target Audience</label>
             <select
               v-model="form.target_audience"
-              class="w-full md:w-80 bg-white border border-slate-300 text-slate-700 text-sm rounded-md focus:ring-2 focus:ring-sky-500 focus:border-sky-500 block p-2.5 cursor-pointer transition-all"
+              class="w-full md:w-80 bg-white border border-stone-200 px-5 py-4 text-[10px] font-black uppercase tracking-widest outline-none focus:border-sky-600 focus:ring-1 focus:ring-sky-600 cursor-pointer shadow-sm"
             >
               <optgroup label="Student Broadcasts">
                 <option value="students_all">All Students</option>
