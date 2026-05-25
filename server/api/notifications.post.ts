@@ -1,19 +1,20 @@
-import { serverSupabaseClient } from '#supabase/server'
+import { serverSupabaseClient, serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
 import type { Database } from '~/types/supabase'
 
 export default defineEventHandler(async (event) => {
   try {
-    const supabase = await serverSupabaseClient<Database>(event)
-
-    const { data: userData, error: userError } = await supabase.auth.getUser()
-    if (userError || !userData?.user) {
+    const user = await serverSupabaseUser(event)
+    if (!user) {
       throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
     }
 
-    const { data: actor } = await supabase
+    const userId = user.id || (user as any).sub
+
+    const client = await serverSupabaseClient<Database>(event)
+    const { data: actor } = await client
       .from('users')
       .select('role')
-      .eq('id', userData.user.id)
+      .eq('id', userId)
       .single()
 
     if (!actor || actor.role !== 'coordinator') {
@@ -31,7 +32,8 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 400, statusMessage: 'recipient_id, title, and body are required' })
     }
 
-    const { data, error } = await supabase
+    const serviceRole = serverSupabaseServiceRole<Database>(event)
+    const { data, error } = await serviceRole
       .from('notifications')
       .insert({
         recipient_id: body.recipient_id,

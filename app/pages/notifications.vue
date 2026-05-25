@@ -10,7 +10,7 @@
         <p class="text-stone-500 mt-2 font-bold uppercase text-[10px] tracking-widest">View system notifications and send manual alerts.</p>
       </header>
 
-      <div v-if="isSuperCoordinator" class="max-w-3xl mb-8 md:mb-12 p-4 md:p-6 lg:p-8 border border-stone-200 bg-stone-50/50">
+      <div class="max-w-3xl mb-8 md:mb-12 p-4 md:p-6 lg:p-8 border border-stone-200 bg-stone-50/50">
         <h3 class="text-[11px] font-black text-slate-800 uppercase tracking-[0.2em] mb-6">Manual Alert Dispatch</h3>
         <form @submit.prevent="sendAlert" class="space-y-6">
           <div class="space-y-2 relative">
@@ -244,11 +244,15 @@ const loadData = async () => {
   try {
     const [notifRes, studentRes] = await Promise.all([
       supabase.from('notifications').select('*, broadcast:broadcast_messages(title, body)').order('created_at', { ascending: false }).limit(200),
-      supabase.from('users').select('id, full_name, student_id').eq('role', 'student').order('full_name')
+      $fetch<any>('/api/students?cohort_id=all')
     ])
 
     if (notifRes.error) throw notifRes.error
-    students.value = studentRes.data || []
+    students.value = (studentRes?.students || studentRes || []).map((s: any) => ({
+      id: s.id,
+      full_name: s.full_name,
+      student_id: s.student_id
+    }))
 
     const rows = (notifRes.data || []) as NotificationWithBroadcast[]
     const recipientIds = rows.map(r => r.recipient_id).filter(Boolean) as string[]
