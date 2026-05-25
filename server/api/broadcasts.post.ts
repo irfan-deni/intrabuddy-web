@@ -92,6 +92,8 @@ export default defineEventHandler(async (event) => {
       const notificationRows = targetUserIds.map(id => ({
         recipient_id: id,
         broadcast_id: broadcastId,
+        title: body.title,
+        body: body.body,
         type: 'broadcast' as const
       }))
       await serviceRole.from('notifications').insert(notificationRows)
