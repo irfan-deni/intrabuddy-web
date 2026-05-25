@@ -41,15 +41,8 @@
               v-model="form.target_audience"
               class="w-full sm:w-72 bg-white border border-stone-200 px-5 py-4 text-[10px] font-black uppercase tracking-widest outline-none focus:border-sky-600 focus:ring-1 focus:ring-sky-600 cursor-pointer shadow-sm"
             >
-              <optgroup label="Student Broadcasts">
-                <option value="students_all">All Students</option>
-                <option value="students_unplaced">Unplaced Students Only</option>
-                <option value="students_placed">Placed Students Only</option>
-                <option value="students_late_logbooks">Students with Late Logbooks</option>
-              </optgroup>
-              <optgroup label="Internal Broadcasts">
-                <option value="coordinators_all">All Coordinators</option>
-              </optgroup>
+              <option value="students_all">Student</option>
+              <option value="coordinators_all">Coordinator</option>
             </select>
 
             <button 

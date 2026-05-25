@@ -1,9 +1,7 @@
 import { serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
 import type { Database } from '~/types/supabase'
 
-type Audience = 'students_all' | 'students_unplaced' | 'students_placed' | 'students_late_logbooks' | 'coordinators_all'
-
-const STUDENT_AUDIENCES: Audience[] = ['students_all', 'students_unplaced', 'students_placed', 'students_late_logbooks']
+type Audience = 'students_all' | 'coordinators_all'
 
 export default defineEventHandler(async (event) => {
   try {
@@ -64,7 +62,7 @@ export default defineEventHandler(async (event) => {
     // 2. Resolve targeted user IDs
     let targetUserIds: string[] = []
 
-    if (STUDENT_AUDIENCES.includes(audience)) {
+    if (audience === 'students_all') {
       const { data: activeCohort } = await serviceRole
         .from('cohorts')
         .select('id')
@@ -77,37 +75,7 @@ export default defineEventHandler(async (event) => {
           .select('student_id')
           .eq('cohort_id', activeCohort.id)
 
-        let candidateIds = enrolled?.map(e => e.student_id).filter(Boolean) as string[] || []
-
-        if (audience === 'students_unplaced') {
-          const { data: placed } = await serviceRole
-            .from('job_applications')
-            .select('student_id')
-            .in('student_id', candidateIds)
-            .eq('status', 'Accepted')
-
-          const placedIds = new Set(placed?.map(p => p.student_id) || [])
-          candidateIds = candidateIds.filter(id => !placedIds.has(id))
-        } else if (audience === 'students_placed') {
-          const { data: placed } = await serviceRole
-            .from('job_applications')
-            .select('student_id')
-            .in('student_id', candidateIds)
-            .eq('status', 'Accepted')
-
-          const placedIds = new Set(placed?.map(p => p.student_id) || [])
-          candidateIds = candidateIds.filter(id => placedIds.has(id))
-        } else if (audience === 'students_late_logbooks') {
-          const { data: late } = await serviceRole
-            .from('weekly_logbook_tracking')
-            .select('student_id')
-            .in('student_id', candidateIds)
-            .eq('is_submitted', false)
-
-          candidateIds = late?.map(l => l.student_id).filter(Boolean) as string[] || []
-        }
-
-        targetUserIds = candidateIds
+        targetUserIds = enrolled?.map(e => e.student_id).filter(Boolean) as string[] || []
       }
     } else if (audience === 'coordinators_all') {
       const { data: coordinators } = await serviceRole
