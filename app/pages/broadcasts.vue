@@ -26,12 +26,31 @@
         <div class="space-y-2">
           <label class="text-[9px] font-black text-stone-500 uppercase tracking-widest">Detailed Content</label>
           <textarea 
+            ref="bodyTextareaRef"
             v-model="form.body" 
             rows="5" 
             placeholder="Enter the message you want to broadcast to all students..."
             required 
             class="w-full bg-white border border-stone-200 rounded-none px-6 py-4 text-xs font-bold uppercase tracking-widest focus:border-sky-600 focus:ring-1 focus:ring-sky-600 outline-none transition-all resize-none leading-relaxed text-slate-800 placeholder:text-stone-400"
           ></textarea>
+
+          <div class="flex items-center gap-3">
+            <input ref="imageInputRef" type="file" accept="image/*" class="hidden" @change="uploadImage">
+            <button type="button" :disabled="uploadingImage" class="h-9 px-4 border border-stone-200 text-stone-500 hover:text-slate-800 hover:border-slate-800 text-[9px] font-black uppercase tracking-widest transition-all flex items-center gap-2" @click="imageInputRef?.click()">
+              <i class="pi pi-image"></i>
+              {{ uploadingImage ? 'Uploading...' : 'Attach Image' }}
+            </button>
+            <span v-if="uploadedImages.length > 0" class="text-[9px] font-black text-stone-400 tabular-nums">{{ uploadedImages.length }} image{{ uploadedImages.length > 1 ? 's' : '' }} attached</span>
+          </div>
+
+          <div v-if="uploadedImages.length > 0" class="flex flex-wrap gap-3 mt-2">
+            <div v-for="(url, idx) in uploadedImages" :key="idx" class="relative group">
+              <img :src="url" class="h-16 w-16 object-cover border border-stone-200">
+              <button type="button" class="absolute -top-2 -right-2 h-5 w-5 bg-red-500 text-white flex items-center justify-center text-[8px] opacity-0 group-hover:opacity-100 transition-all" @click="removeImage(idx)">
+                <i class="pi pi-times"></i>
+              </button>
+            </div>
+          </div>
         </div>
 
         <div class="space-y-2 pt-4">
@@ -140,9 +159,23 @@
 </template>
 
 <script setup lang="ts">
+import type { Database } from '~/types/supabase'
+
 definePageMeta({
   requiredRole: 'coordinator'
 })
+
+const supabase = useSupabaseClient<Database>()
+
+const broadcasts = ref<any[]>([])
+const isLoading = ref(true)
+const isSending = ref(false)
+const successToast = ref(false)
+const uploadingImage = ref(false)
+const uploadedImages = ref<string[]>([])
+
+const imageInputRef = ref<HTMLInputElement | null>(null)
+const bodyTextareaRef = ref<HTMLTextAreaElement | null>(null)
 
 const audienceLabels: Record<string, string> = {
   students_all: 'All Students',
@@ -152,16 +185,63 @@ const audienceLabels: Record<string, string> = {
   coordinators_all: 'All Coordinators'
 }
 
-const broadcasts = ref<any[]>([])
-const isLoading = ref(true)
-const isSending = ref(false)
-const successToast = ref(false)
-
 const form = ref({
   title: '',
   body: '',
   target_audience: 'students_all'
 })
+
+const uploadImage = async () => {
+  const file = imageInputRef.value?.files?.[0]
+  if (!file) return
+
+  uploadingImage.value = true
+  try {
+    const fileExt = file.name.split('.').pop()
+    const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`
+    const filePath = `broadcast-images/${fileName}`
+
+    const { data, error } = await supabase.storage
+      .from('broadcast-media')
+      .upload(filePath, file, { contentType: file.type })
+
+    if (error) {
+      alert('Image upload failed: ' + error.message)
+      return
+    }
+
+    const { data: urlData } = supabase.storage
+      .from('broadcast-media')
+      .getPublicUrl(filePath)
+
+    const publicUrl = urlData?.publicUrl
+    if (!publicUrl) {
+      alert('Failed to get public URL')
+      return
+    }
+
+    uploadedImages.value.push(publicUrl)
+
+    const imgTag = `<img src="${publicUrl}" />`
+    const textarea = bodyTextareaRef.value
+    if (textarea) {
+      const start = textarea.selectionStart
+      const end = textarea.selectionEnd
+      form.value.body = form.value.body.slice(0, start) + imgTag + form.value.body.slice(end)
+    } else {
+      form.value.body += '\n' + imgTag
+    }
+  } finally {
+    uploadingImage.value = false
+    if (imageInputRef.value) imageInputRef.value.value = ''
+  }
+}
+
+const removeImage = (idx: number) => {
+  const url = uploadedImages.value[idx]
+  uploadedImages.value.splice(idx, 1)
+  form.value.body = form.value.body.replace(`<img src="${url}" />`, '').replace(`<img src="${url}">`, '')
+}
 
 const fetchBroadcasts = async () => {
   isLoading.value = true
@@ -197,10 +277,9 @@ const sendBroadcast = async () => {
       }
     })
     
-    // Reset form
     form.value = { title: '', body: '', target_audience: 'students_all' }
+    uploadedImages.value = []
     
-    // Show Toast
     successToast.value = true
     setTimeout(() => successToast.value = false, 5000)
     
