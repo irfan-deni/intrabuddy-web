@@ -51,6 +51,15 @@
             </button>
 
             <button
+              class="flex-1 sm:flex-none h-9 sm:h-8 px-3 bg-indigo-600 text-white text-[9px] font-black uppercase tracking-widest hover:bg-indigo-700 transition-all flex items-center justify-center gap-1"
+              :disabled="isLoading"
+              @click="generatePDF"
+            >
+              <i class="pi pi-file-pdf"></i>
+              <span class="hidden xs:inline">Download PDF</span>
+            </button>
+
+            <button
               class="flex-1 sm:flex-none h-9 sm:h-8 px-3 bg-stone-600 text-white text-[9px] font-black uppercase tracking-widest hover:brightness-150 transition-all flex items-center justify-center"
               :disabled="isLoading"
               @click="loadLogbooks"
@@ -178,6 +187,8 @@ definePageMeta({
 import StatusBadge from '~/components/StatusBadge.vue'
 
 import { useCoordinatorPrivileges } from '~/composables/useCoordinatorPrivileges'
+import jsPDF from 'jspdf'
+import autoTable from 'jspdf-autotable'
 
 type LogbookEntry = {
   id: number
@@ -281,6 +292,34 @@ const formatDate = (value: string) => {
     dateStyle: 'medium',
     timeStyle: 'short'
   })
+}
+
+const generatePDF = async () => {
+  const doc = new jsPDF()
+
+  doc.setFontSize(16)
+  doc.text('INTRA Buddy - Weekly Logbook Compliance Report', 14, 15)
+
+  doc.setFontSize(10)
+  doc.text('Generated on: ' + new Date().toLocaleDateString(), 14, 22)
+
+  const tableData = logbooks.value.map(entry => [
+    entry.studentName,
+    entry.studentMatric || 'N/A',
+    'Week ' + entry.weekNumber,
+    entry.weekEndDate,
+    entry.statusLabel
+  ])
+
+  autoTable(doc, {
+    startY: 30,
+    head: [['Student Name', 'ID', 'Week', 'End Date', 'Status']],
+    body: tableData,
+    styles: { fontSize: 8 },
+    headStyles: { fillColor: [51, 65, 85] }
+  })
+
+  doc.save('INTRA_Compliance_Report.pdf')
 }
 
 onMounted(async () => {

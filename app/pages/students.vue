@@ -29,6 +29,13 @@
             <option value="Pending">Status: Pending</option>
           </select>
           
+          <button
+            class="bg-indigo-600 text-white px-4 md:px-6 py-3 md:py-4 font-black text-[10px] uppercase tracking-[0.2em] hover:bg-indigo-700 transition-all flex items-center justify-center gap-2"
+            @click="generatePDF"
+          >
+            <i class="pi pi-file-pdf"></i>
+            Download PDF
+          </button>
           <button 
             v-if="isSuperCoordinator"
             class="bg-sky-600 text-white px-6 md:px-8 py-3 md:py-4 font-black text-[10px] uppercase tracking-[0.2em] hover:brightness-110 transition-all flex items-center justify-center gap-3 shadow-xl shadow-black/10"
@@ -266,6 +273,8 @@
 
 <script setup lang="ts">
 import { useCoordinatorPrivileges } from '~/composables/useCoordinatorPrivileges'
+import jsPDF from 'jspdf'
+import autoTable from 'jspdf-autotable'
 
 definePageMeta({
   requiredRole: 'coordinator'
@@ -367,6 +376,34 @@ const openAddModal = () => {
 const closeModal = () => {
   showModal.value = false
   editingId.value = null
+}
+
+const generatePDF = () => {
+  const doc = new jsPDF()
+
+  doc.setFontSize(16)
+  doc.text('INTRA Buddy - Student Directory Report', 14, 15)
+
+  doc.setFontSize(10)
+  doc.text('Generated on: ' + new Date().toLocaleDateString(), 14, 22)
+
+  const tableData = filteredStudents.value.map(s => [
+    s.full_name,
+    s.student_id || 'N/A',
+    s.placementStatus || 'Searching',
+    s.completionPercent + '%',
+    String(s.documentCount)
+  ])
+
+  autoTable(doc, {
+    startY: 30,
+    head: [['Student Name', 'ID', 'Placement', 'Progress', 'Documents']],
+    body: tableData,
+    styles: { fontSize: 8 },
+    headStyles: { fillColor: [51, 65, 85] }
+  })
+
+  doc.save('INTRA_Student_Directory_Report.pdf')
 }
 
 onMounted(async () => {
