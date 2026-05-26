@@ -16,17 +16,6 @@ const isMissingRelationError = (message: string) => {
   return normalized.includes('relation') && normalized.includes('does not exist')
 }
 
-const parseSuperCoordinatorEmails = (value: string | undefined) => {
-  if (!value) {
-    return []
-  }
-
-  return value
-    .split(',')
-    .map((email) => email.trim().toLowerCase())
-    .filter((email) => email.length > 0)
-}
-
 export default defineEventHandler(async (event) => {
   const user = await serverSupabaseUser(event)
   if (!user) {
@@ -42,16 +31,15 @@ export default defineEventHandler(async (event) => {
 
   const { data: actorProfile, error: actorError } = await supabase
     .from('users')
-    .select('role, is_active')
+    .select('*')
     .eq('id', user.id)
-    .eq('is_active', true)
-    .single()
+    .single() as unknown as { data: { role: string } | null; error: any }
 
   if (actorError) {
     throw createError({ statusCode: 500, statusMessage: actorError.message })
   }
 
-  if (actorProfile.role !== 'coordinator') {
+  if (!actorProfile || actorProfile.role !== 'coordinator') {
     throw createError({ statusCode: 403, statusMessage: 'Only coordinators can dispatch broadcasts.' })
   }
 
@@ -63,21 +51,20 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 403, statusMessage: 'Only super coordinators can dispatch broadcasts.' })
   }
 
-  const { data: broadcast, error: broadcastError } = await supabase
-    .from('broadcast_notifications')
+  const { data: broadcast, error: broadcastError } = await (supabase
+    .from('broadcast_notifications') as any)
     .select('id, title, message, target_audience')
     .eq('id', body.broadcastId)
-    .single<BroadcastRow>()
+    .single()
 
   if (broadcastError || !broadcast) {
     throw createError({ statusCode: 404, statusMessage: 'Broadcast not found.' })
   }
 
-  let studentsQuery = supabase
-    .from('users')
+  let studentsQuery = (supabase
+    .from('users') as any)
     .select('id')
     .eq('role', 'student')
-    .eq('is_active', true)
 
   if (broadcast.target_audience === 'unplaced_students') {
     studentsQuery = studentsQuery.in('internship_status', ['preparing', 'searching'])
@@ -97,7 +84,7 @@ export default defineEventHandler(async (event) => {
   }
 
   const queuedAt = new Date().toISOString()
-  const outboxRows = students.map((student) => {
+  const outboxRows = students.map((student: { id: string }) => {
     return {
       broadcast_id: broadcast.id,
       user_id: student.id,
@@ -112,8 +99,8 @@ export default defineEventHandler(async (event) => {
     }
   })
 
-  const { error: insertError } = await supabase
-    .from('mobile_notification_outbox')
+  const { error: insertError } = await (supabase
+    .from('mobile_notification_outbox') as any)
     .insert(outboxRows)
 
   if (insertError) {

@@ -1,7 +1,6 @@
 import { useCurrentProfile } from '../composables/useCurrentProfile'
 import { useCoordinatorPrivileges } from '../composables/useCoordinatorPrivileges'
-
-type UserRole = 'student' | 'coordinator'
+import type { UserRole } from '~/constants/domain'
 
 const redirectByRole = (role: UserRole) => {
   console.log('Redirecting by role:', role)

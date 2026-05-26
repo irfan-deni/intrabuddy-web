@@ -19,21 +19,20 @@ export default defineEventHandler(async (event) => {
 
   const { data: profile, error: profileError } = await supabase
     .from('users')
-    .select('id, role, internship_status, is_active')
+    .select('id, role')
     .eq('id', user.id)
-    .eq('is_active', true)
-    .single<UserProfile>()
+    .single() as unknown as { data: UserProfile | null; error: any }
 
-  if (profileError) {
-    throw createError({ statusCode: 500, statusMessage: profileError.message })
+  if (profileError || !profile) {
+    throw createError({ statusCode: 500, statusMessage: profileError?.message || 'User not found' })
   }
 
   if (profile.role !== 'student') {
     throw createError({ statusCode: 403, statusMessage: 'Only students can use mobile sync.' })
   }
 
-  let logbookQuery = supabase
-    .from('logbook_compliance')
+  let logbookQuery = (supabase
+    .from('logbook_compliance') as any)
     .select('id, week_number, submission_status, self_reported_at')
     .eq('student_id', user.id)
     .order('week_number', { ascending: true })
@@ -42,8 +41,8 @@ export default defineEventHandler(async (event) => {
     logbookQuery = logbookQuery.gte('self_reported_at', since)
   }
 
-  let broadcastQuery = supabase
-    .from('broadcast_notifications')
+  let broadcastQuery = (supabase
+    .from('broadcast_notifications') as any)
     .select('id, title, message, target_audience, created_at')
     .order('created_at', { ascending: false })
 

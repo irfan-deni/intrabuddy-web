@@ -40,14 +40,14 @@ export default defineEventHandler(async (event) => {
   const embedding = deterministicEmbedding(body.text, EMBEDDING_SIZE)
   const embeddingLiteral = toPgVectorLiteral(embedding)
 
-  const { error } = await supabase
-    .from('faqs')
+  const { error } = await (supabase
+    .from('faqs') as any)
     .update({
       embedding: embeddingLiteral,
       updated_at: new Date().toISOString(),
       last_updated_by: user.id
     })
-    .eq('id', body.faqId)
+    .eq('id', Number(body.faqId))
 
   if (error) {
     throw createError({ statusCode: 500, statusMessage: error.message })

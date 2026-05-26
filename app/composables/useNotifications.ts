@@ -1,5 +1,4 @@
 import type { Database } from '~/types/supabase'
-import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js'
 
 export function useNotifications() {
   const supabase = useSupabaseClient<Database>()

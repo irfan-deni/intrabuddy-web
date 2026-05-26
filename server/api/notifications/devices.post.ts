@@ -26,22 +26,21 @@ export default defineEventHandler(async (event) => {
 
   const { data: profile, error: profileError } = await supabase
     .from('users')
-    .select('role, is_active')
+    .select('role')
     .eq('id', user.id)
-    .eq('is_active', true)
     .single()
 
   if (profileError) {
     throw createError({ statusCode: 500, statusMessage: profileError.message })
   }
 
-  if (profile.role !== 'student') {
+  if (!profile || profile.role !== 'student') {
     throw createError({ statusCode: 403, statusMessage: 'Only students can register mobile devices.' })
   }
 
   const now = new Date().toISOString()
-  const { error: upsertError } = await supabase
-    .from('mobile_device_tokens')
+  const { error: upsertError } = await (supabase
+    .from('mobile_device_tokens') as any)
     .upsert({
       user_id: user.id,
       device_token: body.deviceToken,

@@ -306,7 +306,8 @@ const markAsRead = async (notification: NotificationDisplay) => {
     await $fetch(`/api/notifications/${notification.id}/read`, { method: 'PATCH' })
     const idx = notifications.value.findIndex(n => n.id === notification.id)
     if (idx !== -1) {
-      notifications.value[idx] = { ...notifications.value[idx], is_read: true }
+      const notif = notifications.value[idx]!
+      notifications.value[idx] = { ...notif, is_read: true }
     }
     decrementCount()
   } catch {

@@ -31,7 +31,8 @@ export default defineNuxtConfig({
   },
 
   supabase: {
-    redirect: false 
+    redirect: false,
+    types: '~/types/supabase'
   },
 
   app: {
@@ -41,6 +42,10 @@ export default defineNuxtConfig({
         { rel: 'icon', type: 'image/svg+xml', href: 'https://nuxt.com/icon.svg' }
       ]
     }
+  },
+
+  nitro: {
+    preset: 'node-server'
   },
 
   runtimeConfig: {

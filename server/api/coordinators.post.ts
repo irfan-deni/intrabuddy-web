@@ -1,11 +1,6 @@
 import { serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
 import type { Database } from '~/types/supabase'
 
-const parseSuperCoordinatorEmails = (value: string | undefined) => {
-  if (!value) return []
-  return value.split(',').map((e) => e.trim().toLowerCase()).filter(Boolean)
-}
-
 export default defineEventHandler(async (event) => {
   const user = await serverSupabaseUser(event)
   if (!user) {

@@ -139,8 +139,10 @@ const saveProfile = async () => {
   }
 }
 
+const { isSuperCoordinator } = useCoordinatorPrivileges()
+
 const role = computed(() => {
-  if (profile.value?.role === 'super_coordinator') return 'Super Coordinator'
+  if (isSuperCoordinator.value) return 'Super Coordinator'
   if (profile.value?.role === 'coordinator') return 'Coordinator'
   return profile.value?.role || '—'
 })
