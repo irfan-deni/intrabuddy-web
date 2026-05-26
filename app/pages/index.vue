@@ -1,7 +1,10 @@
 <template>
   <div class="space-y-6 md:space-y-8">
-    <div class="flex items-center justify-between">
-      <div></div>
+    <header class="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-stone-200 pb-6 md:pb-8">
+      <div>
+        <h1 class="text-2xl md:text-4xl font-black text-slate-800 tracking-tight uppercase">Dashboard</h1>
+        <p class="text-stone-500 mt-2 font-bold uppercase text-[10px] tracking-widest">Real-time overview of the active semester.</p>
+      </div>
       <button
         class="h-9 px-3 bg-indigo-600 text-white text-[9px] font-black uppercase tracking-widest hover:bg-indigo-700 transition-all flex items-center justify-center gap-1"
         @click="generatePDF"
@@ -9,7 +12,7 @@
         <i class="pi pi-file-pdf"></i>
         Download PDF
       </button>
-    </div>
+    </header>
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
       <Card v-for="stat in stats" :key="stat.label" class="bg-white shadow-sm border border-stone-200">
