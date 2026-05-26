@@ -1,4 +1,4 @@
-import { serverSupabaseClient, serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
+import { serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
 import type { Database } from '~/types/supabase'
 
 function generateTempPassword(): string {
@@ -16,13 +16,14 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
   }
 
-  const supabase = await serverSupabaseClient<Database>(event)
-  
+  const userId = user.id || (user as any).sub
+  const serviceRole = serverSupabaseServiceRole<Database>(event)
+
   // Verify Coordinator role
-  const { data: actor } = await supabase
+  const { data: actor } = await serviceRole
     .from('users')
     .select('role')
-    .eq('id', user.id)
+    .eq('id', userId)
     .single()
 
   if (!actor || actor.role !== 'coordinator') {
@@ -30,14 +31,14 @@ export default defineEventHandler(async (event) => {
   }
 
   const body = await readBody(event)
-  const { full_name, student_id, email } = body
+  const { full_name, student_id, email, phone_number } = body
 
   if (!full_name || !email) {
     throw createError({ statusCode: 400, statusMessage: 'Full name and Email are required' })
   }
 
   // 1. Find active cohort
-  const { data: activeCohort } = await supabase
+  const { data: activeCohort } = await serviceRole
     .from('cohorts')
     .select('id')
     .eq('is_active', true)
@@ -48,7 +49,6 @@ export default defineEventHandler(async (event) => {
   }
 
   // 2. Create auth user first (required for FK constraint users.id -> auth.users)
-  const serviceRole = serverSupabaseServiceRole(event)
   const tempPassword = generateTempPassword()
 
   const { data: authData, error: authError } = await serviceRole.auth.admin.createUser({
@@ -72,7 +72,8 @@ export default defineEventHandler(async (event) => {
       role: 'student' as const,
       full_name,
       student_id: student_id || null,
-      email
+      email,
+      phone_number: phone_number || null
     })
     .select('id')
     .single()
@@ -83,7 +84,7 @@ export default defineEventHandler(async (event) => {
   }
 
   // 4. Enroll in active cohort via student_cohorts
-  const { error: cohortError } = await supabase
+  const { error: cohortError } = await serviceRole
     .from('student_cohorts')
     .insert({
       student_id: newUser.id,
@@ -91,13 +92,13 @@ export default defineEventHandler(async (event) => {
     })
 
   if (cohortError) {
-    await serviceRole.from('users').delete().eq('id', newUser.id).catch(() => {})
+    await serviceRole.from('users').delete().eq('id', newUser.id)
     await serviceRole.auth.admin.deleteUser(authId).catch(() => {})
     throw createError({ statusCode: 500, statusMessage: 'Cohort enrollment failed' })
   }
 
   // 5. Initialize Checklist from templates
-  const { data: templates } = await supabase
+  const { data: templates } = await serviceRole
     .from('checklist_templates')
     .select('id, required')
     .eq('cohort_id', activeCohort.id)
@@ -109,7 +110,7 @@ export default defineEventHandler(async (event) => {
       is_completed: false
     }))
 
-    await supabase.from('student_checklists').insert(checklists)
+    await serviceRole.from('student_checklists').insert(checklists)
   }
 
   return { success: true, id: newUser.id }

@@ -332,7 +332,10 @@ const saveStudent = async () => {
     await fetchStudents()
     closeModal()
   } catch (error: any) {
-    alert('Save failed')
+    console.error('Save failed:', error)
+    console.error('Error data:', error?.data)
+    console.error('Error response:', error?.response)
+    alert(JSON.stringify(error?.data || error?.message || error, null, 2))
   } finally {
     isSaving.value = false
   }

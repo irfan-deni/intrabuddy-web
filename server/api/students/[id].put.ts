@@ -1,4 +1,4 @@
-import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server'
+import { serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
 import type { Database } from '~/types/supabase'
 
 export default defineEventHandler(async (event) => {
@@ -7,12 +7,13 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
   }
 
-  const supabase = await serverSupabaseClient<Database>(event)
+  const userId = user.id || (user as any).sub
+  const serviceRole = serverSupabaseServiceRole<Database>(event)
 
-  const { data: actor, error: actorError } = await supabase
+  const { data: actor, error: actorError } = await serviceRole
     .from('users')
     .select('role')
-    .eq('id', user.id)
+    .eq('id', userId)
     .single()
 
   if (actorError || actor.role !== 'coordinator') {
@@ -25,18 +26,19 @@ export default defineEventHandler(async (event) => {
   }
 
   const body = await readBody(event)
-  const { full_name, student_id, email } = body
+  const { full_name, student_id, email, phone_number } = body
 
   if (!full_name) {
     throw createError({ statusCode: 400, statusMessage: 'Full name is required' })
   }
 
-  const { error } = await supabase
+  const { error } = await serviceRole
     .from('users')
     .update({
       full_name,
       student_id: student_id || null,
-      email: email || null
+      email: email || null,
+      phone_number: phone_number || null
     })
     .eq('id', studentId)
 
