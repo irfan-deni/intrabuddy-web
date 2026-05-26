@@ -14,7 +14,7 @@ test.describe('Layout & Navigation', () => {
     await expect(page.locator('text=Broadcasts')).toBeVisible()
     await expect(page.locator('text=Logbooks')).toBeVisible()
     await expect(page.locator('text=Knowledge Base')).toBeVisible()
-    await expect(page.locator('text=Cohorts')).toBeVisible()
+    await expect(page.locator('text=Semesters')).toBeVisible()
     await expect(page.locator('text=Notifications')).toBeVisible()
     await expect(page.locator('text=Settings')).toBeVisible()
   })

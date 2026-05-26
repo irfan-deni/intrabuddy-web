@@ -2,7 +2,7 @@
   <div class="space-y-6 md:space-y-12">
     <header class="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-stone-200 pb-6 md:pb-8">
       <div>
-        <h1 class="text-2xl md:text-4xl font-black text-slate-800 tracking-tight uppercase">Cohort Management</h1>
+        <h1 class="text-2xl md:text-4xl font-black text-slate-800 tracking-tight uppercase">Semester Management</h1>
         <p class="text-stone-500 mt-2 font-bold uppercase text-[10px] tracking-widest">Academic semester configuration and lifecycle.</p>
       </div>
       <button
@@ -11,7 +11,7 @@
         @click="openAddForm"
       >
         <i class="pi pi-plus"></i>
-        New Cohort
+        New Semester
       </button>
     </header>
 
@@ -32,30 +32,30 @@
         <i class="pi pi-spin pi-spinner text-2xl text-sky-600"></i>
       </div>
 
-      <div v-else-if="cohorts.length === 0" class="py-12 md:py-20 text-center text-stone-400 font-black uppercase tracking-widest text-[10px]">No cohorts defined</div>
+      <div v-else-if="semesters.length === 0" class="py-12 md:py-20 text-center text-stone-400 font-black uppercase tracking-widest text-[10px]">No semesters defined</div>
 
       <template v-else>
         <div class="block md:hidden space-y-3 p-4">
-          <div v-for="cohort in cohorts" :key="cohort.id" class="border border-stone-200 p-4">
+          <div v-for="sem in semesters" :key="sem.id" class="border border-stone-200 p-4">
             <div class="flex items-start justify-between mb-3">
-              <div class="font-black text-slate-800 uppercase tracking-tight text-sm">{{ cohort.name }}</div>
+              <div class="font-black text-slate-800 uppercase tracking-tight text-sm">{{ sem.name }}</div>
               <div class="flex items-center gap-2 flex-shrink-0 ml-2">
-                <span class="px-2 py-0.5 text-[9px] font-black uppercase tracking-tighter whitespace-nowrap" :class="cohort.is_active ? 'bg-emerald-500 text-white' : 'bg-stone-100 text-stone-400'">
-                  {{ cohort.is_active ? 'Active' : 'Inactive' }}
+                <span class="px-2 py-0.5 text-[9px] font-black uppercase tracking-tighter whitespace-nowrap" :class="sem.is_active ? 'bg-emerald-500 text-white' : 'bg-stone-100 text-stone-400'">
+                  {{ sem.is_active ? 'Active' : 'Inactive' }}
                 </span>
-                <button v-if="isSuperCoordinator && !cohort.is_active" class="h-6 px-2 bg-sky-600 text-white text-[8px] font-black uppercase tracking-wider hover:brightness-110 transition-all" @click="activateCohort(cohort.id)">Set Active</button>
+                <button v-if="isSuperCoordinator && !sem.is_active" class="h-6 px-2 bg-sky-600 text-white text-[8px] font-black uppercase tracking-wider hover:brightness-110 transition-all" @click="activateSemester(sem.id)">Set Active</button>
               </div>
             </div>
             <div class="text-[10px] font-bold text-stone-500 tabular-nums mb-3">
-              {{ new Date(cohort.start_date).toLocaleDateString() }} — {{ new Date(cohort.end_date).toLocaleDateString() }}
+              {{ new Date(sem.start_date).toLocaleDateString() }} — {{ new Date(sem.end_date).toLocaleDateString() }}
             </div>
             <div v-if="isSuperCoordinator" class="flex items-center justify-between pt-3 border-t border-stone-100">
-              <span class="text-[9px] font-bold text-stone-400">Created: {{ cohort.created_at ? new Date(cohort.created_at).toLocaleDateString() : '---' }}</span>
+              <span class="text-[9px] font-bold text-stone-400">Created: {{ sem.created_at ? new Date(sem.created_at).toLocaleDateString() : '---' }}</span>
               <div class="flex gap-2">
-                <button class="h-7 w-7 bg-slate-900 text-white flex items-center justify-center" @click="openEditForm(cohort)">
+                <button class="h-7 w-7 bg-slate-900 text-white flex items-center justify-center" @click="openEditForm(sem)">
                   <i class="pi pi-pencil text-[8px]"></i>
                 </button>
-                <button class="h-7 w-7 border border-slate-900 text-slate-800 flex items-center justify-center" :disabled="!!cohort.is_active" @click="deleteCohort(cohort.id)">
+                <button class="h-7 w-7 border border-slate-900 text-slate-800 flex items-center justify-center" :disabled="!!sem.is_active" @click="deleteSemester(sem.id)">
                   <i class="pi pi-trash text-[8px]"></i>
                 </button>
               </div>
@@ -67,7 +67,7 @@
           <table class="w-full text-left">
             <thead>
               <tr class="text-[10px] font-black text-stone-500 uppercase tracking-[0.2em] bg-stone-50/50 border-b border-stone-200">
-                <th class="px-8 py-6">Cohort</th>
+                <th class="px-8 py-6">Semester</th>
                 <th class="px-8 py-6">Period</th>
                 <th class="px-8 py-6">Status</th>
                 <th class="px-8 py-6">Created</th>
@@ -75,32 +75,32 @@
               </tr>
             </thead>
             <tbody class="divide-y divide-stone-100 text-xs">
-              <tr v-for="cohort in cohorts" :key="cohort.id" class="hover:bg-stone-50 transition-all group">
+              <tr v-for="sem in semesters" :key="sem.id" class="hover:bg-stone-50 transition-all group">
                 <td class="px-8 py-6">
-                  <div class="font-black text-slate-800 uppercase tracking-tight text-xs">{{ cohort.name }}</div>
+                  <div class="font-black text-slate-800 uppercase tracking-tight text-xs">{{ sem.name }}</div>
                 </td>
                 <td class="px-8 py-6">
                   <span class="font-bold text-stone-500 tabular-nums text-xs">
-                    {{ new Date(cohort.start_date).toLocaleDateString() }} — {{ new Date(cohort.end_date).toLocaleDateString() }}
+                    {{ new Date(sem.start_date).toLocaleDateString() }} — {{ new Date(sem.end_date).toLocaleDateString() }}
                   </span>
                 </td>
                 <td class="px-8 py-6">
                   <div class="flex items-center gap-2">
-                    <span class="px-2 py-0.5 text-[9px] font-black uppercase tracking-tighter" :class="cohort.is_active ? 'bg-emerald-500 text-white' : 'bg-stone-100 text-stone-400'">
-                      {{ cohort.is_active ? 'Active' : 'Inactive' }}
+                    <span class="px-2 py-0.5 text-[9px] font-black uppercase tracking-tighter" :class="sem.is_active ? 'bg-emerald-500 text-white' : 'bg-stone-100 text-stone-400'">
+                      {{ sem.is_active ? 'Active' : 'Inactive' }}
                     </span>
-                    <button v-if="isSuperCoordinator && !cohort.is_active" class="h-6 px-2 bg-sky-600 text-white text-[8px] font-black uppercase tracking-wider hover:brightness-110 transition-all" @click="activateCohort(cohort.id)">Set Active</button>
+                    <button v-if="isSuperCoordinator && !sem.is_active" class="h-6 px-2 bg-sky-600 text-white text-[8px] font-black uppercase tracking-wider hover:brightness-110 transition-all" @click="activateSemester(sem.id)">Set Active</button>
                   </div>
                 </td>
                 <td class="px-8 py-6 text-stone-400 font-bold text-[10px]">
-                  {{ cohort.created_at ? new Date(cohort.created_at).toLocaleDateString() : '---' }}
+                  {{ sem.created_at ? new Date(sem.created_at).toLocaleDateString() : '---' }}
                 </td>
                 <td v-if="isSuperCoordinator" class="px-8 py-6 text-right">
                   <div class="flex items-center justify-end gap-2">
-                    <button class="h-8 w-8 bg-slate-900 text-white hover:brightness-150 transition-all" @click="openEditForm(cohort)">
+                    <button class="h-8 w-8 bg-slate-900 text-white hover:brightness-150 transition-all" @click="openEditForm(sem)">
                       <i class="pi pi-pencil text-[10px]"></i>
                     </button>
-                    <button class="h-8 w-8 border border-slate-900 text-slate-800 hover:bg-slate-900 hover:text-white transition-all" :disabled="!!cohort.is_active" :title="cohort.is_active ? 'Cannot delete active cohort' : ''" @click="deleteCohort(cohort.id)">
+                    <button class="h-8 w-8 border border-slate-900 text-slate-800 hover:bg-slate-900 hover:text-white transition-all" :disabled="!!sem.is_active" :title="sem.is_active ? 'Cannot delete active semester' : ''" @click="deleteSemester(sem.id)">
                       <i class="pi pi-trash text-[10px]"></i>
                     </button>
                   </div>
@@ -118,11 +118,11 @@
           <i class="pi pi-times"></i>
         </button>
 
-        <h2 class="text-xl font-black text-slate-800 uppercase tracking-widest mb-8">{{ editingId ? 'Edit Cohort' : 'New Cohort' }}</h2>
+        <h2 class="text-xl font-black text-slate-800 uppercase tracking-widest mb-8">{{ editingId ? 'Edit Semester' : 'New Semester' }}</h2>
 
-        <form @submit.prevent="saveCohort" class="space-y-6">
+        <form @submit.prevent="saveSemester" class="space-y-6">
           <div class="space-y-2">
-            <label class="text-[9px] font-black text-stone-500 uppercase tracking-widest">Cohort Name</label>
+            <label class="text-[9px] font-black text-stone-500 uppercase tracking-widest">Semester Name</label>
             <input v-model="form.name" type="text" required placeholder="e.g., Jan-Jun 2026"
               class="w-full bg-white border border-stone-200 rounded-none px-4 py-3 text-xs font-black uppercase tracking-widest focus:border-sky-600 focus:ring-1 focus:ring-sky-600 outline-none transition-all text-slate-800">
           </div>
@@ -141,7 +141,7 @@
           </div>
 
           <button type="submit" :disabled="isSaving" class="w-full bg-sky-600 text-white h-14 font-black text-[10px] uppercase tracking-[0.3em] hover:brightness-110 transition-all disabled:opacity-30 mt-4">
-            {{ isSaving ? 'Processing...' : editingId ? 'Update Cohort' : 'Create Cohort' }}
+            {{ isSaving ? 'Processing...' : editingId ? 'Update Semester' : 'Create Semester' }}
           </button>
         </form>
       </div>
@@ -157,12 +157,12 @@ definePageMeta({
   requiredRole: 'coordinator'
 })
 
-type CohortRow = Database['public']['Tables']['cohorts']['Row']
+type SemesterRow = Database['public']['Tables']['semesters']['Row']
 
 const supabase = useSupabaseClient<Database>()
 const { isSuperCoordinator } = useCoordinatorPrivileges()
 
-const cohorts = ref<CohortRow[]>([])
+const semesters = ref<SemesterRow[]>([])
 const isLoading = ref(false)
 const isSaving = ref(false)
 const errorMessage = ref('')
@@ -172,16 +172,16 @@ const showForm = ref(false)
 const editingId = ref<number | null>(null)
 const form = ref({ name: '', start_date: '', end_date: '' })
 
-const loadCohorts = async () => {
+const loadSemesters = async () => {
   isLoading.value = true
   errorMessage.value = ''
   try {
     const { data, error } = await supabase
-      .from('cohorts')
+      .from('semesters')
       .select('*')
       .order('start_date', { ascending: false })
     if (error) throw error
-    cohorts.value = (data || []) as CohortRow[]
+    semesters.value = (data || []) as SemesterRow[]
   } catch (error: any) {
     errorMessage.value = 'Sync failed'
   } finally {
@@ -196,18 +196,18 @@ const openAddForm = () => {
   successMessage.value = ''
 }
 
-const openEditForm = (cohort: CohortRow) => {
-  editingId.value = cohort.id
+const openEditForm = (sem: SemesterRow) => {
+  editingId.value = sem.id
   form.value = {
-    name: cohort.name,
-    start_date: (cohort.start_date || '').split('T')[0] || '',
-    end_date: (cohort.end_date || '').split('T')[0] || ''
+    name: sem.name,
+    start_date: (sem.start_date || '').split('T')[0] || '',
+    end_date: (sem.end_date || '').split('T')[0] || ''
   }
   showForm.value = true
   successMessage.value = ''
 }
 
-const saveCohort = async () => {
+const saveSemester = async () => {
   isSaving.value = true
   errorMessage.value = ''
   successMessage.value = ''
@@ -220,16 +220,16 @@ const saveCohort = async () => {
     }
 
     if (editingId.value) {
-      const { error } = await supabase.from('cohorts').update(payload).eq('id', editingId.value)
+      const { error } = await supabase.from('semesters').update(payload).eq('id', editingId.value)
       if (error) throw error
     } else {
-      const { error } = await supabase.from('cohorts').insert(payload)
+      const { error } = await supabase.from('semesters').insert(payload)
       if (error) throw error
     }
 
-    successMessage.value = editingId.value ? 'Cohort updated' : 'Cohort created'
+    successMessage.value = editingId.value ? 'Semester updated' : 'Semester created'
     showForm.value = false
-    await loadCohorts()
+    await loadSemesters()
   } catch (error: any) {
     errorMessage.value = 'Save failed'
   } finally {
@@ -237,28 +237,28 @@ const saveCohort = async () => {
   }
 }
 
-const activateCohort = async (id: number) => {
+const activateSemester = async (id: number) => {
   try {
-    await supabase.from('cohorts').update({ is_active: false }).neq('id', id)
-    await supabase.from('cohorts').update({ is_active: true }).eq('id', id)
-    successMessage.value = 'Cohort activated'
-    await loadCohorts()
+    await supabase.from('semesters').update({ is_active: false }).neq('id', id)
+    await supabase.from('semesters').update({ is_active: true }).eq('id', id)
+    successMessage.value = 'Semester activated'
+    await loadSemesters()
   } catch (error: any) {
     errorMessage.value = 'Activation failed'
   }
 }
 
-const deleteCohort = async (id: number) => {
-  if (!confirm('Permanently remove this cohort?')) return
+const deleteSemester = async (id: number) => {
+  if (!confirm('Permanently remove this semester?')) return
   try {
-    const { error } = await supabase.from('cohorts').delete().eq('id', id)
+    const { error } = await supabase.from('semesters').delete().eq('id', id)
     if (error) throw error
-    successMessage.value = 'Cohort removed'
-    await loadCohorts()
+    successMessage.value = 'Semester removed'
+    await loadSemesters()
   } catch (error: any) {
     errorMessage.value = 'Delete failed'
   }
 }
 
-onMounted(loadCohorts)
+onMounted(loadSemesters)
 </script>

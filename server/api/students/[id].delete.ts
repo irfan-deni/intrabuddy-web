@@ -30,7 +30,7 @@ export default defineEventHandler(async (event) => {
   }
 
   // Delete related records first to avoid FK constraint violations
-  await serviceRole.from('student_cohorts').delete().eq('student_id', studentId)
+  await serviceRole.from('student_semesters').delete().eq('student_id', studentId)
   await serviceRole.from('notifications').delete().eq('recipient_id', studentId)
   await serviceRole.from('job_applications').delete().eq('student_id', studentId)
 

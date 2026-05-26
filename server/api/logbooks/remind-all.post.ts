@@ -9,20 +9,20 @@ export default defineEventHandler(async (event) => {
 
   const serviceRole = serverSupabaseServiceRole<Database>(event)
 
-  const { data: activeCohort } = await serviceRole
-    .from('cohorts')
+  const { data: activeSemester } = await serviceRole
+    .from('semesters')
     .select('id')
     .eq('is_active', true)
     .maybeSingle()
 
-  if (!activeCohort) {
-    throw createError({ statusCode: 400, statusMessage: 'No active cohort found' })
+  if (!activeSemester) {
+    throw createError({ statusCode: 400, statusMessage: 'No active semester found' })
   }
 
   const { data: entries } = await serviceRole
     .from('weekly_logbook_tracking')
     .select('id, student_id')
-    .eq('cohort_id', activeCohort.id)
+    .eq('semester_id', activeSemester.id)
     .eq('is_submitted', false)
 
   if (!entries || entries.length === 0) {

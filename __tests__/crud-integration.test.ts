@@ -17,19 +17,19 @@ const anon = createClient<Database>(supabaseUrl, supabaseKey, {
 })
 
 describe('Supabase CRUD Integration', () => {
-  let testCohortId: number | null = null
+  let testSemesterId: number | null = null
   let testStudentUserId: string | null = null
   let testBroadcastId: number | null = null
   let testNotificationId: number | null = null
 
   // ── READ ──────────────────────────────────────
 
-  it('should read cohorts', async () => {
-    const { data, error } = await admin.from('cohorts').select('*')
+  it('should read semesters', async () => {
+    const { data, error } = await admin.from('semesters').select('*')
     expect(error).toBeNull()
     expect(data).toBeInstanceOf(Array)
     expect(data!.length).toBeGreaterThanOrEqual(1)
-    testCohortId = data![0].id
+    testSemesterId = data![0].id
   })
 
   it('should read users (students and coordinators)', async () => {
@@ -38,8 +38,8 @@ describe('Supabase CRUD Integration', () => {
     expect(data).toBeInstanceOf(Array)
   })
 
-  it('should read active cohort', async () => {
-    const { data, error } = await admin.from('cohorts').select('*').eq('is_active', true).maybeSingle()
+  it('should read active semester', async () => {
+    const { data, error } = await admin.from('semesters').select('*').eq('is_active', true).maybeSingle()
     expect(error).toBeNull()
     expect(data).not.toBeNull()
     expect(data!.is_active).toBe(true)
@@ -47,16 +47,16 @@ describe('Supabase CRUD Integration', () => {
 
   // ── CREATE ────────────────────────────────────
 
-  it('should create a cohort', async () => {
-    const { data, error } = await admin.from('cohorts').insert({
-      name: `TEST Cohort ${Date.now()}`,
+  it('should create a semester', async () => {
+    const { data, error } = await admin.from('semesters').insert({
+      name: `TEST Semester ${Date.now()}`,
       start_date: '2026-01-01',
       end_date: '2026-06-30',
       is_active: false
     }).select('id').single()
     expect(error).toBeNull()
     expect(data).not.toBeNull()
-    testCohortId = data!.id
+    testSemesterId = data!.id
   })
 
   it('should create a student user (via auth + public.users)', async () => {
@@ -82,12 +82,12 @@ describe('Supabase CRUD Integration', () => {
     testStudentUserId = data!.id
   })
 
-  it('should enroll student in cohort', async () => {
+  it('should enroll student in semester', async () => {
     expect(testStudentUserId).not.toBeNull()
-    expect(testCohortId).not.toBeNull()
-    const { error } = await admin.from('student_cohorts').insert({
+    expect(testSemesterId).not.toBeNull()
+    const { error } = await admin.from('student_semesters').insert({
       student_id: testStudentUserId!,
-      cohort_id: testCohortId!
+      semester_id: testSemesterId!
     })
     expect(error).toBeNull()
   })
@@ -132,11 +132,11 @@ describe('Supabase CRUD Integration', () => {
 
   it('should initialize checklist items', async () => {
     expect(testStudentUserId).not.toBeNull()
-    expect(testCohortId).not.toBeNull()
+    expect(testSemesterId).not.toBeNull()
     // First create a template
     const { data: tpl } = await admin.from('checklist_templates').insert({
       title: 'Test Checklist Item',
-      cohort_id: testCohortId!,
+      semester_id: testSemesterId!,
       required: true,
       display_order: 1
     }).select('id').single()
@@ -178,7 +178,7 @@ describe('Supabase CRUD Integration', () => {
   it('should mark logbook as submitted', async () => {
     // Check if any logbook entries exist; create one if not
     expect(testStudentUserId).not.toBeNull()
-    expect(testCohortId).not.toBeNull()
+    expect(testSemesterId).not.toBeNull()
     const { data: existing } = await admin.from('weekly_logbook_tracking').select('id').eq('student_id', testStudentUserId!).limit(1)
     if (existing && existing.length > 0) {
       const { error } = await admin.from('weekly_logbook_tracking').update({
@@ -189,7 +189,7 @@ describe('Supabase CRUD Integration', () => {
     } else {
       const { data: entry } = await admin.from('weekly_logbook_tracking').insert({
         student_id: testStudentUserId!,
-        cohort_id: testCohortId!,
+        semester_id: testSemesterId!,
         week_number: 1,
         week_end_date: '2026-01-12',
         is_submitted: true,
@@ -227,9 +227,9 @@ describe('Supabase CRUD Integration', () => {
     expect(error).toBeNull()
   })
 
-  it('should delete student cohort enrollment', async () => {
+  it('should delete student semester enrollment', async () => {
     expect(testStudentUserId).not.toBeNull()
-    const { error } = await admin.from('student_cohorts').delete().eq('student_id', testStudentUserId!)
+    const { error } = await admin.from('student_semesters').delete().eq('student_id', testStudentUserId!)
     expect(error).toBeNull()
   })
 
@@ -253,11 +253,11 @@ describe('Supabase CRUD Integration', () => {
     expect(authError).toBeNull()
   })
 
-  it('should delete the test cohort', async () => {
-    if (testCohortId) {
-      // Clean up any checklist templates tied to this cohort
-      await admin.from('checklist_templates').delete().eq('cohort_id', testCohortId)
-      const { error } = await admin.from('cohorts').delete().eq('id', testCohortId)
+  it('should delete the test semester', async () => {
+    if (testSemesterId) {
+      // Clean up any checklist templates tied to this semester
+      await admin.from('checklist_templates').delete().eq('semester_id', testSemesterId)
+      const { error } = await admin.from('semesters').delete().eq('id', testSemesterId)
       expect(error).toBeNull()
     }
   })

@@ -79,18 +79,18 @@ const COMPANIES = [
 async function main() {
   console.log('=== INTRA Buddy Seed Script ===\n')
 
-  // 1. Ensure active cohort exists
-  console.log('[1/5] Checking active cohort...')
-  let { data: activeCohort } = await supabase
-    .from('cohorts')
+  // 1. Ensure active semester exists
+  console.log('[1/5] Checking active semester...')
+  let { data: activeSemester } = await supabase
+    .from('semesters')
     .select('*')
     .eq('is_active', true)
     .maybeSingle()
 
-  if (!activeCohort) {
-    console.log('  No active cohort found. Creating one...')
-    const { data: newCohort, error: cohortErr } = await supabase
-      .from('cohorts')
+  if (!activeSemester) {
+    console.log('  No active semester found. Creating one...')
+    const { data: newSemester, error: semesterErr } = await supabase
+      .from('semesters')
       .insert({
         name: 'Julai 2026',
         start_date: '2026-07-01',
@@ -101,33 +101,33 @@ async function main() {
       .select()
       .single()
 
-    if (cohortErr) {
-      console.error('  Failed to create cohort:', cohortErr.message)
+    if (semesterErr) {
+      console.error('  Failed to create semester:', semesterErr.message)
       process.exit(1)
     }
-    activeCohort = newCohort
-    console.log(`  Created cohort: "${activeCohort.name}" (ID: ${activeCohort.id})`)
+    activeSemester = newSemester
+    console.log(`  Created semester: "${activeSemester.name}" (ID: ${activeSemester.id})`)
   } else {
-    console.log(`  Found active cohort: "${activeCohort.name}" (ID: ${activeCohort.id})`)
+    console.log(`  Found active semester: "${activeSemester.name}" (ID: ${activeSemester.id})`)
   }
 
-  // 2. Ensure checklist templates exist for the cohort
+  // 2. Ensure checklist templates exist for the semester
   console.log('\n[2/5] Checking checklist templates...')
   let { data: templates } = await supabase
     .from('checklist_templates')
     .select('*')
-    .eq('cohort_id', activeCohort.id)
+    .eq('semester_id', activeSemester.id)
 
   if (!templates || templates.length === 0) {
     console.log('  No templates found. Creating default templates...')
     const defaultTemplates = [
-      { title: 'Upload Resume/CV', description: 'Submit your updated resume', required: true, display_order: 1, due_offset_days: 14, cohort_id: activeCohort.id },
-      { title: 'Company Registration', description: 'Complete company registration form', required: true, display_order: 2, due_offset_days: 21, cohort_id: activeCohort.id },
-      { title: 'Offer Letter Upload', description: 'Upload signed offer letter', required: true, display_order: 3, due_offset_days: 30, cohort_id: activeCohort.id },
-      { title: 'Insurance Form', description: 'Submit insurance coverage form', required: false, display_order: 4, due_offset_days: 14, cohort_id: activeCohort.id },
-      { title: 'Emergency Contact', description: 'Provide emergency contact details', required: true, display_order: 5, due_offset_days: 7, cohort_id: activeCohort.id },
-      { title: 'Health Declaration', description: 'Complete health declaration form', required: false, display_order: 6, due_offset_days: 14, cohort_id: activeCohort.id },
-      { title: 'Academic Transcript', description: 'Upload latest academic transcript', required: true, display_order: 7, due_offset_days: 21, cohort_id: activeCohort.id }
+      { title: 'Upload Resume/CV', description: 'Submit your updated resume', required: true, display_order: 1, due_offset_days: 14, semester_id: activeSemester.id },
+      { title: 'Company Registration', description: 'Complete company registration form', required: true, display_order: 2, due_offset_days: 21, semester_id: activeSemester.id },
+      { title: 'Offer Letter Upload', description: 'Upload signed offer letter', required: true, display_order: 3, due_offset_days: 30, semester_id: activeSemester.id },
+      { title: 'Insurance Form', description: 'Submit insurance coverage form', required: false, display_order: 4, due_offset_days: 14, semester_id: activeSemester.id },
+      { title: 'Emergency Contact', description: 'Provide emergency contact details', required: true, display_order: 5, due_offset_days: 7, semester_id: activeSemester.id },
+      { title: 'Health Declaration', description: 'Complete health declaration form', required: false, display_order: 6, due_offset_days: 14, semester_id: activeSemester.id },
+      { title: 'Academic Transcript', description: 'Upload latest academic transcript', required: true, display_order: 7, due_offset_days: 21, semester_id: activeSemester.id }
     ]
 
     const { data: newTemplates, error: tmplErr } = await supabase
@@ -232,28 +232,28 @@ async function main() {
     process.exit(1)
   }
 
-  // 4. Enroll in cohort + create checklist items
-  console.log('\n[4/5] Enrolling students in cohort and creating checklist items...')
+  // 4. Enroll in semester + create checklist items
+  console.log('\n[4/5] Enrolling students in semester and creating checklist items...')
 
-  const cohortEntries = insertedStudentIds.map(sid => ({
+  const semesterEntries = insertedStudentIds.map(sid => ({
     student_id: sid,
-    cohort_id: activeCohort.id,
+    semester_id: activeSemester.id,
     enrolled_at: now
   }))
 
   const { error: enrollErr } = await supabase
-    .from('student_cohorts')
-    .insert(cohortEntries)
+    .from('student_semesters')
+    .insert(semesterEntries)
 
   if (enrollErr) {
     // If some already enrolled, that's okay
     if (enrollErr.message.includes('duplicate') || enrollErr.message.includes('unique')) {
       console.log('  Some students already enrolled (skipped duplicates)')
     } else {
-      console.error('  Cohort enrollment failed:', enrollErr.message)
+      console.error('  Semester enrollment failed:', enrollErr.message)
     }
   } else {
-    console.log(`  Enrolled ${insertedStudentIds.length} students in "${activeCohort.name}"`)
+    console.log(`  Enrolled ${insertedStudentIds.length} students in "${activeSemester.name}"`)
   }
 
   // Create checklist items for all students (randomized completion)
@@ -400,7 +400,7 @@ async function main() {
   // Create 8 weeks of logbook entries per student
   const logbookEntries: Array<{
     student_id: string
-    cohort_id: number
+    semester_id: number
     week_number: number
     week_end_date: string
     is_submitted: boolean
@@ -408,10 +408,10 @@ async function main() {
     reminder_sent: boolean
   }> = []
 
-  const cohortStart = new Date(activeCohort.start_date)
+  const semesterStart = new Date(activeSemester.start_date)
   for (const sid of insertedStudentIds) {
     for (let week = 1; week <= 8; week++) {
-      const weekEnd = new Date(cohortStart)
+      const weekEnd = new Date(semesterStart)
       weekEnd.setDate(weekEnd.getDate() + week * 7)
 
       // First 4 weeks submitted, next 2 late, last 2 not submitted
@@ -421,7 +421,7 @@ async function main() {
 
       logbookEntries.push({
         student_id: sid,
-        cohort_id: activeCohort.id,
+        semester_id: activeSemester.id,
         week_number: week,
         week_end_date: weekEnd.toISOString().split('T')[0],
         is_submitted: isSubmitted,
@@ -452,7 +452,7 @@ async function main() {
   // Summary
   console.log('\n=== Seed Complete! ===')
   console.log(`  Students:          ${insertedStudentIds.length}`)
-  console.log(`  Active cohort:     ${activeCohort.name} (ID: ${activeCohort.id})`)
+  console.log(`  Active semester:     ${activeSemester.name} (ID: ${activeSemester.id})`)
   console.log(`  Checklist items:   ${insertedChecklists} total`)
   console.log(`  Job applications:  ${appCount}`)
   console.log(`  Logbook entries:   ${insertedLogbooks}`)

@@ -19,7 +19,7 @@ test.describe('Dashboard', () => {
     await expect(page.locator('text=60%')).toBeVisible()
   })
 
-  test('shows cohort name', async ({ page }) => {
+  test('shows semester name', async ({ page }) => {
     await expect(page.locator('text=Jan-Jun 2026')).toBeVisible()
   })
 

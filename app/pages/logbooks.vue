@@ -3,7 +3,7 @@
     <header class="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-stone-200 pb-6 md:pb-8">
       <div>
         <h1 class="text-2xl md:text-4xl font-black text-slate-800 tracking-tight uppercase">Logbook Status</h1>
-        <p class="text-stone-500 mt-2 font-bold uppercase text-[10px] tracking-widest">Monitor cohort logbook compliance and send reminders.</p>
+        <p class="text-stone-500 mt-2 font-bold uppercase text-[10px] tracking-widest">Monitor semester logbook compliance and send reminders.</p>
       </div>
     </header>
 
@@ -67,7 +67,7 @@
 
       <div v-else-if="logbooks.length === 0" class="py-12 md:py-16 text-center text-stone-400">
         <i class="pi pi-inbox mb-2 text-3xl block"></i>
-        <span class="text-[10px] font-black uppercase tracking-widest">No logbook records found for the active cohort.</span>
+        <span class="text-[10px] font-black uppercase tracking-widest">No logbook records found for the active semester.</span>
       </div>
 
       <template v-else>

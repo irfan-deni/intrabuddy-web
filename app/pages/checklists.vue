@@ -3,7 +3,7 @@
     <header class="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-stone-200 pb-6 md:pb-8">
       <div>
         <h1 class="text-2xl md:text-4xl font-black text-slate-800 tracking-tight uppercase">Master Checklist</h1>
-        <p class="text-stone-500 mt-2 font-bold uppercase text-[10px] tracking-widest">Global requirements template for the active cohort.</p>
+        <p class="text-stone-500 mt-2 font-bold uppercase text-[10px] tracking-widest">Global requirements template for the active semester.</p>
       </div>
       <button
         v-if="isSuperCoordinator"
@@ -152,7 +152,7 @@ const supabase = useSupabaseClient<Database>()
 const { isSuperCoordinator } = useCoordinatorPrivileges()
 
 const templates = ref<TemplateRow[]>([])
-const activeCohortId = ref<number | null>(null)
+const activeSemesterId = ref<number | null>(null)
 
 const isLoading = ref(false)
 const isSaving = ref(false)
@@ -174,24 +174,24 @@ const loadTemplates = async () => {
   errorMessage.value = ''
   
   try {
-    const { data: cohort, error: cohortError } = await supabase
-      .from('cohorts')
+    const { data: semester, error: semesterError } = await supabase
+      .from('semesters')
       .select('id')
       .eq('is_active', true)
       .maybeSingle()
       
-    if (cohortError) throw cohortError
-    if (!cohort) {
-      errorMessage.value = 'No active cohort set'
+    if (semesterError) throw semesterError
+    if (!semester) {
+      errorMessage.value = 'No active semester set'
       isLoading.value = false
       return
     }
-    activeCohortId.value = cohort.id
+    activeSemesterId.value = semester.id
     
     const { data, error } = await supabase
       .from('checklist_templates')
       .select('*')
-      .eq('cohort_id', cohort.id)
+      .eq('semester_id', semester.id)
       .order('display_order', { ascending: true })
       
     if (error) throw error
@@ -228,7 +228,7 @@ const openEditForm = (item: TemplateRow) => {
 }
 
 const saveTemplate = async () => {
-  if (!activeCohortId.value) return
+  if (!activeSemesterId.value) return
   
   isSaving.value = true
   errorMessage.value = ''
@@ -240,7 +240,7 @@ const saveTemplate = async () => {
       description: form.value.description || null,
       display_order: form.value.display_order,
       required: form.value.required,
-      cohort_id: activeCohortId.value
+      semester_id: activeSemesterId.value
     }
     
     if (editingId.value) {

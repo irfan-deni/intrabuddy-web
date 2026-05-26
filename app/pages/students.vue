@@ -17,10 +17,10 @@
         </div>
         
         <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
-          <select v-model="cohortFilter" @change="fetchStudents" class="bg-white border border-stone-200 px-4 md:px-5 py-3 md:py-4 text-[10px] font-black uppercase tracking-widest outline-none focus:border-sky-600 focus:ring-1 focus:ring-sky-600 cursor-pointer shadow-sm min-w-0 sm:min-w-[180px]">
-            <option value="">Active Cohort</option>
-            <option v-for="c in cohorts" :key="c.id" :value="c.id">{{ c.name }}</option>
-            <option value="all">All Cohorts</option>
+          <select v-model="semesterFilter" @change="fetchStudents" class="bg-white border border-stone-200 px-4 md:px-5 py-3 md:py-4 text-[10px] font-black uppercase tracking-widest outline-none focus:border-sky-600 focus:ring-1 focus:ring-sky-600 cursor-pointer shadow-sm min-w-0 sm:min-w-[180px]">
+            <option value="">Active Semester</option>
+            <option v-for="c in semesters" :key="c.id" :value="c.id">{{ c.name }}</option>
+            <option value="all">All Semesters</option>
           </select>
           <select v-model="statusFilter" class="bg-white border border-stone-200 px-4 md:px-5 py-3 md:py-4 text-[10px] font-black uppercase tracking-widest outline-none focus:border-sky-600 focus:ring-1 focus:ring-sky-600 cursor-pointer shadow-sm">
             <option value="all">Status: All</option>
@@ -275,12 +275,12 @@ const { isSuperCoordinator } = useCoordinatorPrivileges()
 
 const supabase = useSupabaseClient()
 const students = ref<any[]>([])
-const cohorts = ref<any[]>([])
+const semesters = ref<any[]>([])
 const isLoading = ref(true)
 const isSaving = ref(false)
 const searchQuery = ref('')
 const statusFilter = ref('all')
-const cohortFilter = ref<number | string>('')
+const semesterFilter = ref<number | string>('')
 
 const showModal = ref(false)
 const selectedStudent = ref<any>(null)
@@ -301,7 +301,7 @@ const fetchStudents = async () => {
   isLoading.value = true
   try {
     const params = new URLSearchParams()
-    if (cohortFilter.value) params.set('cohort_id', String(cohortFilter.value))
+    if (semesterFilter.value) params.set('semester_id', String(semesterFilter.value))
     const qs = params.toString()
     const { students: data } = await $fetch<{ students: any[] }>(`/api/students${qs ? `?${qs}` : ''}`)
     students.value = data || []
@@ -312,9 +312,9 @@ const fetchStudents = async () => {
   }
 }
 
-const fetchCohorts = async () => {
-  const { data } = await supabase.from('cohorts').select('*').order('created_at', { ascending: false })
-  cohorts.value = data || []
+const fetchSemesters = async () => {
+  const { data } = await supabase.from('semesters').select('*').order('created_at', { ascending: false })
+  semesters.value = data || []
 }
 
 const selectStudent = (student: any) => {
@@ -370,7 +370,7 @@ const closeModal = () => {
 }
 
 onMounted(async () => {
-  await Promise.all([fetchCohorts(), fetchStudents()])
+  await Promise.all([fetchSemesters(), fetchStudents()])
 })
 </script>
 

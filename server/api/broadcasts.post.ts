@@ -63,17 +63,17 @@ export default defineEventHandler(async (event) => {
     let targetUserIds: string[] = []
 
     if (audience === 'students_all') {
-      const { data: activeCohort } = await serviceRole
-        .from('cohorts')
+      const { data: activeSemester } = await serviceRole
+        .from('semesters')
         .select('id')
         .eq('is_active', true)
         .maybeSingle()
 
-      if (activeCohort) {
+      if (activeSemester) {
         const { data: enrolled } = await serviceRole
-          .from('student_cohorts')
+          .from('student_semesters')
           .select('student_id')
-          .eq('cohort_id', activeCohort.id)
+          .eq('semester_id', activeSemester.id)
 
         targetUserIds = enrolled?.map(e => e.student_id).filter(Boolean) as string[] || []
       }

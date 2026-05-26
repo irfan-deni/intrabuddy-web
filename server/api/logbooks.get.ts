@@ -10,14 +10,14 @@ export default defineEventHandler(async (event) => {
 
     const supabase = await serverSupabaseClient<Database>(event)
     
-    // 1. Get Active Cohort
-    const { data: activeCohort } = await supabase
-      .from('cohorts')
+    // 1. Get Active Semester
+    const { data: activeSemester } = await supabase
+      .from('semesters')
       .select('id')
       .eq('is_active', true)
       .maybeSingle()
 
-    if (!activeCohort) {
+    if (!activeSemester) {
       return []
     }
 
@@ -38,7 +38,7 @@ export default defineEventHandler(async (event) => {
           student_id
         )
       `)
-      .eq('cohort_id', activeCohort.id)
+      .eq('semester_id', activeSemester.id)
       .order('week_end_date', { ascending: false })
 
     if (logbooksError) {

@@ -1,7 +1,7 @@
 # Software Requirements Specification (SRS)
 **Project Name:** INTRA Buddy
 **Version:** 1.0.0
-**Description:** A centralized platform to streamline and manage university industrial training (INTRA) placements, logbook submissions, and cohort communications.
+**Description:** A centralized platform to streamline and manage university industrial training (INTRA) placements, logbook submissions, and semester communications.
 
 ---
 
@@ -9,7 +9,7 @@
 The system operates on a role-based access control (RBAC) model with two primary personas:
 
 1. **Coordinator (Admin)**
-   - University staff members responsible for overseeing the entire internship cohort.
+   - University staff members responsible for overseeing the entire internship semester.
    - Needs high-level overviews, data manipulation capabilities, and communication tools.
 2. **Student (End User)**
    - University students undergoing their internship lifecycle.
@@ -20,7 +20,7 @@ The system operates on a role-based access control (RBAC) model with two primary
 ## 2. Functional Requirements (Scope of Work)
 
 ### Epic 1: Dashboard & Analytics
-- **REQ-1.1:** The system shall display a real-time statistical overview of the cohort.
+- **REQ-1.1:** The system shall display a real-time statistical overview of the semester.
 - **REQ-1.2:** The dashboard must track KPI metrics: Total Students, Placed, Searching, and Action Required (Preparing).
 - **REQ-1.3:** The system shall display visual charts indicating placement trends (Future Phase).
 
@@ -56,8 +56,8 @@ The system operates on a role-based access control (RBAC) model with two primary
 ### 3.2 Security & Data Integrity
 - **Authentication:** Handled via Supabase Auth (Email/Password or OAuth).
 - **Authorization:** Row Level Security (RLS) must be enforced in the database so students cannot read or edit other students' data.
-- **Data Retention:** The system must utilize "Soft Deletes" (`is_active = false`) for user records to preserve historical cohort data for university auditing.
+- **Data Retention:** The system must utilize "Soft Deletes" (`is_active = false`) for user records to preserve historical semester data for university auditing.
 
 ### 3.3 Performance
-- Data grids and lists must handle cohorts of up to 500 students without UI freezing.
+- Data grids and lists must handle semesters of up to 500 students without UI freezing.
 - Client-side data fetching should utilize proper loading states and error handling.

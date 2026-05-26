@@ -244,7 +244,7 @@ const loadData = async () => {
   try {
     const [notifRes, studentRes] = await Promise.all([
       supabase.from('notifications').select('*, broadcast:broadcast_messages(title, body)').order('created_at', { ascending: false }).limit(200),
-      $fetch<any>('/api/students?cohort_id=all')
+      $fetch<any>('/api/students?semester_id=all')
     ])
 
     if (notifRes.error) throw notifRes.error

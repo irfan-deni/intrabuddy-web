@@ -36,7 +36,7 @@
               <div>
                 <h2 class="text-lg font-bold text-slate-800">Placement Velocity</h2>
                 <p class="text-sm text-stone-600 mt-2 leading-relaxed">
-                  Current cohort operating at <strong class="text-slate-800">{{ placementPercentage }}%</strong> capacity.
+                  Current semester operating at <strong class="text-slate-800">{{ placementPercentage }}%</strong> capacity.
                   <strong class="text-slate-800">{{ unplacedStudents }}</strong> students still in the active search funnel.
                 </p>
               </div>
@@ -59,9 +59,9 @@
         <template #content>
           <div class="p-6 flex flex-col justify-between h-full min-h-[180px] md:min-h-[200px]">
             <div>
-              <p class="text-xs font-semibold text-white/50 uppercase tracking-wider mb-4">Cohort Control</p>
+              <p class="text-xs font-semibold text-white/50 uppercase tracking-wider mb-4">Semester Control</p>
               <h3 class="text-2xl font-bold leading-tight">
-                Active:<br>{{ cohortName || 'Scanning...' }}
+                Active:<br>{{ semesterName || 'Scanning...' }}
               </h3>
             </div>
             <NuxtLink to="/broadcasts" class="inline-flex items-center gap-2 mt-6 text-sky-400 hover:text-sky-300 transition-colors text-sm font-semibold">
@@ -82,7 +82,7 @@
 
           <template v-else>
             <div class="flex items-end justify-between mb-2">
-              <span class="text-xs font-semibold text-stone-500 uppercase tracking-wider">Overall Cohort Compliance</span>
+              <span class="text-xs font-semibold text-stone-500 uppercase tracking-wider">Overall Semester Compliance</span>
               <span class="text-2xl font-bold text-slate-800 tabular-nums">{{ complianceRate }}%</span>
             </div>
 
@@ -112,14 +112,14 @@ definePageMeta({
 })
 
 type DashboardResponse = {
-  cohortName: string
+  semesterName: string
   totalStudents: number
   placedStudents: number
   unplacedStudents: number
   placementPercentage: number
 }
 
-const cohortName = ref('')
+const semesterName = ref('')
 const totalStudents = ref(0)
 const placedStudents = ref(0)
 const unplacedStudents = ref(0)
@@ -153,7 +153,7 @@ const fetchData = async () => {
       $fetch<any[]>('/api/logbooks')
     ])
 
-    cohortName.value = dash.cohortName
+    semesterName.value = dash.semesterName
     totalStudents.value = dash.totalStudents
     placedStudents.value = dash.placedStudents
     unplacedStudents.value = dash.unplacedStudents

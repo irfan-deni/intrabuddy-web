@@ -53,7 +53,7 @@ export type Database = {
           }
         ]
       }
-      cohorts: {
+      semesters: {
         Row: {
           id: number
           name: string
@@ -80,38 +80,38 @@ export type Database = {
         }
         Relationships: []
       }
-      student_cohorts: {
+      student_semesters: {
         Row: {
           id: number
           student_id: string | null
-          cohort_id: number | null
+          semester_id: number | null
           enrolled_at: string | null
         }
         Insert: {
           id?: number
           student_id?: string | null
-          cohort_id?: number | null
+          semester_id?: number | null
           enrolled_at?: string | null
         }
         Update: {
           id?: number
           student_id?: string | null
-          cohort_id?: number | null
+          semester_id?: number | null
           enrolled_at?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "student_cohorts_student_id_fkey"
+            foreignKeyName: "student_semesters_student_id_fkey"
             columns: ["student_id"]
             isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "student_cohorts_cohort_id_fkey"
-            columns: ["cohort_id"]
+            foreignKeyName: "student_semesters_semester_id_fkey"
+            columns: ["semester_id"]
             isOneToOne: false
-            referencedRelation: "cohorts"
+            referencedRelation: "semesters"
             referencedColumns: ["id"]
           }
         ]
@@ -124,7 +124,7 @@ export type Database = {
           due_offset_days: number | null
           required: boolean | null
           display_order: number | null
-          cohort_id: number | null
+          semester_id: number | null
           created_at: string | null
         }
         Insert: {
@@ -134,7 +134,7 @@ export type Database = {
           due_offset_days?: number | null
           required?: boolean | null
           display_order?: number | null
-          cohort_id?: number | null
+          semester_id?: number | null
           created_at?: string | null
         }
         Update: {
@@ -144,15 +144,15 @@ export type Database = {
           due_offset_days?: number | null
           required?: boolean | null
           display_order?: number | null
-          cohort_id?: number | null
+          semester_id?: number | null
           created_at?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "checklist_templates_cohort_id_fkey"
-            columns: ["cohort_id"]
+            foreignKeyName: "checklist_templates_semester_id_fkey"
+            columns: ["semester_id"]
             isOneToOne: false
-            referencedRelation: "cohorts"
+            referencedRelation: "semesters"
             referencedColumns: ["id"]
           }
         ]
@@ -455,7 +455,7 @@ export type Database = {
         Row: {
           id: number
           student_id: string | null
-          cohort_id: number | null
+          semester_id: number | null
           week_number: number
           week_end_date: string
           is_submitted: boolean | null
@@ -467,7 +467,7 @@ export type Database = {
         Insert: {
           id?: number
           student_id?: string | null
-          cohort_id?: number | null
+          semester_id?: number | null
           week_number: number
           week_end_date: string
           is_submitted?: boolean | null
@@ -479,7 +479,7 @@ export type Database = {
         Update: {
           id?: number
           student_id?: string | null
-          cohort_id?: number | null
+          semester_id?: number | null
           week_number?: number
           week_end_date?: string
           is_submitted?: boolean | null
@@ -497,10 +497,10 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "weekly_logbook_tracking_cohort_id_fkey"
-            columns: ["cohort_id"]
+            foreignKeyName: "weekly_logbook_tracking_semester_id_fkey"
+            columns: ["semester_id"]
             isOneToOne: false
-            referencedRelation: "cohorts"
+            referencedRelation: "semesters"
             referencedColumns: ["id"]
           }
         ]

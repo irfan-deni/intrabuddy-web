@@ -18,7 +18,7 @@ All frontend Vue code MUST live inside the `app/` directory. Do not place pages 
 ## 4. Core Engineering Principles
 1. **Unstyled PrimeVue:** Because PrimeVue is headless in this project, every PrimeVue component (DataTables, Dialogs, Buttons) MUST be manually styled using Tailwind classes via the `pt` (pass-through) prop or wrapper `<div>` tags.
 2. **Client-Side Data Fetching:** Use `const supabase = useSupabaseClient()` inside `onMounted` hooks for fetching data on dashboard pages. Always handle loading (`isLoading`) and error states.
-3. **Soft Deletes:** `users` and other cohort records use `is_active` and are not permanently deleted in normal flows; always append `.eq('is_active', true)` when fetching live cohort data. `faqs` and `internship_applications` currently use hard deletes in the web UI; align these with soft deletes if you add matching columns and policies later.
+3. **Soft Deletes:** `users` and other semester records use `is_active` and are not permanently deleted in normal flows; always append `.eq('is_active', true)` when fetching live semester data. `faqs` and `internship_applications` currently use hard deletes in the web UI; align these with soft deletes if you add matching columns and policies later.
 
 ## 5. Database Schema (PostgreSQL / Supabase)
 Below is the exact schema currently live in the database.

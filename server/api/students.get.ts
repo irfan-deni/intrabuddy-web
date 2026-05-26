@@ -10,46 +10,46 @@ export default defineEventHandler(async (event) => {
 
     const supabase = await serverSupabaseClient<Database>(event)
 
-    // Determine target cohort from query param
-    const { cohort_id } = getQuery(event)
+    // Determine target semester from query param
+    const { semester_id } = getQuery(event)
     let targetStudentIds: string[] | null = null
 
-    if (cohort_id && cohort_id !== 'all') {
-      // Filter by specific cohort
-      const { data: studentCohorts } = await supabase
-        .from('student_cohorts')
+    if (semester_id && semester_id !== 'all') {
+      // Filter by specific semester
+      const { data: studentSemesters } = await supabase
+        .from('student_semesters')
         .select('student_id')
-        .eq('cohort_id', Number(cohort_id))
+        .eq('semester_id', Number(semester_id))
 
-      if (!studentCohorts || studentCohorts.length === 0) {
+      if (!studentSemesters || studentSemesters.length === 0) {
         return { students: [], totalCount: 0 }
       }
 
-      targetStudentIds = studentCohorts.map(sc => sc.student_id).filter(Boolean) as string[]
-    } else if (!cohort_id) {
-      // Default: filter by active cohort
-      const { data: activeCohort } = await supabase
-        .from('cohorts')
+      targetStudentIds = studentSemesters.map(sc => sc.student_id).filter(Boolean) as string[]
+    } else if (!semester_id) {
+      // Default: filter by active semester
+      const { data: activeSemester } = await supabase
+        .from('semesters')
         .select('id')
         .eq('is_active', true)
         .maybeSingle()
 
-      if (!activeCohort) {
+      if (!activeSemester) {
         return { students: [], totalCount: 0 }
       }
 
-      const { data: studentCohorts } = await supabase
-        .from('student_cohorts')
+      const { data: studentSemesters } = await supabase
+        .from('student_semesters')
         .select('student_id')
-        .eq('cohort_id', activeCohort.id)
+        .eq('semester_id', activeSemester.id)
 
-      if (!studentCohorts || studentCohorts.length === 0) {
+      if (!studentSemesters || studentSemesters.length === 0) {
         return { students: [], totalCount: 0 }
       }
 
-      targetStudentIds = studentCohorts.map(sc => sc.student_id).filter(Boolean) as string[]
+      targetStudentIds = studentSemesters.map(sc => sc.student_id).filter(Boolean) as string[]
     }
-    // cohort_id === 'all' → targetStudentIds stays null → all students
+    // semester_id === 'all' → targetStudentIds stays null → all students
 
     // 3. Build student profile query
     let profileQuery = supabase

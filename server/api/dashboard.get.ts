@@ -19,16 +19,16 @@ export default defineEventHandler(async (event) => {
       .eq('id', userId)
       .maybeSingle()
 
-    // 2. Find the active cohort
-    const { data: activeCohort } = await supabase
-      .from('cohorts')
+    // 2. Find the active semester
+    const { data: activeSemester } = await supabase
+      .from('semesters')
       .select('id, name')
       .eq('is_active', true)
       .maybeSingle()
 
-    if (!activeCohort) {
+    if (!activeSemester) {
       return {
-        cohortName: 'No Active Cohort Set',
+        semesterName: 'No Active Semester Set',
         totalStudents: 0,
         placedStudents: 0,
         unplacedStudents: 0,
@@ -40,9 +40,9 @@ export default defineEventHandler(async (event) => {
     // We fetch enrolled students directly. 
     // Note: If RLS is also on these tables, they might still return empty.
     const { data: enrolledStudents } = await supabase
-      .from('student_cohorts')
+      .from('student_semesters')
       .select('student_id')
-      .eq('cohort_id', activeCohort.id)
+      .eq('semester_id', activeSemester.id)
 
     const totalStudents = enrolledStudents ? enrolledStudents.length : 0
     const studentIds = enrolledStudents?.map(s => s.student_id).filter(Boolean) as string[] || []
@@ -62,7 +62,7 @@ export default defineEventHandler(async (event) => {
     const placementPercentage = totalStudents > 0 ? Math.round((placedStudents / totalStudents) * 100) : 0
 
     return {
-      cohortName: activeCohort.name,
+      semesterName: activeSemester.name,
       totalStudents,
       placedStudents,
       unplacedStudents,
@@ -72,7 +72,7 @@ export default defineEventHandler(async (event) => {
     console.error('[Dashboard Exception]:', error.message)
     // Return empty state instead of error to keep the UI alive
     return {
-      cohortName: 'System Error',
+      semesterName: 'System Error',
       totalStudents: 0,
       placedStudents: 0,
       unplacedStudents: 0,

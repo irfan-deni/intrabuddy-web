@@ -37,15 +37,15 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: 'Full name and Email are required' })
   }
 
-  // 1. Find active cohort
-  const { data: activeCohort } = await serviceRole
-    .from('cohorts')
+  // 1. Find active semester
+  const { data: activeSemester } = await serviceRole
+    .from('semesters')
     .select('id')
     .eq('is_active', true)
     .single()
 
-  if (!activeCohort) {
-    throw createError({ statusCode: 400, statusMessage: 'No active cohort found' })
+  if (!activeSemester) {
+    throw createError({ statusCode: 400, statusMessage: 'No active semester found' })
   }
 
   // 2. Create auth user first (required for FK constraint users.id -> auth.users)
@@ -83,25 +83,25 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 500, statusMessage: `Profile creation failed: ${userError?.message}` })
   }
 
-  // 4. Enroll in active cohort via student_cohorts
-  const { error: cohortError } = await serviceRole
-    .from('student_cohorts')
+  // 4. Enroll in active semester via student_semesters
+  const { error: semesterError } = await serviceRole
+    .from('student_semesters')
     .insert({
       student_id: newUser.id,
-      cohort_id: activeCohort.id
+      semester_id: activeSemester.id
     })
 
-  if (cohortError) {
+  if (semesterError) {
     await serviceRole.from('users').delete().eq('id', newUser.id)
     await serviceRole.auth.admin.deleteUser(authId).catch(() => {})
-    throw createError({ statusCode: 500, statusMessage: 'Cohort enrollment failed' })
+    throw createError({ statusCode: 500, statusMessage: 'Semester enrollment failed' })
   }
 
   // 5. Initialize Checklist from templates
   const { data: templates } = await serviceRole
     .from('checklist_templates')
     .select('id, required')
-    .eq('cohort_id', activeCohort.id)
+    .eq('semester_id', activeSemester.id)
 
   if (templates && templates.length > 0) {
     const checklists = templates.map(t => ({

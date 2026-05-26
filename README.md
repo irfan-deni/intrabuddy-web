@@ -1,14 +1,14 @@
 # INTRA Buddy
 
-INTRA Buddy is an enterprise-grade university web application designed to streamline and manage student industrial training (INTRA) placements, track logbook submissions, and facilitate cohort communications.
+INTRA Buddy is an enterprise-grade university web application designed to streamline and manage student industrial training (INTRA) placements, track logbook submissions, and facilitate semester communications.
 
 ## 🚀 Features
 
-- **Dashboard & Analytics**: Real-time statistical overview of the cohort including placement trends and KPI metrics.
+- **Dashboard & Analytics**: Real-time statistical overview of the semester including placement trends and KPI metrics.
 - **Student Directory & Profile Management**: Coordinators can manage student records, while students can track their placement lifecycle ('preparing', 'searching', 'placed', 'completed').
 - **Pre-Internship Tracking**: Track pre-internship checklists (resume, university forms) and student application statuses.
 - **Logbook Compliance**: Monitor weekly logbook submissions for placed students (pending, submitted, overdue).
-- **Cohort Communication**: Target broadcast notifications to specific user segments (e.g., all students, unplaced students).
+- **Semester Communication**: Target broadcast notifications to specific user segments (e.g., all students, unplaced students).
 - **Knowledge Base (FAQ)**: Maintain an updatable FAQ base that supports vector embeddings (`pgvector`) for future AI chatbot integrations.
 
 ## 🛠 Tech Stack

@@ -60,7 +60,7 @@ export async function mockSupabaseRest(page: Page) {
         }
         return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify([]) })
       }
-      if (table === 'cohorts') {
+      if (table === 'semesters') {
         return route.fulfill({
           status: 200,
           contentType: 'application/json',
@@ -86,8 +86,8 @@ export async function mockSupabaseRest(page: Page) {
           status: 200,
           contentType: 'application/json',
           body: JSON.stringify([
-            { id: 1, title: 'Upload Resume', description: 'Upload your latest resume', display_order: 1, required: true, cohort_id: 1 },
-            { id: 2, title: 'Submit Insurance Form', description: null, display_order: 2, required: true, cohort_id: 1 },
+            { id: 1, title: 'Upload Resume', description: 'Upload your latest resume', display_order: 1, required: true, semester_id: 1 },
+            { id: 2, title: 'Submit Insurance Form', description: null, display_order: 2, required: true, semester_id: 1 },
           ]),
         })
       }

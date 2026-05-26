@@ -49,7 +49,7 @@ export const MOCK_STUDENTS = [
 ]
 
 export const MOCK_DASHBOARD = {
-  cohortName: 'Jan-Jun 2026',
+  semesterName: 'Jan-Jun 2026',
   totalStudents: 50,
   placedStudents: 30,
   unplacedStudents: 20,
@@ -83,7 +83,7 @@ export const MOCK_LOGBOOKS = [
   },
 ]
 
-export const MOCK_COHORTS = [
+export const MOCK_SEMESTERS = [
   {
     id: 1,
     name: 'Jan-Jun 2026',
@@ -161,8 +161,8 @@ export const MOCK_FAQ_CATEGORIES = [
 ]
 
 export const MOCK_CHECKLIST_TEMPLATES = [
-  { id: 1, title: 'Upload Resume', description: 'Upload your latest resume', display_order: 1, required: true, cohort_id: 1 },
-  { id: 2, title: 'Submit Insurance Form', description: null, display_order: 2, required: true, cohort_id: 1 },
+  { id: 1, title: 'Upload Resume', description: 'Upload your latest resume', display_order: 1, required: true, semester_id: 1 },
+  { id: 2, title: 'Submit Insurance Form', description: null, display_order: 2, required: true, semester_id: 1 },
 ]
 
 export const MOCK_NOTIFICATIONS = [
