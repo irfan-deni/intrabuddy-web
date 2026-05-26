@@ -76,7 +76,7 @@
     <Card class="bg-white shadow-sm border border-stone-200">
       <template #content>
         <div class="p-4 md:p-8">
-          <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider mb-6 md:mb-8">Logbook Intelligence</h2>
+          <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider mb-6 md:mb-8">Logbook Status Summary</h2>
 
           <div v-if="logbooks.length === 0" class="text-center py-12 md:py-16 text-sm font-semibold text-stone-400">No activity data available</div>
 
