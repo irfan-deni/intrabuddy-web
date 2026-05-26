@@ -4,7 +4,8 @@
       <!-- Header with Search & Add -->
       <header class="flex flex-col md:flex-row md:items-end justify-between gap-6 md:gap-8 border-b border-stone-200 pb-6 md:pb-10">
         <div class="flex-1 max-w-xl">
-          <h1 class="text-2xl md:text-4xl font-black text-slate-800 tracking-tight uppercase mb-4">Student Directory</h1>
+          <h1 class="text-2xl md:text-4xl font-black text-slate-800 tracking-tight uppercase">Student Directory</h1>
+          <p class="text-stone-500 mt-2 mb-4 font-bold uppercase text-[10px] tracking-widest">Manage student placements, milestones, and records.</p>
           <div class="relative group">
             <i class="pi pi-search absolute left-5 top-1/2 -translate-y-1/2 text-stone-400 group-focus-within:text-sky-600 transition-colors"></i>
             <input 
@@ -165,7 +166,7 @@
       </article>
     </div>
 
-    <!-- Sliding Sidebar Dossier -->
+    <!-- Sliding Sidebar Profile -->
     <Transition name="slide">
       <div v-if="selectedStudent" class="fixed inset-y-0 right-0 w-full max-w-2xl bg-white shadow-[-20px_0_60px_rgba(0,0,0,0.1)] z-[100] border-l border-stone-200 overflow-y-auto">
         <div class="sticky top-0 bg-white/90 backdrop-blur-md z-10 px-6 md:px-12 py-6 md:py-10 border-b border-stone-100 flex items-center justify-between">
@@ -173,7 +174,7 @@
             <button class="h-10 w-10 border border-stone-200 flex items-center justify-center hover:bg-slate-900 hover:text-white transition-all" @click="selectedStudent = null">
               <i class="pi pi-arrow-left text-[10px]"></i>
             </button>
-            <h2 class="text-lg md:text-xl font-black text-slate-800 uppercase tracking-widest">Student Dossier</h2>
+            <h2 class="text-lg md:text-xl font-black text-slate-800 uppercase tracking-widest">Student Profile</h2>
           </div>
           <NuxtLink :to="`/student?id=${selectedStudent.id}`" class="text-[10px] font-black text-stone-400 uppercase tracking-widest hover:text-slate-800 hover:underline transition-all whitespace-nowrap">
             Full Profile

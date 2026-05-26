@@ -6,7 +6,7 @@
           <i class="pi pi-arrow-left text-sm"></i>
         </NuxtLink>
         <div>
-          <h1 class="text-2xl md:text-4xl font-black text-slate-800 tracking-tight uppercase">Student Dossier</h1>
+          <h1 class="text-2xl md:text-4xl font-black text-slate-800 tracking-tight uppercase">Student Profile</h1>
           <p class="text-stone-500 mt-2 font-bold uppercase text-[10px] tracking-widest">Comprehensive performance and compliance tracking.</p>
         </div>
       </div>
