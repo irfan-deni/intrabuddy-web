@@ -1,7 +1,7 @@
 import { serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
 import type { Database } from '~/types/supabase'
 
-type Audience = 'students_all' | 'coordinators_all'
+type Audience = 'students_all' | 'students_unplaced' | 'students_placed' | 'students_late_logbooks' | 'coordinators_all'
 
 export default defineEventHandler(async (event) => {
   try {
@@ -17,7 +17,7 @@ export default defineEventHandler(async (event) => {
 
     const serviceRole = serverSupabaseServiceRole<Database>(event)
     const authUser = await serverSupabaseUser(event)
-    const userId = authUser?.id || (authUser as any)?.sub
+    const userId = getUserId(authUser)
 
     if (!userId) {
       throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
@@ -62,7 +62,7 @@ export default defineEventHandler(async (event) => {
     // 2. Resolve targeted user IDs
     let targetUserIds: string[] = []
 
-    if (audience === 'students_all') {
+    if (audience === 'students_all' || audience === 'students_unplaced' || audience === 'students_placed' || audience === 'students_late_logbooks') {
       const { data: activeSemester } = await serviceRole
         .from('semesters')
         .select('id')
@@ -75,7 +75,36 @@ export default defineEventHandler(async (event) => {
           .select('student_id')
           .eq('semester_id', activeSemester.id)
 
-        targetUserIds = enrolled?.map(e => e.student_id).filter(Boolean) as string[] || []
+        let ids = enrolled?.map(e => e.student_id).filter(Boolean) as string[] || []
+
+        if (audience === 'students_unplaced') {
+          const { data: placed } = await (serviceRole.from('users') as any)
+            .select('id')
+            .in('id', ids)
+            .in('internship_status', ['placed', 'completed'])
+
+          const placedIds = new Set(placed?.map((p: any) => p.id) || [])
+          ids = ids.filter(id => !placedIds.has(id))
+        } else if (audience === 'students_placed') {
+          const { data: placed } = await (serviceRole.from('users') as any)
+            .select('id')
+            .in('id', ids)
+            .in('internship_status', ['placed', 'completed'])
+
+          ids = placed?.map((p: any) => p.id) || []
+        } else if (audience === 'students_late_logbooks') {
+          const lateSubmissionDate = new Date()
+          lateSubmissionDate.setDate(lateSubmissionDate.getDate() - 7)
+          const { data: lateStudents } = await (serviceRole.from('weekly_logbook_tracking') as any)
+            .select('student_id')
+            .in('student_id', ids)
+            .eq('is_submitted', false)
+            .lt('week_end_date', lateSubmissionDate.toISOString().split('T')[0])
+
+          ids = [...new Set<string>(lateStudents?.map((s: any) => s.student_id) || [])]
+        }
+
+        targetUserIds = ids
       }
     } else if (audience === 'coordinators_all') {
       const { data: coordinators } = await serviceRole

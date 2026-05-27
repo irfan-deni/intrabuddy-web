@@ -1,12 +1,9 @@
-import { serverSupabaseClient, serverSupabaseSession } from '#supabase/server'
+import { serverSupabaseClient } from '#supabase/server'
 import type { Database } from '~/types/supabase'
 
 export default defineEventHandler(async (event) => {
   try {
-    const session = await serverSupabaseSession(event)
-    if (!session) {
-      throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
-    }
+    await requireCoordinator(event)
 
     const supabase = await serverSupabaseClient<Database>(event)
     const id = getRouterParam(event, 'id')

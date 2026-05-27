@@ -22,14 +22,14 @@
     "nuxt": "^4.4.2",
     "primeicons": "^7.0.0",
     "vue": "^3.5.30",
-    "vue-router": "^5.0.3"
+    "vue-router": "^5.0.3",
+    "sharp": "^0.32.1"
   },
   "devDependencies": {
     "@nuxt/test-utils": "^4.0.3",
     "@vue/test-utils": "^2.4.10",
     "happy-dom": "^20.9.0",
     "playwright": "1.52",
-    "sharp": "^0.32.1",
     "vitest": "^4.1.7"
   }
 }
