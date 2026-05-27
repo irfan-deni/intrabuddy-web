@@ -187,8 +187,7 @@ definePageMeta({
 import StatusBadge from '~/components/StatusBadge.vue'
 
 import { useCoordinatorPrivileges } from '~/composables/useCoordinatorPrivileges'
-import jsPDF from 'jspdf'
-import autoTable from 'jspdf-autotable'
+import { generateReport } from '~/utils/pdfGenerator'
 
 type LogbookEntry = {
   id: number
@@ -294,15 +293,7 @@ const formatDate = (value: string) => {
   })
 }
 
-const generatePDF = async () => {
-  const doc = new jsPDF()
-
-  doc.setFontSize(16)
-  doc.text('INTRA Buddy - Weekly Logbook Compliance Report', 14, 15)
-
-  doc.setFontSize(10)
-  doc.text('Generated on: ' + new Date().toLocaleDateString(), 14, 22)
-
+const generatePDF = () => {
   const tableData = logbooks.value.map(entry => [
     entry.studentName,
     entry.studentMatric || 'N/A',
@@ -311,15 +302,13 @@ const generatePDF = async () => {
     entry.statusLabel
   ])
 
-  autoTable(doc, {
-    startY: 30,
-    head: [['Student Name', 'ID', 'Week', 'End Date', 'Status']],
-    body: tableData,
-    styles: { fontSize: 8 },
-    headStyles: { fillColor: [51, 65, 85] }
-  })
-
-  doc.save('INTRA_Compliance_Report.pdf')
+  generateReport(
+    'INTRA Buddy - Weekly Logbook Compliance Report',
+    ['Student Name', 'ID', 'Week', 'End Date', 'Status'],
+    tableData,
+    'INTRA_Compliance_Report.pdf',
+    { styles: { fontSize: 8 } }
+  )
 }
 
 onMounted(async () => {

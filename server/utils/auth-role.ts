@@ -11,7 +11,7 @@ export const requireCoordinator = async (event: any) => {
   const { data: actor } = await serviceRole
     .from('users')
     .select('role')
-    .eq('id', getUserId(user))
+    .eq('id', getUserId(user as any))
     .single()
 
   if (!actor || actor.role !== 'coordinator') {

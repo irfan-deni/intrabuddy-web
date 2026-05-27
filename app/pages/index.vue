@@ -120,8 +120,7 @@
 
 <script setup lang="ts">
 import Card from 'primevue/card'
-import jsPDF from 'jspdf'
-import autoTable from 'jspdf-autotable'
+import { generateReport } from '~/utils/pdfGenerator'
 
 definePageMeta({
   requiredRole: 'coordinator'
@@ -183,52 +182,36 @@ const fetchData = async () => {
 }
 
 const generatePDF = () => {
-  const doc = new jsPDF()
+  const metricsData = [
+    ['Total Students', String(totalStudents.value)],
+    ['Placed', String(placedStudents.value)],
+    ['Unplaced', String(unplacedStudents.value)],
+    ['Placement Rate', placementPercentage.value + '%'],
+    ['Expected Logbooks', String(totalExpected.value)],
+    ['Submitted', String(totalSubmitted.value)],
+    ['Compliance Rate', complianceRate.value + '%']
+  ]
 
-  doc.setFontSize(16)
-  doc.text('INTRA Buddy - Dashboard Report', 14, 15)
+  const logbookData = logbooks.value.map((e: any) => [
+    e.studentName || 'Unknown',
+    e.studentMatric || 'N/A',
+    'Week ' + e.weekNumber,
+    e.statusLabel || 'Unknown'
+  ])
 
-  doc.setFontSize(10)
-  doc.text('Generated on: ' + new Date().toLocaleDateString(), 14, 22)
-
-  doc.setFontSize(12)
-  doc.text('Active Semester: ' + (semesterName.value || 'N/A'), 14, 32)
-
-  autoTable(doc, {
-    startY: 40,
-    head: [['Metric', 'Value']],
-    body: [
-      ['Total Students', String(totalStudents.value)],
-      ['Placed', String(placedStudents.value)],
-      ['Unplaced', String(unplacedStudents.value)],
-      ['Placement Rate', placementPercentage.value + '%'],
-      ['Expected Logbooks', String(totalExpected.value)],
-      ['Submitted', String(totalSubmitted.value)],
-      ['Compliance Rate', complianceRate.value + '%']
-    ],
-    styles: { fontSize: 10 },
-    headStyles: { fillColor: [51, 65, 85] },
-    columnStyles: { 0: { fontStyle: 'bold' } }
-  })
-
-  if (logbooks.value.length > 0) {
-    const logbookData = logbooks.value.map((e: any) => [
-      e.studentName || 'Unknown',
-      e.studentMatric || 'N/A',
-      'Week ' + e.weekNumber,
-      e.statusLabel || 'Unknown'
-    ])
-
-    autoTable(doc, {
-      startY: (doc as any).lastAutoTable.finalY + 10,
-      head: [['Student', 'ID', 'Week', 'Status']],
-      body: logbookData,
-      styles: { fontSize: 8 },
-      headStyles: { fillColor: [51, 65, 85] }
-    })
-  }
-
-  doc.save('INTRA_Dashboard_Report.pdf')
+  generateReport(
+    'INTRA Buddy - Dashboard Report',
+    ['Metric', 'Value'],
+    metricsData,
+    'INTRA_Dashboard_Report.pdf',
+    {
+      subtitle: 'Active Semester: ' + (semesterName.value || 'N/A'),
+      columnStyles: { 0: { fontStyle: 'bold' } },
+      extraTables: logbooks.value.length > 0
+        ? [{ headers: ['Student', 'ID', 'Week', 'Status'], data: logbookData, styles: { fontSize: 8 } }]
+        : undefined
+    }
+  )
 }
 
 onMounted(fetchData)

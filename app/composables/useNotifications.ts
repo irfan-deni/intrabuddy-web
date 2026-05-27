@@ -9,7 +9,7 @@ export function useNotifications() {
 
   const fetchInitialCount = async () => {
     if (!user.value) return
-    const userId = (user.value as any).id || (user.value as any).sub
+    const userId = getUserId(user.value)
     if (!userId) return
 
     const { count } = await supabase
@@ -23,7 +23,7 @@ export function useNotifications() {
 
   const setupRealtimeListener = () => {
     if (!user.value) return
-    const userId = (user.value as any).id || (user.value as any).sub
+    const userId = getUserId(user.value)
     if (!userId) return
 
     channel = supabase

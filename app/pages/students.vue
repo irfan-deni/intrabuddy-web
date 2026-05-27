@@ -274,8 +274,7 @@
 
 <script setup lang="ts">
 import { useCoordinatorPrivileges } from '~/composables/useCoordinatorPrivileges'
-import jsPDF from 'jspdf'
-import autoTable from 'jspdf-autotable'
+import { generateReport } from '~/utils/pdfGenerator'
 
 definePageMeta({
   requiredRole: 'coordinator'
@@ -382,14 +381,6 @@ const closeModal = () => {
 }
 
 const generatePDF = () => {
-  const doc = new jsPDF()
-
-  doc.setFontSize(16)
-  doc.text('INTRA Buddy - Student Directory Report', 14, 15)
-
-  doc.setFontSize(10)
-  doc.text('Generated on: ' + new Date().toLocaleDateString(), 14, 22)
-
   const tableData = filteredStudents.value.map(s => [
     s.full_name,
     s.student_id || 'N/A',
@@ -398,15 +389,13 @@ const generatePDF = () => {
     String(s.documentCount)
   ])
 
-  autoTable(doc, {
-    startY: 30,
-    head: [['Student Name', 'ID', 'Placement', 'Progress', 'Documents']],
-    body: tableData,
-    styles: { fontSize: 8 },
-    headStyles: { fillColor: [51, 65, 85] }
-  })
-
-  doc.save('INTRA_Student_Directory_Report.pdf')
+  generateReport(
+    'INTRA Buddy - Student Directory Report',
+    ['Student Name', 'ID', 'Placement', 'Progress', 'Documents'],
+    tableData,
+    'INTRA_Student_Directory_Report.pdf',
+    { styles: { fontSize: 8 } }
+  )
 }
 
 onMounted(async () => {
