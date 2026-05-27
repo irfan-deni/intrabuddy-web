@@ -1,17 +1,41 @@
-import { serverSupabaseUser, serverSupabaseServiceRole } from '#supabase/server'
+import { createClient } from '@supabase/supabase-js'
+import { createServerClient, parseCookieHeader } from '@supabase/ssr'
+import { getHeader } from 'h3'
 import type { Database } from '~/types/supabase'
+import type { H3Event } from 'h3'
 
-export const requireCoordinator = async (event: any) => {
-  const user = await serverSupabaseUser(event)
+const getServerClient = (event: H3Event) => {
+  const config = useRuntimeConfig(event)
+  const url = config.public.supabase.url as string
+  const key = config.public.supabase.key as string
+  const allCookies = parseCookieHeader(getHeader(event, 'cookie') ?? '')
+  return createServerClient(url, key, {
+    cookies: {
+      getAll: () => allCookies.filter((c): c is { name: string; value: string } => c.value !== undefined),
+      setAll: () => {}
+    }
+  })
+}
+
+const getServiceRoleClient = (event: H3Event) => {
+  const config = useRuntimeConfig(event)
+  const url = config.public.supabase.url as string
+  const key = (config.supabase.secretKey as string | undefined) || (config.supabase.serviceKey as string | undefined)
+  if (!key) throw createError({ statusCode: 500, statusMessage: 'Service key missing' })
+  return createClient(url, key)
+}
+
+export const requireCoordinator = async (event: H3Event) => {
+  const client = getServerClient(event)
+  const { data: { user } } = await client.auth.getUser()
   if (!user) {
     throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
   }
 
-  const serviceRole = serverSupabaseServiceRole<Database>(event)
-  const { data: actor } = await serviceRole
+  const { data: actor } = await getServiceRoleClient(event)
     .from('users')
     .select('role')
-    .eq('id', getUserId(user as any))
+    .eq('id', user.id)
     .single()
 
   if (!actor || actor.role !== 'coordinator') {
