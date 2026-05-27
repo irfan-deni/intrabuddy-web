@@ -49,7 +49,11 @@ export default defineNuxtConfig({
   },
 
   nitro: {
-    preset: 'node-server'
+    preset: 'node-server',
+    cloudflare: {
+      nodeCompat: true,
+      deployConfig: true
+    }
   },
 
   runtimeConfig: {
