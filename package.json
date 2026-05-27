@@ -7,12 +7,14 @@
     "clean": "nuxi cleanup",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
-    "preview": "nuxt preview",
+    "preview": "npm run build && wrangler dev",
     "postinstall": "nuxt prepare",
     "generate:icons": "node ./scripts/generate-icons.js",
     "seed": "npx tsx scripts/seed-students.ts",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "deploy": "npm run build && wrangler deploy",
+    "cf-typegen": "wrangler types"
   },
   "dependencies": {
     "@nuxtjs/supabase": "^2.0.4",
@@ -21,15 +23,17 @@
     "jspdf-autotable": "^5.0.8",
     "nuxt": "^4.4.2",
     "primeicons": "^7.0.0",
+    "sharp": "^0.32.1",
     "vue": "^3.5.30",
-    "vue-router": "^5.0.3",
-    "sharp": "^0.32.1"
+    "vue-router": "^5.0.3"
   },
   "devDependencies": {
     "@nuxt/test-utils": "^4.0.3",
     "@vue/test-utils": "^2.4.10",
     "happy-dom": "^20.9.0",
+    "nitro-cloudflare-dev": "^0.2.2",
     "playwright": "1.52",
-    "vitest": "^4.1.7"
+    "vitest": "^4.1.7",
+    "wrangler": "^4.95.0"
   }
 }

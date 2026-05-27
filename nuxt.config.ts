@@ -1,11 +1,7 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   ssr: process.env.NUXT_SSR !== 'false',
-  modules: [
-    '@nuxtjs/tailwindcss',
-    '@primevue/nuxt-module',
-    '@nuxtjs/supabase'
-  ],
+  modules: ["nitro-cloudflare-dev"],
 
   css: [
     'primeicons/primeicons.css',
@@ -49,7 +45,7 @@ export default defineNuxtConfig({
   },
 
   nitro: {
-    preset: 'node-server',
+    preset: "cloudflare_module",
     cloudflare: {
       nodeCompat: true,
       deployConfig: true

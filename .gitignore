@@ -31,3 +31,6 @@ logs
 .ai
 docs
 .agents
+
+.dev.vars*
+!.dev.vars.example
