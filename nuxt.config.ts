@@ -52,7 +52,7 @@ export default defineNuxtConfig({
     preset: 'cloudflare-pages',
     cloudflare: {
       nodeCompat: true,
-      deployConfig: true
+      deployConfig: false
     }
   },
 

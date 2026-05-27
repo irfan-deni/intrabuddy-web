@@ -5,11 +5,6 @@
   "observability": {
     "enabled": true
   },
-  "main": "./.output/server/index.mjs",
-  "assets": {
-    "binding": "ASSETS",
-    "directory": "./.output/public/"
-  },
   "compatibility_flags": [
     "nodejs_compat"
   ]
