@@ -46,7 +46,18 @@ export default defineEventHandler(async (event) => {
     const today = new Date().toISOString().split('T')[0] as string
     const staleThreshold = 7 // days past week_end_date before considered stale
 
-    const results = (logbooks || []).map((entry: any) => {
+    type LogbookEntry = {
+      id: number
+      week_number: number
+      week_end_date: string
+      is_submitted: boolean | null
+      submitted_at: string | null
+      reminder_sent: boolean | null
+      student_id: string | null
+      users: { full_name: string; student_id: string | null } | null
+    }
+
+    const results = (logbooks || []).map((entry: LogbookEntry) => {
       let statusLabel = 'Not Submitted'
       if (entry.is_submitted) {
         statusLabel = 'Submitted'

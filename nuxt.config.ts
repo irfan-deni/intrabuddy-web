@@ -44,13 +44,17 @@ export default defineNuxtConfig({
     }
   },
 
+  routeRules: {
+    '/api/**': { cors: true }
+  },
+
   nitro: {
     preset: 'node-server'
   },
 
   runtimeConfig: {
     public: {
-      superCoordinatorEmails: process.env.NUXT_PUBLIC_SUPER_COORDINATOR_EMAILS || 'coordinator@intrabuddy.my'
+      superCoordinatorEmails: process.env.NUXT_PUBLIC_SUPER_COORDINATOR_EMAILS || ''
     }
   },
 
