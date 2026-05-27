@@ -1,3 +1,6 @@
+# Wrangler dev/deploy artifacts
+.wrangler
+
 # Nuxt dev/build outputs
 .output
 .data
