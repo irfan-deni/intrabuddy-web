@@ -8,5 +8,9 @@
   "compatibility_flags": [
     "nodejs_compat"
   ],
-  "pages_build_output_dir": "dist"
+  "main": ".output/server/index.mjs",
+  "assets": {
+    "directory": ".output/public/",
+    "binding": "ASSETS"
+  }
 }
