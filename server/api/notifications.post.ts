@@ -1,4 +1,4 @@
-import { serverSupabaseClient, serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
+import { serverSupabaseClient, serverSupabaseServiceRole, serverSupabaseUser } from '~~/server/utils/supabase-server'
 import type { Database } from '~/types/supabase'
 
 export default defineEventHandler(async (event) => {

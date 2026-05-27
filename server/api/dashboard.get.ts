@@ -1,4 +1,4 @@
-import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server'
+import { serverSupabaseClient, serverSupabaseUser } from '~~/server/utils/supabase-server'
 import type { Database } from '~/types/supabase'
 
 export default defineEventHandler(async (event) => {
@@ -9,7 +9,7 @@ export default defineEventHandler(async (event) => {
     }
 
     const supabase = await serverSupabaseClient<Database>(event)
-    const userId = user.id
+    const userId = user.id!
 
     // 1. Permissive Profile Lookup
     // We try to get the role, but we won't crash if it's missing or blocked by RLS.

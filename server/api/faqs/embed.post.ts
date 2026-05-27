@@ -1,4 +1,4 @@
-import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server'
+import { serverSupabaseClient, serverSupabaseUser } from '~~/server/utils/supabase-server'
 
 const EMBEDDING_SIZE = 1536
 

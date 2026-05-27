@@ -2,9 +2,6 @@
   "name": "intrabuddy-web",
   "type": "module",
   "private": true,
-  "imports": {
-    "#supabase/server": "@nuxtjs/supabase/dist/runtime/server/services/index.js"
-  },
   "scripts": {
     "build": "nuxt build",
     "clean": "nuxi cleanup",
