@@ -49,7 +49,7 @@ export default defineNuxtConfig({
   },
 
   nitro: {
-    preset: 'cloudflare',
+    preset: 'cloudflare-module',
     cloudflare: {
       nodeCompat: false,
       deployConfig: false
