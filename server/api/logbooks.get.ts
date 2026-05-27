@@ -43,6 +43,27 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 500, statusMessage: 'Logbook sync failed' })
     }
 
+    // 3. Filter out non-student entries (coordinators shouldn't appear in logbook tracking)
+    let filteredLogbooks = logbooks || []
+    if (filteredLogbooks.length > 0) {
+      const userIds = filteredLogbooks.map(l => l.student_id).filter(Boolean) as string[]
+      const { data: userRoles } = await supabase
+        .from('users')
+        .select('id, role')
+        .in('id', userIds)
+
+      const validStudentIds = new Set(
+        (userRoles || []).filter(u => u.role === 'student').map(u => u.id)
+      )
+
+      const removedCount = filteredLogbooks.filter(l => l.student_id && !validStudentIds.has(l.student_id)).length
+      if (removedCount > 0) {
+        console.warn(`[Logbooks API] Filtered out ${removedCount} non-student entries`)
+      }
+
+      filteredLogbooks = filteredLogbooks.filter(l => l.student_id && validStudentIds.has(l.student_id))
+    }
+
     const today = new Date().toISOString().split('T')[0] as string
     const staleThreshold = 7 // days past week_end_date before considered stale
 
@@ -57,7 +78,7 @@ export default defineEventHandler(async (event) => {
       users: { full_name: string; student_id: string | null } | null
     }
 
-    const results = (logbooks || []).map((entry: LogbookEntry) => {
+    const results = filteredLogbooks.map((entry: LogbookEntry) => {
       let statusLabel = 'Not Submitted'
       if (entry.is_submitted) {
         statusLabel = 'Submitted'

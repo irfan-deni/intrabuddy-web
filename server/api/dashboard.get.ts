@@ -36,16 +36,34 @@ export default defineEventHandler(async (event) => {
       }
     }
 
-    // 3. Get student stats
-    // We fetch enrolled students directly. 
-    // Note: If RLS is also on these tables, they might still return empty.
+    // 3. Get enrolled student IDs from the active semester
     const { data: enrolledStudents } = await supabase
       .from('student_semesters')
       .select('student_id')
       .eq('semester_id', activeSemester.id)
 
-    const totalStudents = enrolledStudents ? enrolledStudents.length : 0
-    const studentIds = enrolledStudents?.map(s => s.student_id).filter(Boolean) as string[] || []
+    let studentIds = enrolledStudents?.map(s => s.student_id).filter(Boolean) as string[] || []
+
+    // 4. Filter out non-students (coordinators shouldn't be counted)
+    if (studentIds.length > 0) {
+      const { data: userRoles } = await supabase
+        .from('users')
+        .select('id, role')
+        .in('id', studentIds)
+
+      const validStudentIds = new Set(
+        (userRoles || []).filter(u => u.role === 'student').map(u => u.id)
+      )
+
+      const removedCount = studentIds.filter(id => !validStudentIds.has(id)).length
+      if (removedCount > 0) {
+        console.warn(`[Dashboard API] Filtered out ${removedCount} non-student entries`)
+      }
+
+      studentIds = studentIds.filter(id => validStudentIds.has(id))
+    }
+
+    const totalStudents = studentIds.length
 
     let placedStudents = 0
     if (studentIds.length > 0) {
