@@ -8,7 +8,7 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
     }
 
-    const userId = user.id || (user as any).sub
+    const userId = getUserId(user)
 
     const client = await serverSupabaseClient<Database>(event)
     const { data: actor } = await client

@@ -228,7 +228,7 @@ onMounted(() => {
 type NotificationDisplay = NotificationWithBroadcast & { recipient_name: string | null }
 
 const notifications = ref<NotificationDisplay[]>([])
-const students = ref<any[]>([])
+const students = ref<Array<{ id: string; full_name: string; student_id: string | null }>>([])
 const isLoading = ref(true)
 const isSending = ref(false)
 const errorMessage = ref('')
@@ -244,7 +244,7 @@ const loadData = async () => {
   try {
     const [notifRes, studentRes] = await Promise.all([
       supabase.from('notifications').select('*, broadcast:broadcast_messages(title, body)').order('created_at', { ascending: false }).limit(200),
-      $fetch<any>('/api/students?semester_id=all')
+      $fetch<{ students: Array<{ id: string; full_name: string; student_id: string | null }> }>('/api/students?semester_id=all')
     ])
 
     if (notifRes.error) throw notifRes.error

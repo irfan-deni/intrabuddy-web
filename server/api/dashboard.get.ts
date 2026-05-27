@@ -70,13 +70,7 @@ export default defineEventHandler(async (event) => {
     }
   } catch (error: any) {
     console.error('[Dashboard Exception]:', error.message)
-    // Return empty state instead of error to keep the UI alive
-    return {
-      semesterName: 'System Error',
-      totalStudents: 0,
-      placedStudents: 0,
-      unplacedStudents: 0,
-      placementPercentage: 0
-    }
+    if (error.statusCode) throw error
+    throw createError({ statusCode: 500, statusMessage: 'Failed to load dashboard data' })
   }
 })

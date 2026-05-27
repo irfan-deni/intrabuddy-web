@@ -29,7 +29,7 @@ export default defineEventHandler(async (event) => {
       return broadcasts || []
     }
 
-    const userId = user.id || (user as any).sub
+    const userId = getUserId(user)
 
     const supabase = await serverSupabaseClient<Database>(event)
 
@@ -48,6 +48,6 @@ export default defineEventHandler(async (event) => {
   } catch (error: any) {
     if (error.statusCode) throw error
     console.error('[Broadcasts GET Exception]:', error)
-    return []
+    throw createError({ statusCode: 500, statusMessage: 'Failed to fetch broadcasts' })
   }
 })

@@ -167,7 +167,7 @@ definePageMeta({
 
 const supabase = useSupabaseClient<Database>()
 
-const broadcasts = ref<any[]>([])
+const broadcasts = ref<Database['public']['Tables']['broadcast_messages']['Row'][]>([])
 const isLoading = ref(true)
 const isSending = ref(false)
 const successToast = ref(false)
@@ -246,7 +246,7 @@ const removeImage = (idx: number) => {
 const fetchBroadcasts = async () => {
   isLoading.value = true
   try {
-    const data = await $fetch<any[]>('/api/broadcasts')
+    const data = await $fetch<Database['public']['Tables']['broadcast_messages']['Row'][]>('/api/broadcasts')
     broadcasts.value = data || []
   } catch (error) {
     console.error('Failed to sync history')

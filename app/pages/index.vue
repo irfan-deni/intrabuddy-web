@@ -142,7 +142,7 @@ const unplacedStudents = ref(0)
 const placementPercentage = ref(0)
 const isLoading = ref(true)
 
-const logbooks = ref<any[]>([])
+const logbooks = ref<Array<{ statusLabel: string }>>([])
 
 const totalExpected = computed(() => logbooks.value.length)
 

@@ -7,7 +7,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
   }
 
-  const userId = user.id || (user as any).sub
+  const userId = getUserId(user)
   const serviceRole = serverSupabaseServiceRole<Database>(event)
 
   // Use service role for actor check to bypass RLS
@@ -31,8 +31,16 @@ export default defineEventHandler(async (event) => {
   const body = await readBody(event)
   const { email, password, full_name } = body
 
-  if (!email || !password || !full_name) {
-    throw createError({ statusCode: 400, statusMessage: 'Email, password, and full name are required' })
+  if (!full_name || typeof full_name !== 'string' || full_name.trim().length === 0) {
+    throw createError({ statusCode: 400, statusMessage: 'Full name is required' })
+  }
+
+  if (!email || typeof email !== 'string' || !email.includes('@')) {
+    throw createError({ statusCode: 400, statusMessage: 'A valid email is required' })
+  }
+
+  if (!password || typeof password !== 'string' || password.length < 6) {
+    throw createError({ statusCode: 400, statusMessage: 'Password must be at least 6 characters' })
   }
 
   const { data: authData, error: authError } = await serviceRole.auth.admin.createUser({

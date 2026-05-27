@@ -86,6 +86,7 @@ export default defineEventHandler(async (event) => {
     return results
   } catch (error: any) {
     console.error('[Logbooks API Exception]:', error)
-    return [] // Return empty list on failure to avoid crashing dashboard
+    if (error.statusCode) throw error
+    throw createError({ statusCode: 500, statusMessage: 'Failed to load logbook data' })
   }
 })

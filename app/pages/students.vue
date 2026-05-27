@@ -281,11 +281,13 @@ definePageMeta({
   requiredRole: 'coordinator'
 })
 
+import type { Database } from '~/types/supabase'
+
 const { isSuperCoordinator } = useCoordinatorPrivileges()
 
-const supabase = useSupabaseClient()
-const students = ref<any[]>([])
-const semesters = ref<any[]>([])
+const supabase = useSupabaseClient<Database>()
+const students = ref<Array<Record<string, any>>>([])
+const semesters = ref<Database['public']['Tables']['semesters']['Row'][]>([])
 const isLoading = ref(true)
 const isSaving = ref(false)
 const searchQuery = ref('')
@@ -293,7 +295,7 @@ const statusFilter = ref('all')
 const semesterFilter = ref<number | string>('')
 
 const showModal = ref(false)
-const selectedStudent = ref<any>(null)
+const selectedStudent = ref<Record<string, any> | null>(null)
 const editingId = ref<string | null>(null)
 const form = ref({ full_name: '', student_id: '', email: '', phone_number: '' })
 

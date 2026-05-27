@@ -23,6 +23,6 @@ export default defineEventHandler(async (event) => {
     return notifications || []
   } catch (error: any) {
     if (error.statusCode) throw error
-    return []
+    throw createError({ statusCode: 500, statusMessage: 'Failed to fetch notifications' })
   }
 })

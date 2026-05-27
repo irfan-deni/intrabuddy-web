@@ -16,7 +16,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
   }
 
-  const userId = user.id || (user as any).sub
+  const userId = getUserId(user)
   const serviceRole = serverSupabaseServiceRole<Database>(event)
 
   // Verify Coordinator role
@@ -33,8 +33,16 @@ export default defineEventHandler(async (event) => {
   const body = await readBody(event)
   const { full_name, student_id, email, phone_number } = body
 
-  if (!full_name || !email) {
-    throw createError({ statusCode: 400, statusMessage: 'Full name and Email are required' })
+  if (!full_name || typeof full_name !== 'string' || full_name.trim().length === 0) {
+    throw createError({ statusCode: 400, statusMessage: 'Full name is required' })
+  }
+
+  if (!email || typeof email !== 'string' || !email.includes('@')) {
+    throw createError({ statusCode: 400, statusMessage: 'A valid email is required' })
+  }
+
+  if (student_id && typeof student_id !== 'string') {
+    throw createError({ statusCode: 400, statusMessage: 'Invalid student ID' })
   }
 
   // 1. Find active semester

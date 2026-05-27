@@ -125,7 +125,7 @@ definePageMeta({
 
 const { isSuperCoordinator } = useCoordinatorPrivileges()
 
-const coordinators = ref<any[]>([])
+const coordinators = ref<Array<{ id: string; full_name: string; email: string; created_at: string | null }>>([])
 const isLoading = ref(true)
 const isSaving = ref(false)
 const showModal = ref(false)
