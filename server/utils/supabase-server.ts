@@ -36,9 +36,9 @@ export const serverSupabaseServiceRole = <T = any>(event: H3Event) => {
 
 export const serverSupabaseUser = async (event: H3Event) => {
   const client = serverSupabaseClient(event)
-  const { data, error } = await client.auth.getClaims()
+  const { data, error } = await client.auth.getUser()
   if (error) {
     throw createError({ statusMessage: error?.message })
   }
-  return (data?.claims as Record<string, any> & { id?: string }) ?? null
+  return data?.user ?? null
 }
