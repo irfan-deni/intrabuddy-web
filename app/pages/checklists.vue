@@ -11,7 +11,15 @@
           @click="downloadNonComplianceReport"
         >
           <i class="pi pi-file-pdf"></i>
-          Download Non-Compliance Report
+          Export Non-Compliance Report
+        </button>
+        <button
+          v-if="isSuperCoordinator"
+          class="bg-white border border-stone-300 text-stone-700 px-6 py-3 rounded-none font-black text-[10px] uppercase tracking-[0.2em] hover:bg-stone-50 transition-all flex items-center gap-3"
+          @click="importTemplate"
+        >
+          <i class="pi pi-copy"></i>
+          Import Template
         </button>
         <button
           v-if="isSuperCoordinator"
@@ -45,7 +53,17 @@
 
       <template v-else>
         <div class="block md:hidden space-y-3 p-4">
-          <div v-for="item in templates" :key="item.id" class="border border-stone-200 p-4">
+          <div
+            v-for="(item, index) in templates" :key="item.id"
+            :draggable="!!isSuperCoordinator"
+            class="border border-stone-200 p-4"
+            :class="{ 'opacity-50': draggedItemIndex === index }"
+            @dragstart="onDragStart(index)"
+            @dragenter.prevent="onDragEnter(index)"
+            @dragover.prevent
+            @drop="onDrop(index)"
+            @dragend="onDragEnd"
+          >
             <div class="flex items-start justify-between gap-3">
               <div class="min-w-0 flex-1">
                 <div class="font-black text-slate-800 uppercase tracking-tight text-sm">{{ item.title }}</div>
@@ -71,6 +89,7 @@
           <table class="w-full text-left">
             <thead>
               <tr class="text-[10px] font-black text-stone-500 uppercase tracking-[0.2em] bg-stone-50/50 border-b border-stone-200">
+                <th v-if="isSuperCoordinator" class="px-4 py-6 w-12"></th>
                 <th class="px-8 py-6">Order</th>
                 <th class="px-8 py-6">Requirement Title</th>
                 <th class="px-8 py-6">Mandatory</th>
@@ -78,7 +97,26 @@
               </tr>
             </thead>
             <tbody class="divide-y divide-stone-100 text-xs">
-              <tr v-for="item in templates" :key="item.id" class="hover:bg-stone-50 transition-all group">
+              <tr
+                v-for="(item, index) in templates" :key="item.id"
+                :draggable="!!isSuperCoordinator"
+                class="hover:bg-stone-50 transition-all group"
+                :class="{ 'opacity-50': draggedItemIndex === index, 'ring-2 ring-sky-500': draggedOverItemIndex === index && draggedItemIndex !== null }"
+                @dragstart="onDragStart(index)"
+                @dragenter.prevent="onDragEnter(index)"
+                @dragover.prevent
+                @drop="onDrop(index)"
+                @dragend="onDragEnd"
+              >
+                <td v-if="isSuperCoordinator" class="px-4 py-6">
+                  <span class="inline-flex cursor-move text-stone-400 hover:text-slate-800 transition-colors">
+                    <svg class="w-4 h-4" viewBox="0 0 16 16" fill="currentColor">
+                      <circle cx="5" cy="3" r="1.5"/><circle cx="11" cy="3" r="1.5"/>
+                      <circle cx="5" cy="8" r="1.5"/><circle cx="11" cy="8" r="1.5"/>
+                      <circle cx="5" cy="13" r="1.5"/><circle cx="11" cy="13" r="1.5"/>
+                    </svg>
+                  </span>
+                </td>
                 <td class="px-8 py-6 font-black text-stone-400 tabular-nums">{{ item.display_order }}</td>
                 <td class="px-8 py-6">
                   <div class="font-black text-slate-800 uppercase tracking-tight text-xs">{{ item.title }}</div>
@@ -170,6 +208,9 @@ const errorMessage = ref('')
 const successMessage = ref('')
 
 const showForm = ref(false)
+const isImporting = ref(false)
+const draggedItemIndex = ref<number | null>(null)
+const draggedOverItemIndex = ref<number | null>(null)
 const editingId = ref<number | null>(null)
 
 const form = ref({
@@ -282,6 +323,90 @@ const deleteTemplate = async (id: number) => {
   } catch (error: any) {
     errorMessage.value = 'Delete failed'
   }
+}
+
+const importTemplate = async () => {
+  if (!activeSemesterId.value) return
+  if (!confirm('Are you sure you want to import requirements from the previous semester? This will add to your current list.')) return
+
+  isImporting.value = true
+  errorMessage.value = ''
+  successMessage.value = ''
+
+  try {
+    const { data: semesters } = await supabase
+      .from('semesters')
+      .select('id, start_date')
+      .order('start_date', { ascending: false })
+
+    if (!semesters || semesters.length < 2) { errorMessage.value = 'No previous semester found'; return }
+
+    const activeIdx = semesters.findIndex(s => s.id === activeSemesterId.value)
+    const previous = semesters[activeIdx + 1]
+    if (!previous) { errorMessage.value = 'No previous semester found'; return }
+
+    const { data: prevTemplates } = await supabase
+      .from('checklist_templates')
+      .select('*')
+      .eq('semester_id', previous.id)
+
+    if (!prevTemplates || prevTemplates.length === 0) { errorMessage.value = 'No templates found in previous semester'; return }
+
+    const nextOrder = templates.value.length + 1
+    const inserts = prevTemplates.map((t, i) => ({
+      title: t.title,
+      description: t.description,
+      required: t.required,
+      display_order: nextOrder + i,
+      semester_id: activeSemesterId.value
+    }))
+
+    const { error } = await supabase.from('checklist_templates').insert(inserts)
+    if (error) throw error
+
+    successMessage.value = `Imported ${inserts.length} template(s) from previous semester`
+    await loadTemplates()
+  } catch (err: any) {
+    errorMessage.value = err.message || 'Import failed'
+  } finally {
+    isImporting.value = false
+  }
+}
+
+const onDragStart = (index: number) => {
+  draggedItemIndex.value = index
+}
+
+const onDragEnter = (index: number) => {
+  if (index !== draggedItemIndex.value) draggedOverItemIndex.value = index
+}
+
+const onDrop = async (index: number) => {
+  if (draggedItemIndex.value === null || draggedItemIndex.value === index) { onDragEnd(); return }
+
+  const items = [...templates.value]
+  const moved = items.splice(draggedItemIndex.value, 1)[0]
+  if (!moved) { onDragEnd(); return }
+  items.splice(index, 0, moved)
+
+  items.forEach((item, i) => { item.display_order = i + 1 })
+  templates.value = items
+
+  onDragEnd()
+
+  const promises = templates.value.map((item) =>
+    supabase.from('checklist_templates').update({ display_order: item.display_order }).eq('id', item.id)
+  )
+  const results = await Promise.all(promises)
+  if (results.some(r => r.error)) {
+    errorMessage.value = 'Failed to save order'
+    await loadTemplates()
+  }
+}
+
+const onDragEnd = () => {
+  draggedItemIndex.value = null
+  draggedOverItemIndex.value = null
 }
 
 const downloadNonComplianceReport = async () => {

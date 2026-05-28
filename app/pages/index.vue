@@ -10,26 +10,29 @@
         @click="generatePDF"
       >
         <i class="pi pi-file-pdf"></i>
-        Download PDF
+        Export Semester Report
       </button>
     </header>
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-      <Card v-for="stat in stats" :key="stat.label" class="bg-white shadow-sm border border-stone-200">
-        <template #content>
-          <div class="p-4 md:p-6">
-            <div class="flex items-center gap-3 mb-2 md:mb-4">
-              <div class="h-8 w-8 md:h-10 md:w-10 bg-slate-800 text-white flex items-center justify-center rounded-lg">
-                <i :class="[stat.icon, 'text-xs md:text-sm']"></i>
-              </div>
-              <span class="text-xs font-semibold text-stone-500 uppercase tracking-wider">{{ stat.label }}</span>
+      <div
+        v-for="stat in stats" :key="stat.label"
+        class="bg-white shadow-sm border border-stone-200"
+        :class="stat.to ? 'cursor-pointer hover:shadow-md hover:-translate-y-1 transition-all' : ''"
+        @click="stat.to ? navigateTo(stat.to) : undefined"
+      >
+        <div class="p-4 md:p-6">
+          <div class="flex items-center gap-3 mb-2 md:mb-4">
+            <div class="h-8 w-8 md:h-10 md:w-10 bg-slate-800 text-white flex items-center justify-center rounded-lg">
+              <i :class="[stat.icon, 'text-xs md:text-sm']"></i>
             </div>
-            <p class="text-2xl md:text-4xl font-bold text-slate-800 tabular-nums tracking-tight">
-              {{ isLoading ? '...' : stat.value }}
-            </p>
+            <span class="text-xs font-semibold text-stone-500 uppercase tracking-wider">{{ stat.label }}</span>
           </div>
-        </template>
-      </Card>
+          <p class="text-2xl md:text-4xl font-bold text-slate-800 tabular-nums tracking-tight">
+            {{ isLoading ? '...' : stat.value }}
+          </p>
+        </div>
+      </div>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -48,7 +51,7 @@
             </div>
             <div class="flex-1 space-y-6">
               <div>
-                <h2 class="text-lg font-bold text-slate-800">Placement Velocity</h2>
+                <h2 class="text-lg font-bold text-slate-800">Placement Status</h2>
                 <p class="text-sm text-stone-600 mt-2 leading-relaxed">
                   Current semester operating at <strong class="text-slate-800">{{ placementPercentage }}%</strong> capacity.
                   <strong class="text-slate-800">{{ unplacedStudents }}</strong> students still in the active search funnel.
@@ -100,17 +103,30 @@
               <span class="text-2xl font-bold text-slate-800 tabular-nums">{{ complianceRate }}%</span>
             </div>
 
-            <div class="w-full bg-slate-200 rounded-full h-4 mt-4 mb-4 overflow-hidden">
-              <div
-                class="h-full rounded-full transition-all duration-1000 ease-out"
-                :class="complianceRate > 80 ? 'bg-emerald-500' : complianceRate > 50 ? 'bg-amber-400' : 'bg-red-500'"
-                :style="{ width: complianceRate + '%' }"
-              ></div>
+            <div class="w-full bg-stone-200 rounded-full h-4 mt-4 mb-4 overflow-hidden flex">
+              <div class="h-full bg-emerald-500 transition-all duration-1000" :style="{ width: submittedPercent + '%' }"></div>
+              <div class="h-full bg-red-500 transition-all duration-1000" :style="{ width: latePercent + '%' }"></div>
+              <div class="h-full bg-stone-200 transition-all duration-1000" :style="{ width: pendingPercent + '%' }"></div>
             </div>
 
             <p class="text-sm text-stone-600">
               {{ totalSubmitted }} of {{ totalExpected }} expected logbooks submitted this week.
             </p>
+
+            <div class="flex items-center gap-4 mt-3 text-xs">
+              <span class="flex items-center gap-1.5">
+                <span class="h-2.5 w-2.5 rounded-full bg-emerald-500"></span>
+                Submitted ({{ totalSubmitted }})
+              </span>
+              <span class="flex items-center gap-1.5">
+                <span class="h-2.5 w-2.5 rounded-full bg-red-500"></span>
+                Overdue ({{ totalLate }})
+              </span>
+              <span class="flex items-center gap-1.5">
+                <span class="h-2.5 w-2.5 rounded-full bg-stone-300"></span>
+                Pending ({{ totalPending }})
+              </span>
+            </div>
           </template>
         </div>
       </template>
@@ -149,14 +165,34 @@ const totalSubmitted = computed(() =>
   logbooks.value.filter(e => e.statusLabel === 'Submitted').length
 )
 
+const totalLate = computed(() =>
+  logbooks.value.filter(e => e.statusLabel === 'Late').length
+)
+
+const totalPending = computed(() =>
+  logbooks.value.filter(e => e.statusLabel === 'Not Submitted').length
+)
+
 const complianceRate = computed(() =>
   totalExpected.value > 0 ? Math.round((totalSubmitted.value / totalExpected.value) * 100) : 0
 )
 
+const submittedPercent = computed(() =>
+  totalExpected.value > 0 ? Math.round((totalSubmitted.value / totalExpected.value) * 100) : 0
+)
+
+const latePercent = computed(() =>
+  totalExpected.value > 0 ? Math.round((totalLate.value / totalExpected.value) * 100) : 0
+)
+
+const pendingPercent = computed(() =>
+  totalExpected.value > 0 ? Math.round((totalPending.value / totalExpected.value) * 100) : 0
+)
+
 const stats = computed(() => [
-  { label: 'Total Students', value: totalStudents.value, icon: 'pi pi-users' },
-  { label: 'Placed', value: placedStudents.value, icon: 'pi pi-check-circle' },
-  { label: 'Unplaced', value: unplacedStudents.value, icon: 'pi pi-search' },
+  { label: 'Total Students', value: totalStudents.value, icon: 'pi pi-users', to: '/students' },
+  { label: 'Placed', value: placedStudents.value, icon: 'pi pi-check-circle', to: '/students?status=Accepted' },
+  { label: 'Unplaced', value: unplacedStudents.value, icon: 'pi pi-search', to: '/students?status=unplaced' },
   { label: 'Milestones Completed', value: placementPercentage.value + '%', icon: 'pi pi-chart-line' }
 ])
 

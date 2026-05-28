@@ -35,7 +35,7 @@
             @click="generatePDF"
           >
             <i class="pi pi-file-pdf"></i>
-            Download PDF
+            Export Student Directory
           </button>
           <button 
             v-if="isSuperCoordinator"
