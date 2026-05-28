@@ -80,7 +80,16 @@
     <section class="space-y-6">
       <div class="flex items-center justify-between">
         <h2 class="text-[11px] font-black text-slate-800 uppercase tracking-[0.2em]">Transmission History</h2>
-        <span class="text-[8px] font-black text-stone-400 uppercase tracking-widest tabular-nums">{{ broadcasts.length }} Logs Detected</span>
+        <div class="flex items-center gap-3">
+          <button
+            class="h-8 px-3 bg-indigo-600 hover:bg-indigo-700 text-white text-[9px] font-black uppercase tracking-widest transition-all flex items-center gap-1.5"
+            @click="downloadAuditTrail"
+          >
+            <i class="pi pi-file-pdf"></i>
+            Download Audit Trail
+          </button>
+          <span class="text-[8px] font-black text-stone-400 uppercase tracking-widest tabular-nums">{{ broadcasts.length }} Logs Detected</span>
+        </div>
       </div>
 
       <div v-if="broadcasts.length === 0" class="py-12 md:py-20 text-center text-[10px] font-black text-stone-400 uppercase tracking-widest bg-white border border-stone-200">No previous transmissions recorded</div>
@@ -160,6 +169,7 @@
 
 <script setup lang="ts">
 import type { Database } from '~/types/supabase'
+import { generateReport } from '~/utils/pdfGenerator'
 
 definePageMeta({
   requiredRole: 'coordinator'
@@ -253,6 +263,32 @@ const fetchBroadcasts = async () => {
   } finally {
     isLoading.value = false
   }
+}
+
+const formatDateTime = (dateStr: string | null) => {
+  if (!dateStr) return '---'
+  const d = new Date(dateStr)
+  const pad = (n: number) => n.toString().padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
+const downloadAuditTrail = async () => {
+  const coordinatorIds = [...new Set(broadcasts.value.map(b => b.coordinator_id).filter(Boolean) as string[])]
+
+  const coordinatorsMap: Record<string, string> = {}
+  if (coordinatorIds.length) {
+    const { data: users } = await supabase.from('users').select('id, full_name').in('id', coordinatorIds)
+    for (const u of users || []) coordinatorsMap[u.id] = u.full_name
+  }
+
+  const rows = broadcasts.value.map(b => [
+    formatDateTime(b.sent_at),
+    b.title || 'Untitled',
+    (b.target_roles || []).map(r => audienceLabels[r] || r).join(', ') || 'All',
+    b.coordinator_id ? (coordinatorsMap[b.coordinator_id] || 'Unknown') : 'System'
+  ])
+
+  generateReport('Broadcast Audit Trail', ['Date Sent', 'Message Title', 'Target Cohort / Segment', 'Sent By'], rows, 'Broadcast_Audit_Trail.pdf', { columnStyles: { 0: { fontStyle: 'bold' } } })
 }
 
 const deleteBroadcast = async (id: number) => {

@@ -5,14 +5,23 @@
         <h1 class="text-2xl md:text-4xl font-black text-slate-800 tracking-tight uppercase">Master Checklist</h1>
         <p class="text-stone-500 mt-2 font-bold uppercase text-[10px] tracking-widest">Global requirements template for the active semester.</p>
       </div>
-      <button
-        v-if="isSuperCoordinator"
-        class="bg-sky-600 text-white px-6 py-3 rounded-none font-black text-[10px] uppercase tracking-[0.2em] hover:brightness-110 transition-all flex items-center gap-3"
-        @click="openAddForm"
-      >
-        <i class="pi pi-plus"></i>
-        New Requirement
-      </button>
+      <div class="flex items-center gap-3">
+        <button
+          class="bg-indigo-600 text-white px-6 py-3 rounded-none font-black text-[10px] uppercase tracking-[0.2em] hover:bg-indigo-700 transition-all flex items-center gap-3"
+          @click="downloadNonComplianceReport"
+        >
+          <i class="pi pi-file-pdf"></i>
+          Download Non-Compliance Report
+        </button>
+        <button
+          v-if="isSuperCoordinator"
+          class="bg-sky-600 text-white px-6 py-3 rounded-none font-black text-[10px] uppercase tracking-[0.2em] hover:brightness-110 transition-all flex items-center gap-3"
+          @click="openAddForm"
+        >
+          <i class="pi pi-plus"></i>
+          New Requirement
+        </button>
+      </div>
     </header>
 
     <div v-if="errorMessage" class="p-4 bg-rose-50 border border-rose-100 text-rose-700 text-[10px] font-black uppercase tracking-widest">
@@ -141,6 +150,7 @@
 <script setup lang="ts">
 import type { Database } from '~/types/supabase'
 import { useCoordinatorPrivileges } from '~/composables/useCoordinatorPrivileges'
+import { generateReport } from '~/utils/pdfGenerator'
 
 definePageMeta({
   requiredRole: 'coordinator'
@@ -272,6 +282,40 @@ const deleteTemplate = async (id: number) => {
   } catch (error: any) {
     errorMessage.value = 'Delete failed'
   }
+}
+
+const downloadNonComplianceReport = async () => {
+  if (!activeSemesterId.value) return
+
+  const { data: studentSemesters } = await supabase
+    .from('student_semesters')
+    .select('student_id')
+    .eq('semester_id', activeSemesterId.value)
+
+  const enrolledIds = (studentSemesters || []).map(s => s.student_id).filter(Boolean) as string[]
+  if (!enrolledIds.length) { alert('No students enrolled in active semester'); return }
+
+  const [{ data: requiredTpls }, { data: profiles }, { data: checklists }] = await Promise.all([
+    supabase.from('checklist_templates').select('id, title').eq('semester_id', activeSemesterId.value).eq('required', true),
+    supabase.from('users').select('id, full_name, student_id').eq('role', 'student').in('id', enrolledIds),
+    supabase.from('student_checklists').select('student_id, checklist_item_id, is_completed').in('student_id', enrolledIds)
+  ])
+
+  const rows: string[][] = []
+  for (const student of profiles || []) {
+    const studentItems = checklists?.filter(c => c.student_id === student.id) || []
+    const missing = (requiredTpls || []).filter(t => {
+      const item = studentItems.find(c => c.checklist_item_id === t.id)
+      return !item || !item.is_completed
+    })
+    if (missing.length) {
+      rows.push([student.full_name, student.student_id || '---', missing.map(t => t.title).join(', '), 'Non-Compliant'])
+    }
+  }
+
+  if (!rows.length) { alert('All students are compliant'); return }
+
+  generateReport('Cohort Readiness Report - Non-Compliance', ['Student Name', 'ID', 'Missing Milestones', 'Status'], rows, 'Cohort_Readiness_Report.pdf', { columnStyles: { 0: { fontStyle: 'bold' } } })
 }
 
 onMounted(() => {

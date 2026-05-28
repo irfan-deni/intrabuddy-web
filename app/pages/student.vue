@@ -16,6 +16,12 @@
           <span class="text-[9px] md:text-[10px] font-black text-slate-800 uppercase tracking-widest">{{ isLoading ? 'Syncing...' : 'Active' }}</span>
         </div>
         <button
+          class="h-10 md:h-12 px-4 md:px-6 bg-indigo-600 hover:bg-indigo-700 text-white text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap"
+          @click="downloadStudentProfile"
+        >
+          <i class="pi pi-file-pdf mr-1.5 md:mr-2"></i> Download Student Profile
+        </button>
+        <button
           class="h-10 md:h-12 px-4 md:px-6 bg-sky-600 hover:bg-sky-700 text-white text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap"
           @click="openAlertModal"
         >
@@ -266,6 +272,7 @@ import type { Database } from '~/types/supabase'
 import StatusBadge from '~/components/StatusBadge.vue'
 import ProgressBar from '~/components/ProgressBar.vue'
 import { useCoordinatorPrivileges } from '~/composables/useCoordinatorPrivileges'
+import { generateReport } from '~/utils/pdfGenerator'
 
 definePageMeta({
   requiredRole: 'coordinator'
@@ -452,6 +459,29 @@ const sendAlert = async () => {
   } finally {
     isSendingAlert.value = false
   }
+}
+
+const downloadStudentProfile = () => {
+  const acceptedApp = applications.value.find(a => a.status === 'Accepted')
+  const placementCompany = acceptedApp?.company_name || 'Not Placed'
+
+  const rows: [string, string][] = [
+    ['Name', studentName.value],
+    ['Student ID', studentId.value || '---'],
+    ['Placement Company', placementCompany],
+    ['Readiness Checklist', `${checklistCompletion.value}%`],
+    ['Logbooks Submitted', `${logbookEntries.value.filter(e => e.is_submitted).length} of ${logbookEntries.value.length}`]
+  ]
+
+  const safeName = studentName.value.replace(/[^a-zA-Z0-9_-]/g, '_')
+
+  generateReport(
+    `Student Profile - ${studentName.value}`,
+    ['Category', 'Details'],
+    rows,
+    `${safeName}_Profile.pdf`,
+    { columnStyles: { 0: { fontStyle: 'bold', cellWidth: 50 } } }
+  )
 }
 
 onMounted(async () => {
