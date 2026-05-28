@@ -30,7 +30,7 @@
         </div>
 
         <div class="bg-white border border-stone-200 shadow-sm rounded-sm p-8">
-          <h2 class="text-xl font-black uppercase tracking-widest text-stone-900">AUTHENTICATION</h2>
+          <h2 class="text-xl font-black uppercase tracking-widest text-stone-900">COORDINATOR LOGIN</h2>
           <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-stone-500 mt-2">Enter your credentials to access the dashboard.</p>
 
           <div v-if="errorMessage" class="mt-6 p-4 bg-rose-50 border border-rose-200 text-rose-700 text-[9px] font-black uppercase tracking-widest text-center">
@@ -87,7 +87,7 @@
               class="bg-sky-600 hover:bg-sky-700 text-white font-black text-[10px] uppercase tracking-[0.2em] py-3 px-4 rounded-sm transition-colors w-full flex justify-center items-center disabled:opacity-50 gap-2"
             >
               <i v-if="loading" class="pi pi-spin pi-spinner"></i>
-              {{ loading ? 'Signing in...' : 'Sign in' }}
+              {{ loading ? 'Logging in...' : 'LOG IN' }}
             </button>
           </form>
         </div>
