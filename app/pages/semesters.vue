@@ -47,15 +47,18 @@
               </div>
             </div>
             <div class="text-[10px] font-bold text-stone-500 tabular-nums mb-3">
-              {{ new Date(sem.start_date).toLocaleDateString() }} — {{ new Date(sem.end_date).toLocaleDateString() }}
+              {{ formatDate(sem.start_date) }} — {{ formatDate(sem.end_date) }}
             </div>
             <div v-if="isSuperCoordinator" class="flex items-center justify-between pt-3 border-t border-stone-100">
-              <span class="text-[9px] font-bold text-stone-400">Created: {{ sem.created_at ? new Date(sem.created_at).toLocaleDateString() : '---' }}</span>
+              <span class="text-[9px] font-bold text-stone-400">Created: {{ formatDate(sem.created_at) }}</span>
               <div class="flex gap-2">
-                <button class="h-7 w-7 bg-slate-900 text-white flex items-center justify-center" @click="openEditForm(sem)">
+                <button class="h-7 w-7 border border-stone-200 text-stone-500 hover:bg-stone-50 flex items-center justify-center rounded-sm" @click="openEditForm(sem)">
                   <i class="pi pi-pencil text-[8px]"></i>
                 </button>
-                <button class="h-7 w-7 border border-slate-900 text-slate-800 flex items-center justify-center" :disabled="!!sem.is_active" @click="deleteSemester(sem.id)">
+                <button v-if="sem.is_active" class="h-7 w-7 border border-stone-200 text-stone-300 cursor-not-allowed flex items-center justify-center" disabled title="Cannot delete active semester">
+                  <i class="pi pi-trash text-[8px]"></i>
+                </button>
+                <button v-else class="h-7 w-7 border border-slate-900 text-slate-800 flex items-center justify-center" @click="deleteSemester(sem.id)">
                   <i class="pi pi-trash text-[8px]"></i>
                 </button>
               </div>
@@ -81,7 +84,7 @@
                 </td>
                 <td class="px-8 py-6">
                   <span class="font-bold text-stone-500 tabular-nums text-xs">
-                    {{ new Date(sem.start_date).toLocaleDateString() }} — {{ new Date(sem.end_date).toLocaleDateString() }}
+                    {{ formatDate(sem.start_date) }} — {{ formatDate(sem.end_date) }}
                   </span>
                 </td>
                 <td class="px-8 py-6">
@@ -93,14 +96,17 @@
                   </div>
                 </td>
                 <td class="px-8 py-6 text-stone-400 font-bold text-[10px]">
-                  {{ sem.created_at ? new Date(sem.created_at).toLocaleDateString() : '---' }}
+                  {{ formatDate(sem.created_at) }}
                 </td>
                 <td v-if="isSuperCoordinator" class="px-8 py-6 text-right">
                   <div class="flex items-center justify-end gap-2">
-                    <button class="h-8 w-8 bg-slate-900 text-white hover:brightness-150 transition-all" @click="openEditForm(sem)">
+                    <button class="h-8 w-8 border border-stone-200 text-stone-500 hover:bg-stone-50 rounded-sm transition-all" @click="openEditForm(sem)">
                       <i class="pi pi-pencil text-[10px]"></i>
                     </button>
-                    <button class="h-8 w-8 border border-slate-900 text-slate-800 hover:bg-slate-900 hover:text-white transition-all" :disabled="!!sem.is_active" :title="sem.is_active ? 'Cannot delete active semester' : ''" @click="deleteSemester(sem.id)">
+                    <button v-if="sem.is_active" class="h-8 w-8 border border-stone-200 text-stone-300 cursor-not-allowed flex items-center justify-center rounded-sm" disabled title="Cannot delete active semester">
+                      <i class="pi pi-trash text-[10px]"></i>
+                    </button>
+                    <button v-else class="h-8 w-8 border border-slate-900 text-slate-800 hover:bg-slate-900 hover:text-white transition-all" @click="deleteSemester(sem.id)">
                       <i class="pi pi-trash text-[10px]"></i>
                     </button>
                   </div>
@@ -258,6 +264,15 @@ const deleteSemester = async (id: number) => {
   } catch (error: any) {
     errorMessage.value = 'Delete failed'
   }
+}
+
+const formatDate = (date: string | null | undefined) => {
+  if (!date) return '---'
+  return new Intl.DateTimeFormat('en-GB', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric'
+  }).format(new Date(date))
 }
 
 onMounted(loadSemesters)
