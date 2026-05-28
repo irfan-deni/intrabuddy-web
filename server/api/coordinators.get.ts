@@ -22,7 +22,7 @@ export default defineEventHandler(async (event) => {
 
   const { data: coordinators, error } = await serviceRole
     .from('users')
-    .select('id, full_name, email, created_at')
+    .select('id, full_name, email, role, created_at')
     .eq('role', 'coordinator')
     .order('created_at', { ascending: false })
 
