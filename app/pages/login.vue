@@ -29,17 +29,17 @@
           <p class="text-stone-500 mt-1 text-[10px] font-bold uppercase tracking-widest">Coordinator Portal</p>
         </div>
 
-        <div class="bg-white shadow-xl rounded-2xl p-8">
-          <h2 class="text-xl font-bold text-slate-800">Sign in to your account</h2>
-          <p class="text-stone-500 text-sm mt-1.5">Enter your credentials to access the dashboard.</p>
+        <div class="bg-white border border-stone-200 shadow-sm rounded-sm p-8">
+          <h2 class="text-xl font-black uppercase tracking-widest text-stone-900">AUTHENTICATION</h2>
+          <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-stone-500 mt-2">Enter your credentials to access the dashboard.</p>
 
-          <div v-if="errorMessage" class="mt-6 p-4 bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold rounded-lg text-center">
+          <div v-if="errorMessage" class="mt-6 p-4 bg-rose-50 border border-rose-200 text-rose-700 text-[9px] font-black uppercase tracking-widest text-center">
             {{ errorMessage }}
           </div>
 
           <form @submit.prevent="handleLogin" class="mt-8 space-y-5">
             <div class="space-y-1.5">
-              <label for="email" class="text-xs font-semibold text-slate-700">Email address</label>
+              <label for="email" class="text-[9px] font-black uppercase tracking-[0.2em] text-stone-700 mb-1">Email address</label>
               <InputText
                 id="email"
                 v-model="email"
@@ -47,12 +47,12 @@
                 required
                 autocomplete="email"
                 placeholder="name@university.edu"
-                class="w-full px-4 py-3 bg-white border border-slate-200 rounded-lg outline-none focus:border-sky-600 focus:ring-2 focus:ring-sky-600/20 text-sm text-slate-800 placeholder:text-stone-400 transition-all"
+                class="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-sm outline-none focus:border-sky-600 focus:ring-0 text-xs font-bold text-stone-900 placeholder:text-stone-400 transition-all"
               />
             </div>
 
             <div class="space-y-1.5">
-              <label for="password" class="text-xs font-semibold text-slate-700">Password</label>
+              <label for="password" class="text-[9px] font-black uppercase tracking-[0.2em] text-stone-700 mb-1">Password</label>
               <Password
                 v-model="password"
                 inputId="password"
@@ -76,15 +76,15 @@
                     <i v-if="checked" class="pi pi-check text-white text-[9px] font-bold"></i>
                   </template>
                 </Checkbox>
-                <span class="text-sm font-medium text-stone-600 group-hover:text-slate-800 transition-colors">Remember me</span>
+                <span class="text-[10px] font-bold text-stone-600 group-hover:text-slate-800 transition-colors">Remember me</span>
               </label>
-              <button type="button" class="text-sm font-semibold text-sky-600 hover:text-sky-700 transition-colors">Forgot password?</button>
+              <button type="button" class="text-[10px] font-bold text-sky-600 hover:text-sky-700 transition-colors">Forgot password?</button>
             </div>
 
             <button
               type="submit"
               :disabled="loading"
-              class="w-full py-3 bg-sky-600 text-white font-semibold text-sm rounded-lg hover:brightness-110 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+              class="bg-sky-600 hover:bg-sky-700 text-white font-black text-[10px] uppercase tracking-[0.2em] py-3 px-4 rounded-sm transition-colors w-full flex justify-center items-center disabled:opacity-50 gap-2"
             >
               <i v-if="loading" class="pi pi-spin pi-spinner"></i>
               {{ loading ? 'Signing in...' : 'Sign in' }}
@@ -92,7 +92,7 @@
           </form>
         </div>
 
-        <p class="mt-10 text-center text-xs font-medium text-stone-400">
+        <p class="mt-10 text-center text-[10px] font-bold text-stone-400 uppercase tracking-widest">
           &copy; 2026 INTRA Buddy. Professional Placement Management.
         </p>
       </div>
@@ -113,7 +113,7 @@ const remember = ref(false)
 const loading = ref(false)
 const errorMessage = ref('')
 
-const inputClass = 'w-full px-4 py-3 bg-white border border-slate-200 rounded-lg outline-none focus:border-sky-600 focus:ring-2 focus:ring-sky-600/20 text-sm text-slate-800 placeholder:text-stone-400 transition-all'
+const inputClass = 'w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-sm outline-none focus:border-sky-600 focus:ring-0 text-xs font-bold text-stone-900 placeholder:text-stone-400 transition-all'
 
 const checkboxPt = computed(() => ({
   root: { class: 'cursor-pointer' },
