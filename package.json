@@ -34,6 +34,6 @@
     "nitro-cloudflare-dev": "^0.2.2",
     "playwright": "1.52",
     "vitest": "^4.1.7",
-    "wrangler": "^4.95.0"
+    "wrangler": "^4.135.0"
   }
 }
