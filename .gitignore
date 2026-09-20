@@ -16,6 +16,9 @@ node_modules
 logs
 *.log
 
+# Test artifacts
+test-results
+
 # Misc
 .DS_Store
 .fleet
