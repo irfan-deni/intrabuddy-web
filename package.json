@@ -34,6 +34,6 @@
     "happy-dom": "^20.9.0",
     "nitro-cloudflare-dev": "^0.2.2",
     "vitest": "^4.1.11",
-    "wrangler": "^4.135.0"
+    "wrangler": "^4.146.0"
   }
 }
