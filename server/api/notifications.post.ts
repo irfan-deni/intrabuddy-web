@@ -1,25 +1,9 @@
-import { serverSupabaseClient, serverSupabaseServiceRole, serverSupabaseUser } from '~~/server/utils/supabase-server'
+import { serverSupabaseServiceRole } from '~~/server/utils/supabase-server'
 import type { Database } from '~/types/supabase'
 
 export default defineEventHandler(async (event) => {
   try {
-    const user = await serverSupabaseUser(event)
-    if (!user) {
-      throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
-    }
-
-    const userId = getUserId(user)
-
-    const client = await serverSupabaseClient<Database>(event)
-    const { data: actor } = await client
-      .from('users')
-      .select('role')
-      .eq('id', userId)
-      .single()
-
-    if (!actor || actor.role !== 'coordinator') {
-      throw createError({ statusCode: 403, statusMessage: 'Forbidden' })
-    }
+    await requireCoordinator(event)
 
     const body = await readBody<{
       recipient_id: string
@@ -28,9 +12,13 @@ export default defineEventHandler(async (event) => {
       type?: string
     }>(event)
 
-    if (!body.recipient_id || !body.title || !body.body) {
+    if (!body || typeof body.recipient_id !== 'string' || !body.recipient_id ||
+      typeof body.title !== 'string' || !body.title.trim() || body.title.length > 200 ||
+      typeof body.body !== 'string' || !body.body.trim() || body.body.length > 20000 ||
+      (body.type !== undefined && body.type !== 'manual_alert')) {
       throw createError({ statusCode: 400, statusMessage: 'recipient_id, title, and body are required' })
     }
+    await requireStudentTarget(event, body.recipient_id)
 
     const serviceRole = serverSupabaseServiceRole<Database>(event)
     const { data, error } = await serviceRole

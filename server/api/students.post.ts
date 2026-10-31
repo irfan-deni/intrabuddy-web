@@ -1,34 +1,18 @@
-import { serverSupabaseServiceRole, serverSupabaseUser } from '~~/server/utils/supabase-server'
+import { serverSupabaseServiceRole } from '~~/server/utils/supabase-server'
 import type { Database } from '~/types/supabase'
 
 function generateTempPassword(): string {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$'
   let password = ''
   for (let i = 0; i < 16; i++) {
-    password += chars.charAt(Math.floor(Math.random() * chars.length))
+    password += chars.charAt(crypto.getRandomValues(new Uint32Array(1))[0]! % chars.length)
   }
   return password
 }
 
 export default defineEventHandler(async (event) => {
-  const user = await serverSupabaseUser(event)
-  if (!user) {
-    throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
-  }
-
-  const userId = getUserId(user)
+  await requireSuperCoordinator(event)
   const serviceRole = serverSupabaseServiceRole<Database>(event)
-
-  // Verify Coordinator role
-  const { data: actor } = await serviceRole
-    .from('users')
-    .select('role')
-    .eq('id', userId)
-    .single()
-
-  if (!actor || actor.role !== 'coordinator') {
-    throw createError({ statusCode: 403, statusMessage: 'Forbidden' })
-  }
 
   const body = await readBody(event)
   const { full_name, student_id, email, phone_number } = body

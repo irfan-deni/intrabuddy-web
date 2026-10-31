@@ -18,12 +18,16 @@ logs
 
 # Test artifacts
 test-results
+playwright-report
+coverage
 
 # Misc
 .DS_Store
 .fleet
 .idea
 .vscode/mcp.json
+*.code-workspace
+opencode.json
 
 # Local env files
 .env
@@ -32,8 +36,11 @@ test-results
 
 # Ai
 .ai
-docs
+docs/*
+!docs/core-database-setup.sql
+!docs/mobile-notifications-setup.sql
 .agents
+supabase/.temp/
 
 .dev.vars*
 !.dev.vars.example

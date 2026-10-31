@@ -1,12 +1,12 @@
 <template>
-  <div class="space-y-6 md:space-y-10">
-    <header class="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-stone-200 pb-6 md:pb-8">
+  <div class="app-surface-ui space-y-6 md:space-y-8">
+    <header class="flex flex-col md:flex-row flex-wrap md:items-end justify-between gap-6">
       <div>
-        <h1 class="text-2xl md:text-4xl font-black text-slate-800 tracking-tight uppercase">Knowledge Base</h1>
-        <p class="text-stone-500 mt-2 font-bold uppercase text-[10px] tracking-widest">Self-service FAQ library for internship candidates.</p>
+        <h1 class="text-2xl md:text-4xl font-bold text-slate-800 tracking-tight">FAQs</h1>
+        <p class="mt-2 text-sm font-normal leading-relaxed text-text-muted">Self-service FAQ library for internship candidates.</p>
       </div>
       <button
-        class="bg-sky-600 text-white px-6 py-3 rounded-none font-black text-[10px] uppercase tracking-[0.2em] hover:brightness-110 transition-all flex items-center gap-3"
+        class="bg-sky-700 text-white px-6 py-3 rounded-control text-sm font-semibold hover:bg-sky-800 transition-all flex items-center gap-3"
         @click="openAddModal"
       >
         <i class="pi pi-plus"></i>
@@ -14,25 +14,25 @@
       </button>
     </header>
 
-    <div v-if="errorMessage" class="p-4 bg-rose-50 border border-rose-100 text-rose-700 text-[10px] font-black uppercase tracking-widest">
+    <div v-if="errorMessage" class="rounded-card p-4 bg-rose-50 border border-rose-100 text-rose-700 text-[10px] font-black uppercase tracking-widest">
       {{ errorMessage }}
     </div>
 
     <div class="relative group">
-      <i class="pi pi-search absolute left-5 top-1/2 -translate-y-1/2 text-stone-400 group-focus-within:text-sky-600 transition-colors"></i>
+      <i class="pi pi-search absolute left-5 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-sky-700 transition-colors"></i>
       <input
         v-model="searchQuery"
         type="text"
         placeholder="Search articles..."
-        class="w-full pl-14 pr-6 py-4 bg-white border border-stone-200 rounded-none outline-none focus:border-sky-600 focus:ring-1 focus:ring-sky-600 transition-all text-xs font-black uppercase tracking-widest text-slate-800 placeholder:text-stone-400"
+        class="w-full pl-14 pr-6 py-4 bg-surface-muted border border-surface-control rounded-control outline-none focus:border-sky-700 focus:ring-1 focus:ring-sky-700 transition-all text-xs font-black uppercase tracking-widest text-slate-800 placeholder:text-text-muted"
       >
     </div>
 
     <!-- Category Filter Pills + Management -->
     <div class="flex flex-wrap items-center gap-2">
       <button
-        class="px-4 py-2 text-[9px] font-black uppercase tracking-widest border transition-all"
-        :class="activeCategory === null ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-stone-400 border-stone-200 hover:border-slate-900 hover:text-slate-800'"
+        class="rounded-control px-4 py-2 text-[9px] font-black uppercase tracking-widest border transition-all"
+        :class="activeCategory === null ? 'bg-slate-900 text-white border-slate-900' : 'bg-surface-muted text-text-muted border-surface-control hover:border-slate-900 hover:text-slate-800'"
         @click="activeCategory = null"
       >
         All
@@ -40,14 +40,14 @@
       <button
         v-for="cat in categories"
         :key="cat.id"
-        class="px-4 py-2 text-[9px] font-black uppercase tracking-widest border transition-all"
-        :class="activeCategory === cat.id ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-stone-400 border-stone-200 hover:border-slate-900 hover:text-slate-800'"
+        class="rounded-control px-4 py-2 text-[9px] font-black uppercase tracking-widest border transition-all"
+        :class="activeCategory === cat.id ? 'bg-slate-900 text-white border-slate-900' : 'bg-surface-muted text-text-muted border-surface-control hover:border-slate-900 hover:text-slate-800'"
         @click="activeCategory = cat.id"
       >
         {{ cat.name }}
       </button>
       <button
-        class="px-4 py-2 text-[9px] font-black uppercase tracking-widest border border-dashed border-stone-300 text-stone-400 hover:border-slate-900 hover:text-slate-800 transition-all"
+        class="rounded-control px-4 py-2 text-[9px] font-black uppercase tracking-widest border border-dashed border-surface-control text-text-muted hover:border-slate-900 hover:text-slate-800 transition-all"
         @click="showCategoryForm = true"
       >
         <i class="pi pi-pencil mr-1"></i> Manage
@@ -60,46 +60,46 @@
         <span class="text-[10px] font-black uppercase tracking-widest text-slate-800">Syncing Library</span>
       </div>
       
-      <div v-else-if="filteredFaqs.length === 0" class="md:col-span-2 py-24 text-center border-2 border-dashed border-stone-200">
+      <div v-else-if="filteredFaqs.length === 0" class="rounded-card bg-surface md:col-span-2 py-24 text-center border-2 border-dashed border-surface-border">
         <i class="pi pi-question-circle text-5xl mb-6 text-stone-100"></i>
-        <p class="text-[10px] font-black text-stone-400 uppercase tracking-widest">No articles found</p>
+        <p class="text-[10px] font-black text-text-muted uppercase tracking-widest">No articles found</p>
       </div>
 
       <div 
         v-for="faq in filteredFaqs" 
         :key="faq.id" 
-        class="bg-white p-4 md:p-6 lg:p-8 border border-stone-200 hover:border-sky-600 transition-all group flex flex-col relative"
+        class="rounded-card bg-surface p-4 md:p-6 lg:p-8 border border-surface-border hover:border-sky-700 transition-all group flex flex-col relative"
       >
         <div class="absolute top-0 right-0 p-4 flex gap-1 opacity-0 group-hover:opacity-100 transition-all">
-          <button class="h-8 w-8 flex items-center justify-center bg-slate-900 text-white" @click="editFaq(faq)">
+          <button class="rounded-control h-8 w-8 flex items-center justify-center bg-slate-900 text-white" @click="editFaq(faq)">
             <i class="pi pi-pencil text-[10px]"></i>
           </button>
-          <button class="h-8 w-8 flex items-center justify-center border border-slate-900 text-slate-800 hover:bg-slate-900 hover:text-white" @click="confirmDelete(faq.id)">
+          <button class="rounded-control h-8 w-8 flex items-center justify-center border border-slate-900 text-slate-800 hover:bg-slate-900 hover:text-white" @click="confirmDelete(faq.id)">
             <i class="pi pi-trash text-[10px]"></i>
           </button>
         </div>
 
         <div class="mb-6">
-          <span class="inline-flex px-2 py-1 bg-slate-900 text-white text-[9px] font-black uppercase tracking-tighter mb-4">
+          <span class="rounded-badge inline-flex px-2 py-1 bg-slate-900 text-white text-[9px] font-black uppercase tracking-tighter mb-4">
             {{ getCategoryName(faq.category_id) }}
           </span>
           <h3 class="text-base font-black text-slate-800 uppercase tracking-tight leading-tight">{{ faq.question }}</h3>
         </div>
         
-        <p class="text-xs text-stone-500 font-medium leading-relaxed mb-6 flex-1 line-clamp-4">{{ faq.answer }}</p>
+        <p class="text-xs text-text-muted font-medium leading-relaxed mb-6 flex-1 line-clamp-4">{{ faq.answer }}</p>
 
         <div v-if="faq.keywords && faq.keywords.length > 0" class="flex flex-wrap gap-1.5 mb-6">
           <span
             v-for="tag in faq.keywords"
             :key="tag"
-            class="px-2 py-0.5 bg-stone-100 text-slate-800 text-[8px] font-black uppercase tracking-tight cursor-pointer hover:bg-slate-900 hover:text-white transition-colors"
+            class="rounded-badge px-2 py-0.5 bg-surface-muted text-slate-800 text-[8px] font-black uppercase tracking-tight cursor-pointer hover:bg-slate-900 hover:text-white transition-colors"
             @click="searchQuery = tag"
           >
             {{ tag }}
           </span>
         </div>
 
-        <div class="pt-6 border-t border-stone-100 flex items-center justify-between text-[9px] font-black text-stone-400 uppercase tracking-widest">
+        <div class="pt-6 border-t border-surface-border flex items-center justify-between text-[9px] font-black text-text-muted uppercase tracking-widest">
           <span>Article #{{ faq.id }}</span>
           <span>Last Updated: {{ faq.updated_at ? new Date(faq.updated_at).toLocaleDateString() : '---' }}</span>
         </div>
@@ -108,8 +108,8 @@
 
     <!-- Modal Form -->
     <div v-if="showModal || editingId" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-4 sm:p-6">
-      <div class="bg-white w-full max-w-lg p-6 sm:p-10 border border-stone-200 shadow-2xl relative mx-4 sm:mx-0">
-        <button class="absolute top-6 right-6 text-stone-400 hover:text-slate-800 transition-colors" @click="closeModal">
+      <div class="rounded-dialog max-h-[calc(100dvh-2rem)] sm:max-h-[calc(100dvh-3rem)] overflow-y-auto bg-surface w-full max-w-lg p-6 sm:p-10 border border-surface-border shadow-2xl relative mx-4 sm:mx-0">
+        <button class="rounded-control absolute top-6 right-6 text-text-muted hover:text-slate-800 transition-colors" @click="closeModal">
           <i class="pi pi-times"></i>
         </button>
         
@@ -117,30 +117,30 @@
         
         <form @submit.prevent="saveFaq" class="space-y-6">
           <div class="space-y-2">
-            <label class="text-[9px] font-black text-stone-500 uppercase tracking-widest">Classification</label>
-            <select v-model="form.category_id" required class="w-full bg-white border border-stone-200 rounded-none px-4 py-3 text-xs font-black uppercase tracking-widest focus:border-sky-600 focus:ring-1 focus:ring-sky-600 outline-none transition-all cursor-pointer text-slate-800">
+            <label class="text-[9px] font-black text-text-muted uppercase tracking-widest">Classification</label>
+            <select v-model="form.category_id" required class="w-full bg-surface-muted border border-surface-control rounded-control px-4 py-3 text-xs font-black uppercase tracking-widest focus:border-sky-700 focus:ring-1 focus:ring-sky-700 outline-none transition-all cursor-pointer text-slate-800">
               <option :value="null">Select Category...</option>
               <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
             </select>
           </div>
 
           <div class="space-y-2">
-            <label class="text-[9px] font-black text-stone-500 uppercase tracking-widest">Inquiry / Question</label>
-            <input v-model="form.question" type="text" required class="w-full bg-white border border-stone-200 rounded-none px-4 py-3 text-xs font-black uppercase tracking-widest focus:border-sky-600 focus:ring-1 focus:ring-sky-600 outline-none transition-all text-slate-800">
+            <label class="text-[9px] font-black text-text-muted uppercase tracking-widest">Inquiry / Question</label>
+            <input v-model="form.question" type="text" required class="w-full bg-surface-muted border border-surface-control rounded-control px-4 py-3 text-xs font-black uppercase tracking-widest focus:border-sky-700 focus:ring-1 focus:ring-sky-700 outline-none transition-all text-slate-800">
           </div>
 
           <div class="space-y-2">
-            <label class="text-[9px] font-black text-stone-500 uppercase tracking-widest">Resolution / Answer</label>
-            <textarea v-model="form.answer" rows="6" required class="w-full bg-white border border-stone-200 rounded-none px-4 py-3 text-xs font-bold uppercase tracking-widest focus:border-sky-600 focus:ring-1 focus:ring-sky-600 outline-none transition-all resize-none leading-relaxed text-slate-800"></textarea>
+            <label class="text-[9px] font-black text-text-muted uppercase tracking-widest">Resolution / Answer</label>
+            <textarea v-model="form.answer" rows="6" required class="w-full bg-surface-muted border border-surface-control rounded-control px-4 py-3 text-xs font-bold uppercase tracking-widest focus:border-sky-700 focus:ring-1 focus:ring-sky-700 outline-none transition-all resize-none leading-relaxed text-slate-800"></textarea>
           </div>
 
           <div class="space-y-2">
-            <label class="text-[9px] font-black text-stone-500 uppercase tracking-widest">Tags (comma-separated)</label>
+            <label class="text-[9px] font-black text-text-muted uppercase tracking-widest">Tags (comma-separated)</label>
             <input v-model="form.keywordsStr" type="text" placeholder="e.g., deadline, requirements, form"
-              class="w-full bg-white border border-stone-200 rounded-none px-4 py-3 text-xs font-black uppercase tracking-widest focus:border-sky-600 focus:ring-1 focus:ring-sky-600 outline-none transition-all text-slate-800 placeholder:text-stone-400">
+              class="w-full bg-surface-muted border border-surface-control rounded-control px-4 py-3 text-xs font-black uppercase tracking-widest focus:border-sky-700 focus:ring-1 focus:ring-sky-700 outline-none transition-all text-slate-800 placeholder:text-text-muted">
           </div>
           
-          <button type="submit" :disabled="isSaving" class="w-full bg-sky-600 text-white h-14 font-black text-[10px] uppercase tracking-[0.3em] hover:brightness-110 transition-all disabled:opacity-30 mt-4">
+          <button type="submit" :disabled="isSaving" class="rounded-control w-full bg-sky-700 text-white h-14 font-black text-[10px] uppercase tracking-[0.3em] hover:bg-sky-800 transition-all disabled:opacity-30 mt-4">
             {{ isSaving ? 'Processing...' : 'Sync Entry' }}
           </button>
         </form>
@@ -149,40 +149,40 @@
 
     <!-- Category Management Modal -->
     <div v-if="showCategoryForm" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-4 sm:p-6">
-      <div class="bg-white w-full max-w-lg p-6 sm:p-10 border border-stone-200 shadow-2xl relative mx-4 sm:mx-0">
-        <button class="absolute top-6 right-6 text-stone-400 hover:text-slate-800 transition-colors" @click="showCategoryForm = false">
+      <div class="rounded-dialog max-h-[calc(100dvh-2rem)] sm:max-h-[calc(100dvh-3rem)] overflow-y-auto bg-surface w-full max-w-lg p-6 sm:p-10 border border-surface-border shadow-2xl relative mx-4 sm:mx-0">
+        <button class="rounded-control absolute top-6 right-6 text-text-muted hover:text-slate-800 transition-colors" @click="showCategoryForm = false">
           <i class="pi pi-times"></i>
         </button>
 
         <h2 class="text-xl font-black text-slate-800 uppercase tracking-widest mb-8">Manage Categories</h2>
 
         <div class="space-y-4 mb-8">
-          <div v-for="cat in categories" :key="cat.id" class="flex items-center justify-between gap-4 p-4 bg-stone-50 border border-stone-200">
+          <div v-for="cat in categories" :key="cat.id" class="rounded-card flex items-center justify-between gap-4 p-4 bg-surface-muted border border-surface-border">
             <div>
               <span class="font-black text-slate-800 uppercase tracking-tight text-xs">{{ cat.name }}</span>
-              <p v-if="cat.description" class="text-[9px] font-bold text-stone-400 uppercase tracking-tighter mt-1">{{ cat.description }}</p>
+              <p v-if="cat.description" class="text-[9px] font-bold text-text-muted uppercase tracking-tighter mt-1">{{ cat.description }}</p>
             </div>
-            <button class="h-8 w-8 flex items-center justify-center border border-red-400 text-red-400 hover:bg-red-500 hover:text-white transition-all" @click="deleteCategory(cat.id)">
+            <button class="rounded-control h-8 w-8 flex items-center justify-center border border-red-400 text-red-700 hover:bg-red-700 hover:text-white transition-all" @click="deleteCategory(cat.id)">
               <i class="pi pi-trash text-[10px]"></i>
             </button>
           </div>
-          <div v-if="categories.length === 0" class="py-8 text-center text-stone-400 font-black uppercase tracking-widest text-[10px]">No categories defined</div>
+          <div v-if="categories.length === 0" class="py-8 text-center text-text-muted font-black uppercase tracking-widest text-[10px]">No categories defined</div>
         </div>
 
-        <form @submit.prevent="saveCategory" class="space-y-4 border-t border-stone-200 pt-6">
+        <form @submit.prevent="saveCategory" class="space-y-4 border-t border-surface-border pt-6">
           <h3 class="text-[11px] font-black text-slate-800 uppercase tracking-[0.2em] mb-4">Add Category</h3>
           <div class="space-y-2">
-            <label class="text-[9px] font-black text-stone-500 uppercase tracking-widest">Name</label>
+            <label class="text-[9px] font-black text-text-muted uppercase tracking-widest">Name</label>
             <input v-model="catForm.name" type="text" required placeholder="e.g., Placement Requirements"
-              class="w-full bg-white border border-stone-200 rounded-none px-4 py-3 text-xs font-black uppercase tracking-widest focus:border-sky-600 focus:ring-1 focus:ring-sky-600 outline-none transition-all text-slate-800">
+              class="w-full bg-surface-muted border border-surface-control rounded-control px-4 py-3 text-xs font-black uppercase tracking-widest focus:border-sky-700 focus:ring-1 focus:ring-sky-700 outline-none transition-all text-slate-800">
           </div>
           <div class="space-y-2">
-            <label class="text-[9px] font-black text-stone-500 uppercase tracking-widest">Description</label>
+            <label class="text-[9px] font-black text-text-muted uppercase tracking-widest">Description</label>
             <input v-model="catForm.description" type="text" placeholder="Brief description"
-              class="w-full bg-white border border-stone-200 rounded-none px-4 py-3 text-xs font-black uppercase tracking-widest focus:border-sky-600 focus:ring-1 focus:ring-sky-600 outline-none transition-all text-slate-800">
+              class="w-full bg-surface-muted border border-surface-control rounded-control px-4 py-3 text-xs font-black uppercase tracking-widest focus:border-sky-700 focus:ring-1 focus:ring-sky-700 outline-none transition-all text-slate-800">
           </div>
           <button type="submit" :disabled="isSavingCat"
-            class="w-full bg-sky-600 text-white h-12 font-black text-[10px] uppercase tracking-[0.3em] hover:brightness-110 transition-all disabled:opacity-30">
+            class="rounded-control w-full bg-sky-700 text-white h-12 font-black text-[10px] uppercase tracking-[0.3em] hover:bg-sky-800 transition-all disabled:opacity-30">
             {{ isSavingCat ? 'Adding...' : 'Add Category' }}
           </button>
         </form>
@@ -199,12 +199,15 @@ definePageMeta({
 
 type FaqRow = Database['public']['Tables']['faqs']['Row']
 type CategoryRow = Database['public']['Tables']['faq_categories']['Row']
+type FaqResponse = { faqs: FaqRow[]; categories: CategoryRow[] }
 
 const supabase = useSupabaseClient<Database>()
+const pageCache = usePageCache()
 
-const faqs = ref<FaqRow[]>([])
-const categories = ref<CategoryRow[]>([])
-const isLoading = ref(true)
+const cachedFaqs = pageCache.read<FaqResponse>('/api/faqs')
+const faqs = ref<FaqRow[]>(cachedFaqs?.faqs || [])
+const categories = ref<CategoryRow[]>(cachedFaqs?.categories || [])
+const isLoading = ref(!cachedFaqs)
 const isSaving = ref(false)
 const isSavingCat = ref(false)
 const searchQuery = ref('')
@@ -229,8 +232,8 @@ const saveCategory = async () => {
     })
     if (error) throw error
     catForm.value = { name: '', description: '' }
-    const { data } = await supabase.from('faq_categories').select('*').order('display_order', { ascending: true })
-    if (data) categories.value = data as CategoryRow[]
+    pageCache.invalidate('/api/faqs')
+    await fetchInitialData(true)
   } catch (error: any) {
     alert('Failed to add category')
   } finally {
@@ -243,8 +246,8 @@ const deleteCategory = async (id: number) => {
   try {
     await supabase.from('faqs').update({ category_id: null }).eq('category_id', id)
     await supabase.from('faq_categories').delete().eq('id', id)
-    const { data } = await supabase.from('faq_categories').select('*').order('display_order', { ascending: true })
-    if (data) categories.value = data as CategoryRow[]
+    pageCache.invalidate('/api/faqs')
+    await fetchInitialData(true)
   } catch (error: any) {
     alert('Delete failed')
   }
@@ -270,20 +273,18 @@ const getCategoryName = (id: number | null) => {
   return categories.value.find(c => c.id === id)?.name || 'Misc'
 }
 
-const fetchInitialData = async () => {
-  isLoading.value = true
+const fetchInitialData = async (force = false) => {
+  const cached = pageCache.read<FaqResponse>('/api/faqs')
+  if (cached) {
+    faqs.value = cached.faqs
+    categories.value = cached.categories
+  }
+  isLoading.value = !cached
   errorMessage.value = ''
   try {
-    const [faqRes, catRes] = await Promise.all([
-      supabase.from('faqs').select('*').order('updated_at', { ascending: false }),
-      supabase.from('faq_categories').select('*').order('display_order', { ascending: true })
-    ])
-
-    if (faqRes.error) throw faqRes.error
-    if (catRes.error) throw catRes.error
-
-    faqs.value = (faqRes.data || []) as FaqRow[]
-    categories.value = (catRes.data || []) as CategoryRow[]
+    const data = await pageCache.fetch<FaqResponse>('/api/faqs', { force })
+    faqs.value = data.faqs
+    categories.value = data.categories
   } catch (error: any) {
     errorMessage.value = 'Database sync failed'
   } finally {
@@ -312,7 +313,8 @@ const saveFaq = async () => {
       const { error } = await supabase.from('faqs').insert(payload)
       if (error) throw error
     }
-    await fetchInitialData()
+    pageCache.invalidate('/api/faqs')
+    await fetchInitialData(true)
     closeModal()
   } catch (error: any) {
     alert('Save failed')
@@ -341,7 +343,8 @@ const confirmDelete = async (id: number) => {
   if (confirm('Archive entry?')) {
     try {
       await supabase.from('faqs').delete().eq('id', id)
-      await fetchInitialData()
+      pageCache.invalidate('/api/faqs')
+      await fetchInitialData(true)
     } catch (error: any) {
       alert('Delete failed')
     }

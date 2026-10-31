@@ -1,15 +1,15 @@
 <template>
-  <div class="min-h-screen flex flex-col md:flex-row">
+  <div class="app-surface-ui min-h-screen flex flex-col md:flex-row">
     <div class="hidden md:flex md:w-1/2 bg-slate-900 text-white items-center justify-center p-12 lg:p-16 min-h-screen">
       <div class="max-w-lg">
-        <div class="inline-flex items-center justify-center h-16 w-16 bg-white mb-10">
+        <div class="rounded-control inline-flex items-center justify-center h-16 w-16 bg-surface mb-10">
           <i class="pi pi-graduation-cap text-slate-900 text-3xl"></i>
         </div>
         <h1 class="text-4xl lg:text-5xl font-black tracking-[0.05em] leading-tight">INTRA Buddy</h1>
         <p class="text-white/60 mt-4 text-base font-medium leading-relaxed max-w-md">
           Coordinator Administration Portal
         </p>
-        <div class="flex items-center gap-6 mt-14 text-white/20 text-sm font-bold uppercase tracking-widest">
+        <div class="flex items-center gap-6 mt-14 text-slate-300 text-sm font-bold uppercase tracking-widest">
           <span>Placement</span>
           <span class="h-px w-6 bg-white/10"></span>
           <span>Logbooks</span>
@@ -19,27 +19,26 @@
       </div>
     </div>
 
-    <div class="bg-slate-50 md:w-1/2 flex items-center justify-center p-4 sm:p-6 md:p-8 lg:p-12 min-h-screen">
+    <div class="bg-surface-canvas md:w-1/2 flex items-center justify-center p-4 sm:p-6 md:p-8 lg:p-12 min-h-screen">
       <div class="w-full max-w-md mx-auto">
         <div class="md:hidden text-center mb-10">
-          <div class="inline-flex items-center justify-center h-12 w-12 bg-slate-900 text-white mb-4">
+          <div class="rounded-control inline-flex items-center justify-center h-12 w-12 bg-slate-900 text-white mb-4">
             <i class="pi pi-graduation-cap text-xl"></i>
           </div>
-          <h2 class="text-xl font-black uppercase tracking-[0.2em] text-slate-800">INTRA Buddy</h2>
-          <p class="text-stone-500 mt-1 text-[10px] font-bold uppercase tracking-widest">Coordinator Portal</p>
+          <h2 class="text-2xl font-bold tracking-tight text-slate-800">INTRA Buddy</h2>
+          <p class="text-text-muted mt-1 text-sm font-medium">Coordinator portal</p>
         </div>
 
-        <div class="bg-white border border-stone-200 shadow-sm rounded-sm p-8">
-          <h2 class="text-xl font-black uppercase tracking-widest text-stone-900">COORDINATOR LOGIN</h2>
-          <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-stone-500 mt-2">Enter your credentials to access the dashboard.</p>
+        <div class="bg-surface border border-surface-border shadow-sm rounded-card p-8">
+          <h2 class="text-2xl font-bold tracking-tight text-text-primary">Coordinator login</h2>
 
-          <div v-if="errorMessage" class="mt-6 p-4 bg-rose-50 border border-rose-200 text-rose-700 text-[9px] font-black uppercase tracking-widest text-center">
+          <div v-if="errorMessage" class="rounded-card mt-6 p-4 bg-rose-50 border border-rose-200 text-rose-700 text-sm font-medium text-center">
             {{ errorMessage }}
           </div>
 
           <form @submit.prevent="handleLogin" class="mt-8 space-y-5">
             <div class="space-y-1.5">
-              <label for="email" class="text-[9px] font-black uppercase tracking-[0.2em] text-stone-700 mb-1">Email address</label>
+              <label for="email" class="text-sm font-semibold text-text-muted mb-1">Email address</label>
               <InputText
                 id="email"
                 v-model="email"
@@ -47,12 +46,12 @@
                 required
                 autocomplete="email"
                 placeholder="name@university.edu"
-                class="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-sm outline-none focus:border-sky-600 focus:ring-0 text-xs font-bold text-stone-900 placeholder:text-stone-400 transition-all"
+                class="w-full px-4 py-3 bg-surface-muted border border-surface-control rounded-control outline-none focus:border-sky-700 focus:ring-0 text-base font-medium text-text-primary placeholder:text-text-muted transition-all"
               />
             </div>
 
             <div class="space-y-1.5">
-              <label for="password" class="text-[9px] font-black uppercase tracking-[0.2em] text-stone-700 mb-1">Password</label>
+              <label for="password" class="text-sm font-semibold text-text-muted mb-1">Password</label>
               <Password
                 v-model="password"
                 inputId="password"
@@ -76,24 +75,24 @@
                     <i v-if="checked" class="pi pi-check text-white text-[9px] font-bold"></i>
                   </template>
                 </Checkbox>
-                <span class="text-[10px] font-bold text-stone-600 group-hover:text-slate-800 transition-colors">Remember me</span>
+                <span class="text-sm font-medium text-text-muted group-hover:text-slate-800 transition-colors">Remember me</span>
               </label>
-              <button type="button" class="text-[10px] font-bold text-sky-600 hover:text-sky-700 transition-colors">Forgot password?</button>
+              <button type="button" class="rounded-control text-sm font-semibold text-sky-700 hover:text-sky-800 transition-colors">Forgot password?</button>
             </div>
 
             <button
               type="submit"
               :disabled="loading"
-              class="bg-sky-600 hover:bg-sky-700 text-white font-black text-[10px] uppercase tracking-[0.2em] py-3 px-4 rounded-sm transition-colors w-full flex justify-center items-center disabled:opacity-50 gap-2"
+              class="bg-sky-700 hover:bg-sky-800 text-white font-semibold text-sm py-3 px-4 rounded-control transition-colors w-full flex justify-center items-center disabled:opacity-50 gap-2"
             >
               <i v-if="loading" class="pi pi-spin pi-spinner"></i>
-              {{ loading ? 'Logging in...' : 'LOG IN' }}
+              {{ loading ? 'Logging in...' : 'Log in' }}
             </button>
           </form>
         </div>
 
-        <p class="mt-10 text-center text-[10px] font-bold text-stone-400 uppercase tracking-widest">
-          &copy; 2026 INTRA Buddy. Professional Placement Management.
+        <p class="mt-10 text-center text-sm font-medium text-text-muted">
+          &copy; 2026 INTRA Buddy. Professional placement management.
         </p>
       </div>
     </div>
@@ -106,18 +105,21 @@ definePageMeta({
 })
 
 const supabase = useSupabaseClient()
+const route = useRoute()
+const { loadProfile, clearProfile } = useCurrentProfile()
+const mobileOnlyMessage = 'This portal is for coordinators. Students should use the INTRA Buddy mobile app.'
 
 const email = ref('')
 const password = ref('')
 const remember = ref(false)
 const loading = ref(false)
-const errorMessage = ref('')
+const errorMessage = ref(route.query.reason === 'mobile-only' ? mobileOnlyMessage : '')
 
-const inputClass = 'w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-sm outline-none focus:border-sky-600 focus:ring-0 text-xs font-bold text-stone-900 placeholder:text-stone-400 transition-all'
+const inputClass = 'w-full px-4 py-3 bg-surface-muted border border-surface-control rounded-control outline-none focus:border-sky-700 focus:ring-0 text-base font-medium text-text-primary placeholder:text-text-muted transition-all'
 
 const checkboxPt = computed(() => ({
-  root: { class: 'cursor-pointer' },
-  box: { class: ['h-[18px] w-[18px] rounded border-2 flex items-center justify-center transition-all shrink-0', remember.value ? 'bg-sky-600 border-sky-600' : 'border-stone-300'] },
+  root: { class: 'cursor-pointer rounded-badge focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-sky-700' },
+  box: { class: ['h-[18px] w-[18px] rounded-badge border-2 flex items-center justify-center transition-all shrink-0', remember.value ? 'bg-sky-700 border-sky-700' : 'bg-surface-muted border-surface-control'] },
   input: { class: 'sr-only' }
 }))
 
@@ -126,37 +128,46 @@ const passwordPt = {
   pcInputText: {
     root: { class: [inputClass, 'pr-12'] }
   },
-  maskIcon: { class: 'absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-stone-400 hover:text-slate-800 transition-colors w-5 h-5' },
-  unmaskIcon: { class: 'absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-stone-400 hover:text-slate-800 transition-colors w-5 h-5' }
+  maskIcon: { class: 'absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-text-muted hover:text-slate-800 transition-colors w-5 h-5' },
+  unmaskIcon: { class: 'absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-text-muted hover:text-slate-800 transition-colors w-5 h-5' }
 }
 
 const handleLogin = async () => {
-  console.log('Login attempt started for:', email.value)
   loading.value = true
   errorMessage.value = ''
 
   try {
-    console.log('Calling Supabase signInWithPassword...')
+    clearProfile()
     const { data, error } = await supabase.auth.signInWithPassword({
-      email: email.value,
+      email: email.value.trim(),
       password: password.value
     })
 
     if (error) {
-      console.error('Supabase Auth error:', error)
       throw error
     }
 
-    console.log('Auth successful, user:', data.user?.id)
-    console.log('Redirecting to /...')
+    if (!data.user || !data.session) {
+      throw new Error('Unable to establish your session. Please try logging in again.')
+    }
+
+    const profile = await loadProfile(data.user.id, data.session.access_token)
+    if (profile?.role === 'student') {
+      await supabase.auth.signOut({ scope: 'local' })
+      clearProfile()
+      errorMessage.value = mobileOnlyMessage
+      return
+    }
+    if (profile?.role !== 'coordinator') {
+      throw new Error('Your account does not have coordinator access. Please contact your administrator.')
+    }
     await navigateTo('/')
-    console.log('Navigation call finished')
   } catch (error: any) {
-    console.error('Login process caught error:', error)
+    await supabase.auth.signOut({ scope: 'local' })
+    clearProfile()
     errorMessage.value = error.message || 'Authentication failed'
   } finally {
     loading.value = false
-    console.log('Login process finished')
   }
 }
 </script>

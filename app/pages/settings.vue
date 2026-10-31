@@ -1,47 +1,47 @@
 <template>
-  <div class="min-h-screen bg-slate-50">
-    <div class="max-w-3xl mx-auto py-8 md:py-12 px-4 sm:px-6 lg:px-8 space-y-10">
-      <header class="border-b border-stone-200 pb-6">
+  <div class="app-surface-ui min-h-screen bg-surface-canvas">
+    <div class="max-w-3xl mx-auto py-8 md:py-12 px-4 sm:px-6 lg:px-8 space-y-8">
+      <header>
         <h1 class="text-2xl md:text-4xl font-black text-slate-800 tracking-tight uppercase">Settings</h1>
-        <p class="text-stone-500 mt-1.5 font-bold uppercase text-[10px] tracking-widest">Account configuration and security.</p>
+        <p class="text-text-muted mt-1.5 font-bold uppercase text-[10px] tracking-widest">Account configuration and security.</p>
       </header>
 
-      <div v-if="successMessage" class="p-4 bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest">
+      <div v-if="successMessage" class="rounded-card p-4 bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest">
         {{ successMessage }}
       </div>
-      <div v-if="errorMessage" class="p-4 bg-rose-50 border border-rose-100 text-rose-700 text-[10px] font-black uppercase tracking-widest">
+      <div v-if="errorMessage" class="rounded-card p-4 bg-rose-50 border border-rose-100 text-rose-700 text-[10px] font-black uppercase tracking-widest">
         {{ errorMessage }}
       </div>
 
-      <article class="bg-white border border-stone-200 shadow-sm">
-        <div class="px-6 md:px-10 py-6 border-b border-stone-100">
+      <article class="rounded-card bg-surface border border-surface-border shadow-sm">
+        <div class="px-6 md:px-10 py-6 border-b border-surface-border">
           <h2 class="text-sm font-black text-slate-800 uppercase tracking-widest">Personal Information</h2>
-          <p class="text-stone-400 text-[10px] font-bold uppercase tracking-wider mt-1">Update your profile details.</p>
+          <p class="text-text-muted text-[10px] font-bold uppercase tracking-wider mt-1">Update your profile details.</p>
         </div>
         <div class="px-6 md:px-10 py-8 space-y-6">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="space-y-1.5">
-              <label class="text-[9px] font-black text-stone-500 uppercase tracking-widest">Email Address</label>
-              <input :value="profile?.email" type="text" readonly class="w-full bg-slate-100 text-slate-500 cursor-not-allowed border border-stone-200 px-5 py-4 text-xs font-black uppercase outline-none">
+              <label class="text-[9px] font-black text-text-muted uppercase tracking-widest">Email Address</label>
+              <input :value="profile?.email" type="text" readonly class="rounded-control w-full bg-surface-muted text-text-muted cursor-not-allowed border border-surface-control px-5 py-4 text-xs font-black uppercase outline-none">
             </div>
             <div class="space-y-1.5">
-              <label class="text-[9px] font-black text-stone-500 uppercase tracking-widest">System Role</label>
-              <input :value="role" type="text" readonly class="w-full bg-slate-100 text-slate-500 cursor-not-allowed border border-stone-200 px-5 py-4 text-xs font-black uppercase outline-none">
+              <label class="text-[9px] font-black text-text-muted uppercase tracking-widest">System Role</label>
+              <input :value="role" type="text" readonly class="rounded-control w-full bg-surface-muted text-text-muted cursor-not-allowed border border-surface-control px-5 py-4 text-xs font-black uppercase outline-none">
             </div>
           </div>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="space-y-1.5">
-              <label class="text-[9px] font-black text-stone-500 uppercase tracking-widest">Full Name</label>
-              <input v-model="profileForm.fullName" type="text" class="w-full bg-stone-50 border border-stone-200 px-5 py-4 text-xs font-black uppercase focus:border-sky-600 focus:ring-1 focus:ring-sky-600 outline-none transition-all text-slate-800">
+              <label class="text-[9px] font-black text-text-muted uppercase tracking-widest">Full Name</label>
+              <input v-model="profileForm.fullName" type="text" class="rounded-control w-full bg-surface-muted border border-surface-control px-5 py-4 text-xs font-black uppercase focus:border-sky-700 focus:ring-1 focus:ring-sky-700 outline-none transition-all text-slate-800">
             </div>
             <div class="space-y-1.5">
-              <label class="text-[9px] font-black text-stone-500 uppercase tracking-widest">Phone Number</label>
-              <input v-model="profileForm.phone" type="text" placeholder="+60 12-345 6789" class="w-full bg-stone-50 border border-stone-200 px-5 py-4 text-xs font-black uppercase focus:border-sky-600 focus:ring-1 focus:ring-sky-600 outline-none transition-all text-slate-800">
+              <label class="text-[9px] font-black text-text-muted uppercase tracking-widest">Phone Number</label>
+              <input v-model="profileForm.phone" type="text" placeholder="+60 12-345 6789" class="rounded-control w-full bg-surface-muted border border-surface-control px-5 py-4 text-xs font-black uppercase focus:border-sky-700 focus:ring-1 focus:ring-sky-700 outline-none transition-all text-slate-800">
             </div>
           </div>
           <div class="pt-2">
             <button
-              class="bg-sky-600 text-white h-12 px-8 font-black text-[10px] uppercase tracking-[0.2em] hover:brightness-110 transition-all disabled:opacity-30"
+              class="rounded-control bg-sky-700 text-white h-12 px-8 font-black text-[10px] uppercase tracking-[0.2em] hover:bg-sky-800 transition-all disabled:opacity-30"
               :disabled="isSavingProfile"
               @click="saveProfile"
             >
@@ -51,32 +51,32 @@
         </div>
       </article>
 
-      <article class="bg-white border border-stone-200 shadow-sm">
-        <div class="px-6 md:px-10 py-6 border-b border-stone-100">
+      <article class="rounded-card bg-surface border border-surface-border shadow-sm">
+        <div class="px-6 md:px-10 py-6 border-b border-surface-border">
           <h2 class="text-sm font-black text-slate-800 uppercase tracking-widest">Security</h2>
-          <p class="text-stone-400 text-[10px] font-bold uppercase tracking-wider mt-1">Change your account password.</p>
+          <p class="text-text-muted text-[10px] font-bold uppercase tracking-wider mt-1">Change your account password.</p>
         </div>
         <div class="px-6 md:px-10 py-8 space-y-6">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="space-y-1.5">
-              <label class="text-[9px] font-black text-stone-500 uppercase tracking-widest">Current Password</label>
+              <label class="text-[9px] font-black text-text-muted uppercase tracking-widest">Current Password</label>
               <Password v-model="passwordForm.currentPassword" toggleMask :feedback="false" :pt="passwordPt" />
             </div>
             <div class="space-y-1.5"></div>
           </div>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="space-y-1.5">
-              <label class="text-[9px] font-black text-stone-500 uppercase tracking-widest">New Password</label>
+              <label class="text-[9px] font-black text-text-muted uppercase tracking-widest">New Password</label>
               <Password v-model="passwordForm.newPassword" toggleMask :feedback="true" :pt="passwordPt" />
             </div>
             <div class="space-y-1.5">
-              <label class="text-[9px] font-black text-stone-500 uppercase tracking-widest">Confirm Password</label>
+              <label class="text-[9px] font-black text-text-muted uppercase tracking-widest">Confirm Password</label>
               <Password v-model="passwordForm.confirmPassword" toggleMask :feedback="false" :pt="passwordPt" />
             </div>
           </div>
           <div class="pt-2">
             <button
-              class="bg-sky-600 text-white h-12 px-8 font-black text-[10px] uppercase tracking-[0.2em] hover:brightness-110 transition-all disabled:opacity-30"
+              class="rounded-control bg-sky-700 text-white h-12 px-8 font-black text-[10px] uppercase tracking-[0.2em] hover:bg-sky-800 transition-all disabled:opacity-30"
               :disabled="isUpdatingPassword"
               @click="updatePassword"
             >
@@ -190,14 +190,15 @@ const updatePassword = async () => {
   }
 }
 
-const inputClass = 'w-full bg-stone-50 border border-stone-200 px-5 py-4 text-xs font-black uppercase focus:border-sky-600 focus:ring-1 focus:ring-sky-600 outline-none transition-all text-slate-800'
+const inputClass = 'rounded-control w-full bg-surface-muted border border-surface-control px-5 py-4 text-xs font-black uppercase focus:border-sky-700 focus:ring-1 focus:ring-sky-700 outline-none transition-all text-slate-800'
 
 const passwordPt = {
   root: { class: 'relative w-full' },
   pcInputText: {
     root: { class: [inputClass, 'pr-12'] }
   },
-  maskIcon: { class: 'absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-stone-400 hover:text-slate-800 transition-colors w-5 h-5' },
-  unmaskIcon: { class: 'absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-stone-400 hover:text-slate-800 transition-colors w-5 h-5' }
+  maskIcon: { class: 'absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-text-muted hover:text-slate-800 transition-colors w-5 h-5' },
+  unmaskIcon: { class: 'absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-text-muted hover:text-slate-800 transition-colors w-5 h-5' },
+  overlay: { class: 'rounded-control bg-surface border border-surface-border p-4 shadow-lg text-text-primary' }
 }
 </script>

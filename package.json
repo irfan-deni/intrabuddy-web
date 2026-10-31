@@ -12,7 +12,10 @@
     "generate:icons": "node ./scripts/generate-icons.js",
     "seed": "npx tsx scripts/seed-students.ts",
     "test": "vitest run",
+    "test:permissions:db": "node scripts/test-student-management-db.mjs",
     "test:watch": "vitest",
+    "test:integration": "vitest run --config vitest.integration.config.ts",
+    "test:e2e": "playwright test",
     "deploy": "npm run build && wrangler deploy",
     "cf-typegen": "wrangler types"
   },

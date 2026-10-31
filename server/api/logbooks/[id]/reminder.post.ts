@@ -6,11 +6,7 @@ export default defineEventHandler(async (event) => {
     await requireCoordinator(event)
 
     const supabase = await serverSupabaseClient<Database>(event)
-    const id = getRouterParam(event, 'id')
-
-    if (!id) {
-      throw createError({ statusCode: 400, statusMessage: 'Missing logbook entry ID' })
-    }
+    const id = positiveId(getRouterParam(event, 'id'), 'logbook ID')
 
     const { data: entry, error: fetchError } = await supabase
       .from('weekly_logbook_tracking')

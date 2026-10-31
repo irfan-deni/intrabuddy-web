@@ -18,6 +18,65 @@
 }
 
 @layer components {
+  .app-surface-ui :is(button, a, input, select, textarea, summary):focus-visible {
+    outline: 2px solid #0369A1;
+    outline-offset: 2px;
+  }
+
+  .app-surface-ui :is(input, textarea)::placeholder {
+    @apply text-text-muted;
+    opacity: 1;
+  }
+
+  .readable-ui :is(input, textarea, select) {
+    font-size: 0.875rem !important;
+    font-weight: 500 !important;
+    letter-spacing: normal !important;
+    text-transform: none !important;
+  }
+
+  .readable-ui :is(input, textarea, select)::placeholder {
+    letter-spacing: normal !important;
+    text-transform: none !important;
+  }
+
+  .readable-ui main h1 {
+    font-weight: 700 !important;
+    letter-spacing: -0.025em !important;
+    text-transform: none !important;
+  }
+
+  .readable-ui main h2 {
+    font-size: 1.125rem !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.015em !important;
+    text-transform: none !important;
+  }
+
+  .readable-ui main h3 {
+    font-size: 1rem !important;
+    font-weight: 600 !important;
+    letter-spacing: normal !important;
+    text-transform: none !important;
+  }
+
+  .readable-ui main label,
+  .readable-ui main button {
+    font-size: 0.875rem !important;
+    font-weight: 600 !important;
+    letter-spacing: normal !important;
+    text-transform: none !important;
+  }
+
+  .readable-ui main [class*="uppercase"] {
+    letter-spacing: normal !important;
+    text-transform: none !important;
+  }
+
+  .readable-ui main :is([class*="text-[8px]"], [class*="text-[9px]"], [class*="text-[10px]"], [class*="text-[11px]"]) {
+    font-size: 0.75rem !important;
+  }
+
   .brand-gradient {
     @apply bg-gradient-to-r from-brand-navy to-brand-azure;
   }
@@ -27,22 +86,22 @@
   }
 
   .btn-primary {
-    @apply bg-brand-azure text-brand-navy font-black text-[10px] uppercase tracking-[0.2em] px-8 py-4 hover:brightness-110 transition-all flex items-center gap-3;
+    @apply bg-sky-700 text-white rounded-control font-semibold text-sm tracking-normal px-8 py-4 hover:bg-sky-800 transition-all flex items-center gap-3;
   }
 
   .btn-ghost {
-    @apply border border-brand-azure text-brand-azure font-black text-[10px] uppercase tracking-[0.2em] px-8 py-4 hover:bg-brand-azure hover:text-brand-navy transition-all flex items-center gap-3;
+    @apply border border-sky-700 text-sky-700 rounded-control font-semibold text-sm tracking-normal px-8 py-4 hover:bg-sky-700 hover:text-white transition-all flex items-center gap-3;
   }
 
   .badge-positive {
-    @apply bg-brand-emerald text-white border-brand-emerald;
+    @apply rounded-badge bg-emerald-100 text-emerald-900 border-emerald-300;
   }
 
   .badge-warning {
-    @apply bg-brand-gold text-black border-brand-gold;
+    @apply rounded-badge bg-brand-gold text-black border-brand-gold;
   }
 
   .badge-neutral {
-    @apply bg-white text-text-veryMuted border-slate-100;
+    @apply rounded-badge bg-surface-muted text-text-muted border-surface-border;
   }
 }

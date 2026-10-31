@@ -14,57 +14,52 @@ test.describe('Students Directory', () => {
   })
 
   test('displays student list', async ({ page }) => {
-    await expect(page.locator('text=Alice Johnson')).toBeVisible()
-    await expect(page.locator('text=Bob Smith')).toBeVisible()
-    await expect(page.locator('text=Charlie Brown')).toBeVisible()
+    await expect(page.getByRole('table').getByText('Alice Johnson')).toBeVisible()
+    await expect(page.getByRole('table').getByText('Bob Smith')).toBeVisible()
+    await expect(page.getByRole('table').getByText('Charlie Brown')).toBeVisible()
   })
 
   test('can search students by name', async ({ page }) => {
     await page.fill('input[placeholder*="Search by name"]', 'Alice')
-    await page.waitForTimeout(300)
-    await expect(page.locator('text=Alice Johnson')).toBeVisible()
-    await expect(page.locator('text=Bob Smith')).not.toBeVisible()
+    await expect(page.getByRole('table').getByText('Alice Johnson')).toBeVisible()
+    await expect(page.getByRole('table').getByText('Bob Smith')).toHaveCount(0)
   })
 
   test('can search students by matric number', async ({ page }) => {
     await page.fill('input[placeholder*="Search by name"]', 'MATRIC002')
-    await page.waitForTimeout(300)
-    await expect(page.locator('text=Bob Smith')).toBeVisible()
-    await expect(page.locator('text=Alice Johnson')).not.toBeVisible()
+    await expect(page.getByRole('table').getByText('Bob Smith')).toBeVisible()
+    await expect(page.getByRole('table').getByText('Alice Johnson')).toHaveCount(0)
   })
 
   test('can filter by placement status', async ({ page }) => {
-    const filter = page.locator('select').first()
+    const filter = page.getByRole('combobox').filter({ has: page.locator('option[value="Accepted"]') })
     await filter.selectOption('Accepted')
-    await page.waitForTimeout(300)
-    await expect(page.locator('text=Alice Johnson')).toBeVisible()
-    await expect(page.locator('text=Bob Smith')).not.toBeVisible()
+    await expect(page.getByRole('table').getByText('Alice Johnson')).toBeVisible()
+    await expect(page.getByRole('table').getByText('Bob Smith')).toHaveCount(0)
   })
 
   test('shows empty state when no match', async ({ page }) => {
     await page.fill('input[placeholder*="Search by name"]', 'NonExistent')
-    await page.waitForTimeout(300)
-    await expect(page.locator('text=No matching records found')).toBeVisible()
+    await expect(page.getByRole('cell', { name: 'No matching records found' })).toBeVisible()
   })
 
   test('opens student dossier sidebar on click', async ({ page }) => {
-    await page.locator('text=Alice Johnson').first().click()
-    await expect(page.locator('text=Student Dossier')).toBeVisible()
-    await expect(page.locator('text=ALICE JOHNSON')).toBeVisible()
-    await expect(page.locator('text=MATRIC001')).toBeVisible()
+    await page.getByRole('table').getByText('Alice Johnson').click()
+    await expect(page.getByRole('heading', { name: 'Student Profile', exact: true })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Alice Johnson' })).toBeVisible()
   })
 
   test('student dossier sidebar has full profile link', async ({ page }) => {
-    await page.locator('text=Alice Johnson').first().click()
-    const profileLink = page.locator('a[href*="/student?id=student-1"]')
+    await page.getByRole('table').getByText('Alice Johnson').click()
+    const profileLink = page.getByRole('link', { name: 'Full Profile', exact: true })
     await expect(profileLink).toBeVisible()
     await expect(profileLink).toContainText('Full Profile')
   })
 
   test('closes sidebar with close button', async ({ page }) => {
-    await page.locator('text=Alice Johnson').first().click()
-    await expect(page.locator('text=Student Dossier')).toBeVisible()
+    await page.getByRole('table').getByText('Alice Johnson').click()
+    await expect(page.getByRole('heading', { name: 'Student Profile', exact: true })).toBeVisible()
     await page.locator('button:has(.pi-arrow-left)').first().click()
-    await expect(page.locator('text=Student Dossier')).not.toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Student Profile', exact: true })).toHaveCount(0)
   })
 })

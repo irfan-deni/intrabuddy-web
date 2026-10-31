@@ -12,27 +12,21 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
   }
 
-  const notificationId = getRouterParam(event, 'id')
-  if (!notificationId) {
-    throw createError({ statusCode: 400, statusMessage: 'Notification ID is required' })
-  }
-
-  const id = Number(notificationId)
-  if (isNaN(id)) {
-    throw createError({ statusCode: 400, statusMessage: 'Invalid notification ID' })
-  }
+  const id = positiveId(getRouterParam(event, 'id'), 'notification ID')
 
   const serviceRole = serverSupabaseServiceRole<Database>(event)
 
-  const { error } = await serviceRole
+  const { data, error } = await serviceRole
     .from('notifications')
     .delete()
     .eq('id', id)
     .eq('recipient_id', userId)
+    .select('id')
 
   if (error) {
     throw createError({ statusCode: 500, statusMessage: `Failed to delete notification: ${error.message}` })
   }
+  if (!data?.length) throw createError({ statusCode: 404, statusMessage: 'Notification not found' })
 
   return { success: true }
 })

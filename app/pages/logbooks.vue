@@ -1,48 +1,57 @@
 <template>
-  <section class="space-y-6 md:space-y-8">
-    <header class="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-stone-200 pb-6 md:pb-8">
+  <section class="app-surface-ui space-y-6 md:space-y-8">
+    <header class="flex flex-col md:flex-row md:items-end justify-between gap-6">
       <div>
-        <h1 class="text-2xl md:text-4xl font-black text-slate-800 tracking-tight uppercase">Logbook Status</h1>
-        <p class="text-stone-500 mt-2 font-bold uppercase text-[10px] tracking-widest">Monitor semester logbook compliance and send reminders.</p>
+        <h1 class="text-2xl md:text-4xl font-bold text-slate-800 tracking-tight">Logbooks</h1>
+        <p class="mt-2 text-sm font-normal leading-relaxed text-text-muted">Monitor semester logbook compliance and send reminders.</p>
       </div>
     </header>
 
-    <p v-if="errorMessage" class="p-4 bg-rose-50 border border-rose-100 text-rose-700 text-[10px] font-black uppercase tracking-widest">
+    <p v-if="errorMessage" class="rounded-card p-4 bg-rose-50 border border-rose-100 text-rose-700 text-sm font-medium">
       {{ errorMessage }}
     </p>
 
-    <div class="grid grid-cols-3 gap-3 md:gap-6">
-      <div class="bg-white border border-stone-200 shadow-sm p-4 md:p-6 flex flex-col items-center justify-center">
-        <span class="text-[9px] font-black text-stone-400 uppercase tracking-widest mb-1">Expected</span>
-        <span class="text-xl md:text-3xl font-black text-slate-800 tabular-nums">{{ totalCount }}</span>
-      </div>
-      <div class="bg-white border border-emerald-200 shadow-sm p-4 md:p-6 flex flex-col items-center justify-center">
-        <span class="text-[9px] font-black text-emerald-600 uppercase tracking-widest mb-1">Submitted</span>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-6" aria-label="Semester logbook summary">
+      <div class="relative overflow-hidden rounded-card bg-emerald-50 border border-emerald-200 shadow-sm p-4 md:p-6 flex flex-col items-center justify-center">
+        <i aria-hidden="true" class="pi pi-check-circle pointer-events-none absolute right-3 top-3 text-3xl text-emerald-700/10"></i>
+        <span class="text-sm font-semibold text-emerald-700 mb-1">Submitted</span>
         <span class="text-xl md:text-3xl font-black text-emerald-700 tabular-nums">{{ submittedCount }}</span>
+        <span class="mt-1 text-sm text-text-muted text-center">of {{ totalCount }} logbooks this semester</span>
       </div>
-      <div class="bg-white border border-amber-200 shadow-sm p-4 md:p-6 flex flex-col items-center justify-center">
-        <span class="text-[9px] font-black text-amber-600 uppercase tracking-widest mb-1">Late / Pending</span>
-        <span class="text-xl md:text-3xl font-black text-amber-700 tabular-nums">{{ lateCount }}</span>
+      <div class="relative overflow-hidden rounded-card bg-slate-50 border border-slate-200 shadow-sm p-4 md:p-6 flex flex-col items-center justify-center">
+        <i aria-hidden="true" class="pi pi-clock pointer-events-none absolute right-3 top-3 text-3xl text-slate-700/10"></i>
+        <span class="text-sm font-semibold text-slate-700 mb-1">Not submitted</span>
+        <span class="text-xl md:text-3xl font-black text-slate-800 tabular-nums">{{ outstandingCount }}</span>
+        <span class="mt-1 text-sm text-text-muted text-center"><span class="text-amber-800 font-semibold">{{ overdueCount }} overdue</span> · {{ notOverdueCount }} not overdue</span>
       </div>
     </div>
 
-    <article class="bg-white border border-stone-200 shadow-sm relative">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-stone-200 bg-stone-50/50 p-4 md:p-6">
-          <h2 class="text-[11px] font-black text-slate-800 uppercase tracking-[0.2em]">Logbook Submissions</h2>
+    <article ref="logbookPanel" class="rounded-card overflow-hidden bg-surface border border-surface-border shadow-sm relative">
+        <div class="flex flex-col xl:flex-row xl:items-center justify-between gap-4 border-b border-surface-border bg-surface-muted p-4 md:p-6">
+          <h2 class="text-lg font-bold text-slate-800">Logbook Submissions</h2>
 
-          <div class="flex items-center gap-2 md:gap-4 w-full sm:w-auto">
+          <div class="flex flex-wrap items-center gap-2 md:gap-4 w-full xl:w-auto">
+            <input
+              v-model="searchQuery"
+              type="search"
+              aria-label="Search by student name or matric number"
+              placeholder="Search name or matric number"
+              class="rounded-control w-full sm:w-64 text-sm font-medium border border-surface-control px-3 py-2 bg-surface outline-none focus:border-sky-700 focus:ring-1 focus:ring-sky-700 transition-all"
+            >
             <select
               v-model="statusFilter"
-              class="flex-1 sm:flex-none text-[10px] font-black border border-stone-200 rounded-none px-3 py-2 bg-white uppercase tracking-widest outline-none focus:border-sky-600 focus:ring-1 focus:ring-sky-600 transition-all cursor-pointer"
+              aria-label="Filter by status"
+              class="rounded-control flex-1 sm:flex-none text-sm font-medium border border-surface-control px-3 py-2 bg-surface-muted outline-none focus:border-sky-700 focus:ring-1 focus:ring-sky-700 transition-all cursor-pointer"
             >
               <option value="all">All Statuses</option>
               <option value="Submitted">Submitted</option>
               <option value="Not Submitted">Not Submitted</option>
-              <option value="Late">Late</option>
+              <option value="Late">Overdue</option>
             </select>
 
             <button
-              class="flex-1 sm:flex-none h-9 sm:h-8 px-3 bg-amber-400 text-slate-900 text-[9px] font-black uppercase tracking-widest hover:brightness-110 transition-all disabled:opacity-30 flex items-center justify-center gap-1"
+              class="rounded-control flex-1 sm:flex-none h-9 px-3 bg-amber-400 text-slate-900 text-sm font-semibold hover:brightness-110 transition-all disabled:opacity-30 flex items-center justify-center gap-1"
+              aria-label="Remind all students"
               :disabled="isLoading || isRemindingAll"
               @click="remindAll"
             >
@@ -51,7 +60,8 @@
             </button>
 
             <button
-              class="flex-1 sm:flex-none h-9 sm:h-8 px-3 bg-indigo-600 text-white text-[9px] font-black uppercase tracking-widest hover:bg-indigo-700 transition-all flex items-center justify-center gap-1"
+              class="rounded-control flex-1 sm:flex-none h-9 px-3 bg-sky-700 text-white text-sm font-semibold hover:bg-sky-800 transition-all flex items-center justify-center gap-1"
+              aria-label="Download logbook PDF"
               :disabled="isLoading"
               @click="generatePDF"
             >
@@ -60,122 +70,181 @@
             </button>
 
             <button
-              class="flex-1 sm:flex-none h-9 sm:h-8 px-3 bg-stone-600 text-white text-[9px] font-black uppercase tracking-widest hover:brightness-150 transition-all flex items-center justify-center"
-              :disabled="isLoading"
-              @click="loadLogbooks"
+              class="rounded-control flex-1 sm:flex-none h-9 px-3 bg-slate-600 text-white text-sm font-semibold hover:brightness-150 transition-all flex items-center justify-center"
+              :disabled="isRefreshing"
+              @click="loadLogbooks(true)"
             >
               Refresh
             </button>
           </div>
         </div>
 
-      <div v-if="isLoading" class="py-12 md:py-16 text-center text-stone-400">
+      <div v-if="isLoading" class="py-12 md:py-16 text-center text-text-muted">
         <i class="pi pi-spin pi-spinner text-xl text-sky-600 mr-2" />
-        <span class="text-[10px] font-black uppercase tracking-widest">Loading logbooks...</span>
+        <span class="text-sm font-medium">Loading logbooks...</span>
       </div>
 
-      <div v-else-if="logbooks.length === 0" class="py-12 md:py-16 text-center text-stone-400">
+      <div v-else-if="filteredStudents.length === 0" class="py-12 md:py-16 text-center text-text-muted">
         <i class="pi pi-inbox mb-2 text-3xl block"></i>
-        <span class="text-[10px] font-black uppercase tracking-widest">No logbook records found for the active semester.</span>
+        <span class="text-sm font-medium">{{ searchQuery.trim() || statusFilter !== 'all' ? 'No logbook records match your filters.' : 'No logbook records found for the active semester.' }}</span>
       </div>
 
       <template v-else>
         <div class="block md:hidden space-y-3 p-4 md:p-0">
-          <div v-for="entry in logbooks" :key="entry.id" class="bg-stone-50 border border-stone-200 p-4">
-            <div class="flex items-start justify-between mb-3">
-              <div class="min-w-0 flex-1">
-                <div class="font-black text-slate-800 uppercase tracking-tight text-sm">{{ entry.studentName }}</div>
-                <div class="text-[9px] font-bold text-stone-400 mt-0.5">{{ entry.studentMatric || 'No ID' }}</div>
-              </div>
-              <StatusBadge :status="entry.statusLabel" :positive="entry.statusLabel === 'Submitted'" />
+          <div v-for="student in paginatedStudents" :key="student.id" class="rounded-card bg-surface-muted border border-surface-border p-4">
+            <div class="font-semibold text-slate-800 tracking-tight text-base">{{ student.name }}</div>
+            <div class="text-xs font-medium text-text-muted mt-0.5">{{ student.matric || 'No ID' }}</div>
+            <div class="mt-3 flex justify-between gap-3 text-sm text-text-muted">
+              <span>Submitted: {{ student.submitted }} / {{ student.entries.length }}</span>
+              <span>Not submitted: {{ student.outstanding }}</span>
             </div>
-            <div class="flex items-center justify-between text-xs text-stone-500">
-              <span class="font-black text-slate-800">Week {{ entry.weekNumber }}</span>
-              <span class="font-bold tabular-nums">{{ entry.weekEndDate }}</span>
-            </div>
-            <div v-if="entry.isStale" class="mt-2 flex items-center gap-1 text-[9px] font-black text-amber-700 uppercase tracking-wider">
-              <i class="pi pi-exclamation-triangle text-[10px]" /> Stale Record
-            </div>
-            <div class="mt-3 pt-3 border-t border-stone-200 flex items-center gap-2">
-              <button
-                v-if="!entry.isSubmitted"
-                class="flex-1 h-9 bg-amber-400 text-slate-900 text-[8px] font-black uppercase tracking-wider hover:brightness-110 transition-all flex items-center justify-center gap-1"
-                :disabled="entry.isSendingReminder"
-                @click="sendReminder(entry)"
-              >
-                <i class="pi pi-bell"></i>
-                {{ entry.isSendingReminder ? '...' : 'Remind' }}
-              </button>
-              <button
-                v-if="!entry.isSubmitted && isSuperCoordinator"
-                class="flex-1 h-9 bg-slate-900 text-white text-[8px] font-black uppercase tracking-wider hover:brightness-150 transition-all flex items-center justify-center gap-1"
-                :disabled="entry.isSubmitting"
-                @click="markSubmitted(entry)"
-              >
-                <i class="pi pi-check"></i>
-                {{ entry.isSubmitting ? '...' : 'Mark Done' }}
-              </button>
-            </div>
+            <button type="button" class="rounded-control mt-4 w-full h-9 bg-sky-700 text-white text-sm font-semibold hover:bg-sky-800 transition-all" @click="openStudent(student.id, $event)">View logbooks</button>
           </div>
         </div>
 
         <div class="hidden md:block overflow-x-auto">
           <table class="w-full text-left">
             <thead>
-              <tr class="text-xs font-semibold text-stone-500 uppercase tracking-wider bg-stone-50/50 border-b border-stone-200">
+              <tr class="text-sm font-semibold text-text-muted bg-surface-muted border-b border-surface-border">
+                <th class="w-14 px-4 py-6 text-center">#</th>
                 <th class="px-8 py-6">Student</th>
-                <th class="px-8 py-6">Week</th>
-                <th class="px-8 py-6">End Date</th>
-                <th class="px-8 py-6">Status</th>
-                <th class="px-8 py-6 text-right">Submitted At</th>
+                <th class="px-8 py-6">Progress</th>
+                <th class="px-8 py-6">Not submitted</th>
                 <th class="px-8 py-6 text-right w-32">Actions</th>
               </tr>
             </thead>
-            <tbody class="text-xs divide-y divide-stone-100">
-              <tr v-for="entry in logbooks" :key="entry.id" class="hover:bg-stone-50 transition-colors group">
+            <tbody class="text-sm divide-y divide-surface-border">
+              <tr v-for="(student, index) in paginatedStudents" :key="student.id" class="hover:bg-surface-hover transition-colors group">
+                <td class="px-4 py-6 text-center text-xs font-medium text-text-muted tabular-nums">{{ String(visibleStart + index).padStart(2, '0') }}</td>
                 <td class="px-8 py-6">
-                  <div class="font-black text-slate-800 uppercase tracking-tight text-xs">{{ entry.studentName }}</div>
-                  <div class="text-[9px] font-bold text-stone-400 mt-1">{{ entry.studentMatric || 'No ID' }}</div>
-                </td>
-                <td class="px-8 py-6 font-black text-slate-800 tracking-tighter text-xs">Week {{ entry.weekNumber }}</td>
-                <td class="px-8 py-6 font-bold text-stone-500 tabular-nums text-xs">{{ entry.weekEndDate }}</td>
-                <td class="px-8 py-6">
-                  <StatusBadge :status="entry.statusLabel" :positive="entry.statusLabel === 'Submitted'" />
-                  <div v-if="entry.isStale" class="mt-2 flex items-center gap-1 text-[9px] font-black text-amber-700 uppercase tracking-wider">
-                    <i class="pi pi-exclamation-triangle text-[10px]" /> Stale Record
-                  </div>
-                </td>
-                <td class="px-8 py-6 text-right text-stone-400 font-black tabular-nums text-[10px]">
-                  {{ entry.submittedAt ? formatDate(entry.submittedAt) : '-' }}
-                </td>
+                    <div class="font-semibold text-slate-800 tracking-tight text-sm">{{ student.name }}</div>
+                    <div class="text-xs font-medium text-text-muted mt-1">{{ student.matric || 'No ID' }}</div>
+                  </td>
+                <td class="px-8 py-6 font-medium text-slate-800 tabular-nums">{{ student.submitted }} / {{ student.entries.length }} submitted</td>
+                <td class="px-8 py-6 font-medium text-text-muted tabular-nums">{{ student.outstanding }}</td>
                 <td class="px-8 py-6 text-right">
-                  <div class="flex items-center justify-end gap-2">
-                    <button
-                      v-if="!entry.isSubmitted"
-                      class="h-8 px-3 bg-amber-400 text-slate-900 text-[8px] font-black uppercase tracking-wider hover:brightness-110 transition-all"
-                      :disabled="entry.isSendingReminder"
-                      @click="sendReminder(entry)"
-                    >
-                      <i class="pi pi-bell mr-1"></i>
-                      {{ entry.isSendingReminder ? '...' : 'Remind' }}
-                    </button>
-                    <button
-                      v-if="!entry.isSubmitted && isSuperCoordinator"
-                      class="h-8 px-3 bg-slate-900 text-white text-[8px] font-black uppercase tracking-wider hover:brightness-150 transition-all"
-                      :disabled="entry.isSubmitting"
-                      @click="markSubmitted(entry)"
-                    >
-                      <i class="pi pi-check mr-1"></i>
-                      {{ entry.isSubmitting ? '...' : 'Mark Done' }}
-                    </button>
-                  </div>
+                  <button type="button" class="rounded-control whitespace-nowrap h-9 px-3 bg-sky-700 text-white text-sm font-semibold hover:bg-sky-800 transition-all" @click="openStudent(student.id, $event)">View logbooks</button>
                 </td>
               </tr>
             </tbody>
           </table>
         </div>
+
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-t border-surface-border bg-surface-muted p-4 md:px-6">
+          <p class="text-xs font-medium text-text-muted tabular-nums">
+            Showing {{ visibleStart }}–{{ visibleEnd }} of {{ filteredStudents.length }} students
+          </p>
+          <div class="flex items-center justify-between sm:justify-end gap-3 md:gap-5">
+            <label class="flex items-center gap-2 text-xs font-medium text-text-muted">
+              <span class="hidden xs:inline">Rows</span>
+              <select
+                v-model.number="pageSize"
+                aria-label="Rows per page"
+                class="rounded-control text-xs font-medium border border-surface-control px-2 py-1.5 bg-surface-muted outline-none focus:border-sky-700 focus:ring-1 focus:ring-sky-700 transition-all cursor-pointer tabular-nums"
+              >
+                <option v-for="size in pageSizeOptions" :key="size" :value="size">{{ size }}</option>
+              </select>
+            </label>
+            <div class="flex items-center gap-2">
+              <button
+                type="button"
+                aria-label="Previous page"
+                :disabled="currentPage === 1"
+                class="rounded-control h-8 w-8 border border-surface-control bg-surface text-text-muted hover:bg-surface-hover disabled:opacity-30 disabled:cursor-not-allowed transition-all flex items-center justify-center"
+                @click="goToPage(currentPage - 1)"
+              >
+                <i class="pi pi-chevron-left text-[9px]" />
+              </button>
+              <span class="text-xs font-medium text-text-muted tabular-nums" aria-live="polite">
+                Page {{ currentPage }} of {{ totalPages }}
+              </span>
+              <button
+                type="button"
+                aria-label="Next page"
+                :disabled="currentPage === totalPages"
+                class="rounded-control h-8 w-8 border border-surface-control bg-surface text-text-muted hover:bg-surface-hover disabled:opacity-30 disabled:cursor-not-allowed transition-all flex items-center justify-center"
+                @click="goToPage(currentPage + 1)"
+              >
+                <i class="pi pi-chevron-right text-[9px]" />
+              </button>
+            </div>
+          </div>
+        </div>
       </template>
     </article>
+    <Drawer
+      v-model:visible="drawerVisible"
+      position="right"
+      modal
+      dismissable
+      block-scroll
+      :show-close-icon="false"
+      :style="{ width: 'min(100vw, 32rem)' }"
+      :pt="{
+        mask: { class: 'logbook-drawer-mask bg-slate-900/50' },
+        root: { class: 'logbook-drawer h-full flex flex-col bg-surface shadow-2xl' },
+        header: { class: 'shrink-0 border-b border-surface-border px-5 py-5 sm:px-6' },
+        content: { class: 'flex-1 min-h-0 overflow-y-auto px-5 py-5 sm:px-6' }
+      }"
+      aria-label="Student weekly logbooks"
+      @after-hide="drawerTrigger?.focus()"
+    >
+      <template #header>
+        <div class="flex w-full items-start justify-between gap-4">
+          <div v-if="selectedStudent" class="min-w-0">
+            <p class="text-xs font-semibold uppercase tracking-wide text-text-muted">Student logbooks</p>
+            <h2 class="mt-1 text-xl font-bold text-slate-800 break-words">{{ selectedStudent.name }}</h2>
+            <p class="mt-1 text-sm text-text-muted">{{ selectedStudent.matric || 'No ID' }}</p>
+          </div>
+          <button type="button" autofocus aria-label="Close student logbooks" class="rounded-control shrink-0 flex h-9 w-9 items-center justify-center text-text-muted hover:bg-surface-hover focus:outline-none focus:ring-2 focus:ring-sky-700" @click="drawerVisible = false">
+            <i class="pi pi-times" aria-hidden="true" />
+          </button>
+        </div>
+      </template>
+      <template v-if="selectedStudent">
+        <div class="rounded-card border border-surface-border bg-surface-muted p-4">
+          <div class="flex items-center justify-between gap-4">
+            <div>
+              <p class="text-xs font-semibold text-text-muted">Submission progress</p>
+              <p class="mt-1 text-lg font-bold text-slate-800 tabular-nums">{{ selectedStudent.submitted }} / {{ selectedStudent.entries.length }} <span class="text-sm font-medium text-text-muted">weeks submitted</span></p>
+            </div>
+            <div class="text-right">
+              <p class="text-xs font-semibold text-text-muted">Not submitted</p>
+              <p class="mt-1 text-lg font-bold text-amber-700 tabular-nums">{{ selectedStudent.outstanding }}</p>
+            </div>
+          </div>
+          <button v-if="selectedStudent.outstanding > 0" type="button" class="rounded-control mt-4 h-9 px-3 bg-amber-400 text-slate-900 text-sm font-semibold hover:brightness-110 transition-all disabled:opacity-50" :disabled="isRemindingStudent" @click="sendStudentReminder(selectedStudent.id)">
+            <i class="pi pi-bell mr-1" /> {{ isRemindingStudent ? 'Sending...' : 'Remind student' }}
+          </button>
+          <p v-if="studentReminderMessage" class="mt-2 text-sm" :class="studentReminderError ? 'text-rose-700' : 'text-emerald-700'" role="status">{{ studentReminderMessage }}</p>
+        </div>
+        <div class="mt-6 mb-3 flex items-center justify-between gap-3">
+          <h3 class="font-bold text-slate-800">Weekly logbooks</h3>
+          <NuxtLink :to="{ path: '/student', query: { id: selectedStudent.id }, hash: '#student-management' }" class="text-sm font-medium text-sky-700 underline underline-offset-2">View reviews</NuxtLink>
+        </div>
+        <div class="overflow-hidden rounded-card border border-surface-border divide-y divide-surface-border">
+          <div v-for="entry in selectedStudent.entries" :key="entry.id" class="bg-surface px-4 py-4">
+            <div class="flex items-start justify-between gap-4">
+              <div>
+                <div class="font-semibold text-slate-800">Week {{ entry.weekNumber }}</div>
+                <div class="mt-1 text-sm text-text-muted">Ends {{ entry.weekEndDate }}</div>
+                <p class="mt-1 text-sm text-text-muted">{{ entry.submittedAt ? `Submitted ${formatDate(entry.submittedAt)}` : 'Not submitted' }}</p>
+              </div>
+              <span class="inline-flex shrink-0" :title="entry.isStale ? 'Stale: no submission more than 7 days after the week ended.' : undefined">
+                <StatusBadge :status="entry.statusLabel === 'Late' ? 'Overdue' : entry.statusLabel" />
+                <span v-if="entry.isStale" class="sr-only">Stale record</span>
+              </span>
+            </div>
+            <div v-if="!entry.isSubmitted && isSuperCoordinator" class="mt-3 flex flex-wrap gap-2">
+              <button v-if="isSuperCoordinator" type="button" class="rounded-control h-9 px-3 bg-slate-900 text-white text-xs font-semibold hover:brightness-150 transition-all disabled:opacity-50" :disabled="entry.isSubmitting" @click="markSubmitted(entry)">
+                <i class="pi pi-check mr-1" /> {{ entry.isSubmitting ? 'Saving...' : 'Mark Done' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </template>
+      <p v-else class="text-sm text-text-muted">This student's logbooks are no longer available.</p>
+    </Drawer>
   </section>
 </template>
 
@@ -185,6 +254,7 @@ definePageMeta({
 })
 
 import StatusBadge from '~/components/StatusBadge.vue'
+import Drawer from 'primevue/drawer'
 
 import { useCoordinatorPrivileges } from '~/composables/useCoordinatorPrivileges'
 import { generateReport } from '~/utils/pdfGenerator'
@@ -207,45 +277,80 @@ type LogbookEntry = {
 
 const { isSuperCoordinator } = useCoordinatorPrivileges()
 
-const logbooks = ref<LogbookEntry[]>([])
-const isLoading = ref(false)
+const pageCache = usePageCache()
+const cachedLogbooks = pageCache.read<LogbookEntry[]>('/api/logbooks')
+const logbooks = ref<LogbookEntry[]>(cachedLogbooks || [])
+const isLoading = ref(!cachedLogbooks)
+const isRefreshing = ref(false)
 const isRemindingAll = ref(false)
 const errorMessage = ref('')
 
 const statusFilter = ref('all')
+const searchQuery = ref('')
+const pageSize = ref(15)
+const pageSizeOptions = [10, 15, 20, 50]
+const currentPage = ref(1)
+const logbookPanel = ref<HTMLElement | null>(null)
+const drawerVisible = ref(false)
+const selectedStudentId = ref<string | null>(null)
+const drawerTrigger = ref<HTMLElement | null>(null)
+const isRemindingStudent = ref(false)
+const studentReminderMessage = ref('')
+const studentReminderError = ref(false)
 
-watch(statusFilter, () => {
-  void loadLogbooks()
+const openStudent = (id: string, event: MouseEvent) => {
+  drawerTrigger.value = event.currentTarget as HTMLElement
+  selectedStudentId.value = id
+  studentReminderMessage.value = ''
+  studentReminderError.value = false
+  drawerVisible.value = true
+}
+
+watch([statusFilter, searchQuery], () => {
+  currentPage.value = 1
 })
 
-const loadLogbooks = async () => {
-  isLoading.value = true
+watch(pageSize, () => {
+  currentPage.value = 1
+})
+
+const loadLogbooks = async (force = false) => {
+  isRefreshing.value = true
+  const url = '/api/logbooks'
+  const cached = pageCache.read<LogbookEntry[]>(url)
+  if (cached) logbooks.value = cached
+  isLoading.value = !cached
   errorMessage.value = ''
 
   try {
-    const queryParams = new URLSearchParams()
-    if (statusFilter.value !== 'all') {
-      queryParams.set('status', statusFilter.value)
-    }
-
-    const data = await $fetch<LogbookEntry[]>(`/api/logbooks?${queryParams.toString()}`)
+    const data = await pageCache.fetch<LogbookEntry[]>(url, { force })
     logbooks.value = data || []
   } catch (error: unknown) {
     errorMessage.value = error instanceof Error ? error.message : 'Unable to load logbooks.'
   } finally {
     isLoading.value = false
+    isRefreshing.value = false
   }
 }
 
-const sendReminder = async (entry: LogbookEntry) => {
-  entry.isSendingReminder = true
+const sendStudentReminder = async (studentId: string) => {
+  isRemindingStudent.value = true
+  studentReminderMessage.value = ''
+  studentReminderError.value = false
   try {
-    await $fetch(`/api/logbooks/${entry.id}/reminder`, { method: 'POST' })
-    entry.reminderSent = true
+    const result = await $fetch<{ entryIds: number[] }>(`/api/logbooks/student/${encodeURIComponent(studentId)}/reminder`, { method: 'POST' })
+    pageCache.invalidate('/api/logbooks')
+    for (const entry of logbooks.value) {
+      if (result.entryIds.includes(entry.id)) entry.reminderSent = true
+    }
+    if (selectedStudentId.value === studentId) studentReminderMessage.value = 'Reminder sent.'
   } catch (error: any) {
-    alert('Failed to send reminder')
+    if (selectedStudentId.value === studentId) {
+      studentReminderError.value = true
+      studentReminderMessage.value = error?.data?.statusMessage || 'Failed to send reminder.'
+    }
   } finally {
-    entry.isSendingReminder = false
+    isRemindingStudent.value = false
   }
 }
 
@@ -253,6 +358,7 @@ const markSubmitted = async (entry: LogbookEntry) => {
   entry.isSubmitting = true
   try {
     await $fetch(`/api/logbooks/${entry.id}/submit`, { method: 'POST' })
+    pageCache.invalidate('/api/logbooks')
     entry.isSubmitted = true
     entry.submittedAt = new Date().toISOString()
     entry.statusLabel = 'Submitted'
@@ -267,6 +373,7 @@ const remindAll = async () => {
   isRemindingAll.value = true
   try {
     const result = await $fetch<{ reminded: number }>('/api/logbooks/remind-all', { method: 'POST' })
+    pageCache.invalidate('/api/logbooks')
     alert(`Reminders sent to ${result.reminded} student(s)`)
     await loadLogbooks()
   } catch {
@@ -276,15 +383,68 @@ const remindAll = async () => {
   }
 }
 
+const filteredLogbooks = computed(() => {
+  const query = searchQuery.value.trim().toLowerCase()
+  return logbooks.value.filter(entry => {
+    const matchesStatus = statusFilter.value === 'all' || entry.statusLabel === statusFilter.value
+    const matchesSearch = !query || entry.studentName.toLowerCase().includes(query) || (entry.studentMatric || '').toLowerCase().includes(query)
+    return matchesStatus && matchesSearch
+  })
+})
+
 const totalCount = computed(() => logbooks.value.length)
 
 const submittedCount = computed(() =>
   logbooks.value.filter(e => e.statusLabel === 'Submitted').length
 )
 
-const lateCount = computed(() =>
-  logbooks.value.filter(e => e.statusLabel === 'Late' || e.statusLabel === 'Not Submitted').length
+const overdueCount = computed(() => logbooks.value.filter(e => e.statusLabel === 'Late').length)
+const notOverdueCount = computed(() => logbooks.value.filter(e => e.statusLabel === 'Not Submitted').length)
+const outstandingCount = computed(() => overdueCount.value + notOverdueCount.value)
+
+const students = computed(() => {
+  const grouped = new Map<string, { id: string, name: string, matric: string, entries: LogbookEntry[], submitted: number, outstanding: number }>()
+  for (const entry of logbooks.value) {
+    let student = grouped.get(entry.studentId)
+    if (!student) {
+      student = { id: entry.studentId, name: entry.studentName, matric: entry.studentMatric, entries: [], submitted: 0, outstanding: 0 }
+      grouped.set(entry.studentId, student)
+    }
+    student.entries.push(entry)
+    if (entry.statusLabel === 'Submitted') student.submitted++
+    if (entry.statusLabel === 'Late' || entry.statusLabel === 'Not Submitted') student.outstanding++
+  }
+  return Array.from(grouped.values()).map(student => ({ ...student, entries: student.entries.sort((a, b) => a.weekNumber - b.weekNumber) }))
+})
+const filteredStudents = computed(() => {
+  const matchingIds = new Set(filteredLogbooks.value.map(entry => entry.studentId))
+  return students.value.filter(student => matchingIds.has(student.id))
+})
+const selectedStudent = computed(() => students.value.find(student => student.id === selectedStudentId.value))
+
+const totalPages = computed(() => Math.max(1, Math.ceil(filteredStudents.value.length / pageSize.value)))
+const visibleStart = computed(() =>
+  filteredStudents.value.length === 0 ? 0 : (currentPage.value - 1) * pageSize.value + 1
 )
+const visibleEnd = computed(() => Math.min(currentPage.value * pageSize.value, filteredStudents.value.length))
+const paginatedStudents = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value
+  return filteredStudents.value.slice(start, start + pageSize.value)
+})
+
+watch(totalPages, (pages) => {
+  if (currentPage.value > pages) currentPage.value = pages
+})
+
+const goToPage = (page: number) => {
+  const nextPage = Math.min(Math.max(page, 1), totalPages.value)
+  if (nextPage === currentPage.value) return
+
+  currentPage.value = nextPage
+  nextTick(() => {
+    logbookPanel.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  })
+}
 
 const formatDate = (value: string) => {
   return new Date(value).toLocaleString('en-US', {
@@ -294,7 +454,7 @@ const formatDate = (value: string) => {
 }
 
 const generatePDF = () => {
-  const tableData = logbooks.value.map(entry => [
+  const tableData = filteredLogbooks.value.map(entry => [
     entry.studentName,
     entry.studentMatric || 'N/A',
     'Week ' + entry.weekNumber,
@@ -315,3 +475,45 @@ onMounted(async () => {
   await loadLogbooks()
 })
 </script>
+
+<style>
+.logbook-drawer.p-drawer-enter-active,
+.logbook-drawer.p-drawer-leave-active {
+  transition: transform 250ms ease;
+}
+
+.logbook-drawer.p-drawer-enter-from,
+.logbook-drawer.p-drawer-leave-to {
+  transform: translateX(100%);
+}
+
+.logbook-drawer-mask {
+  animation: logbook-backdrop-in 250ms ease both;
+}
+
+.logbook-drawer-mask:has(.p-drawer-leave-active) {
+  animation: logbook-backdrop-out 250ms ease both;
+}
+
+@keyframes logbook-backdrop-in {
+  from { background-color: transparent; }
+  to { background-color: rgb(15 23 42 / 50%); }
+}
+
+@keyframes logbook-backdrop-out {
+  from { background-color: rgb(15 23 42 / 50%); }
+  to { background-color: transparent; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .logbook-drawer.p-drawer-enter-active,
+  .logbook-drawer.p-drawer-leave-active {
+    transition-duration: 0.01ms;
+  }
+
+  .logbook-drawer-mask,
+  .logbook-drawer-mask:has(.p-drawer-leave-active) {
+    animation-duration: 0.01ms;
+  }
+}
+</style>

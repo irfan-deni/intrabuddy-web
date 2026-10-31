@@ -9,6 +9,24 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      coordinator_student_assignments: {
+        Row: { student_id: string; semester_id: number; coordinator_id: string; assigned_by: string; assigned_at: string }
+        Insert: { student_id: string; semester_id: number; coordinator_id: string; assigned_by: string; assigned_at?: string }
+        Update: { coordinator_id?: string; assigned_by?: string; assigned_at?: string }
+        Relationships: []
+      }
+      student_management_audit: {
+        Row: { id: number; actor_id: string; student_id: string; semester_id: number; action: string; target_id: string; before_value: Json; after_value: Json; reason: string; created_at: string }
+        Insert: { actor_id: string; student_id: string; semester_id: number; action: string; target_id: string; before_value?: Json; after_value?: Json; reason: string }
+        Update: never
+        Relationships: []
+      }
+      logbook_reviews: {
+        Row: { logbook_id: number; status: string; feedback: string; reviewer_id: string; reviewed_at: string }
+        Insert: { logbook_id: number; status: string; feedback: string; reviewer_id: string }
+        Update: { status?: string; feedback?: string; reviewer_id?: string; reviewed_at?: string }
+        Relationships: []
+      }
       users: {
         Row: {
           id: string
@@ -211,6 +229,7 @@ export type Database = {
       job_applications: {
         Row: {
           id: number
+          semester_id: number | null
           student_id: string | null
           company_name: string
           position: string | null
@@ -224,6 +243,7 @@ export type Database = {
         }
         Insert: {
           id?: number
+          semester_id?: number | null
           student_id?: string | null
           company_name: string
           position?: string | null
@@ -237,6 +257,7 @@ export type Database = {
         }
         Update: {
           id?: number
+          semester_id?: number | null
           student_id?: string | null
           company_name?: string
           position?: string | null
@@ -299,6 +320,7 @@ export type Database = {
       broadcast_messages: {
         Row: {
           id: number
+          image_paths: string[]
           coordinator_id: string | null
           title: string | null
           body: string | null
@@ -307,6 +329,7 @@ export type Database = {
         }
         Insert: {
           id?: number
+          image_paths?: string[]
           coordinator_id?: string | null
           title?: string | null
           body?: string | null
@@ -315,6 +338,7 @@ export type Database = {
         }
         Update: {
           id?: number
+          image_paths?: string[]
           coordinator_id?: string | null
           title?: string | null
           body?: string | null
@@ -549,7 +573,20 @@ export type Database = {
       }
     }
     Views: Record<string, never>
-    Functions: Record<string, never>
+    Functions: {
+      manage_portal_configuration: {
+        Args: { p_action: string; p_payload: Json }
+        Returns: Json
+      }
+      manage_student_record: {
+        Args: { p_actor_id: string; p_super: boolean; p_student_id: string; p_semester_id: number; p_action: string; p_payload: Json; p_entry_id?: number }
+        Returns: Json
+      }
+      get_coordinator_dashboard: {
+        Args: Record<string, never>
+        Returns: Json
+      }
+    }
     Enums: Record<string, never>
     CompositeTypes: Record<string, never>
   }

@@ -1,4 +1,4 @@
-import { serverSupabaseClient, serverSupabaseUser } from '~~/server/utils/supabase-server'
+import { serverSupabaseClient } from '~~/server/utils/supabase-server'
 
 type DispatchBody = {
   broadcastId?: string
@@ -17,10 +17,7 @@ const isMissingRelationError = (message: string) => {
 }
 
 export default defineEventHandler(async (event) => {
-  const user = await serverSupabaseUser(event)
-  if (!user) {
-    throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
-  }
+  await requireSuperCoordinator(event)
 
   const body = await readBody<DispatchBody>(event)
   if (!body.broadcastId) {
@@ -28,28 +25,6 @@ export default defineEventHandler(async (event) => {
   }
 
   const supabase = await serverSupabaseClient(event)
-
-  const { data: actorProfile, error: actorError } = await supabase
-    .from('users')
-    .select('*')
-    .eq('id', user.id)
-    .single() as unknown as { data: { role: string } | null; error: any }
-
-  if (actorError) {
-    throw createError({ statusCode: 500, statusMessage: actorError.message })
-  }
-
-  if (!actorProfile || actorProfile.role !== 'coordinator') {
-    throw createError({ statusCode: 403, statusMessage: 'Only coordinators can dispatch broadcasts.' })
-  }
-
-  const runtimeConfig = useRuntimeConfig(event)
-  const allowedEmails = parseSuperCoordinatorEmails(runtimeConfig.public.superCoordinatorEmails)
-  const actorEmail = user.email?.trim().toLowerCase() || ''
-
-  if (!allowedEmails.includes(actorEmail)) {
-    throw createError({ statusCode: 403, statusMessage: 'Only super coordinators can dispatch broadcasts.' })
-  }
 
   const { data: broadcast, error: broadcastError } = await (supabase
     .from('broadcast_notifications') as any)

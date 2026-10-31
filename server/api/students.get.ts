@@ -9,89 +9,33 @@ export default defineEventHandler(async (event) => {
 
     // Determine target semester from query param
     const { semester_id } = getQuery(event)
-    let targetStudentIds: string[] | null = null
-
-    if (semester_id && semester_id !== 'all') {
-      // Filter by specific semester
-      const { data: studentSemesters } = await supabase
-        .from('student_semesters')
-        .select('student_id')
-        .eq('semester_id', Number(semester_id))
-
-      if (!studentSemesters || studentSemesters.length === 0) {
-        return { students: [], totalCount: 0 }
-      }
-
-      targetStudentIds = studentSemesters.map(sc => sc.student_id).filter(Boolean) as string[]
-    } else if (!semester_id) {
-      // Default: filter by active semester
-      const { data: activeSemester } = await supabase
-        .from('semesters')
-        .select('id')
-        .eq('is_active', true)
-        .maybeSingle()
-
-      if (!activeSemester) {
-        return { students: [], totalCount: 0 }
-      }
-
-      const { data: studentSemesters } = await supabase
-        .from('student_semesters')
-        .select('student_id')
-        .eq('semester_id', activeSemester.id)
-
-      if (!studentSemesters || studentSemesters.length === 0) {
-        return { students: [], totalCount: 0 }
-      }
-
-      targetStudentIds = studentSemesters.map(sc => sc.student_id).filter(Boolean) as string[]
-    }
-    // semester_id === 'all' → targetStudentIds stays null → all students
-
-    // 3. Build student profile query
-    let profileQuery = supabase
-      .from('users')
-      .select('id, full_name, student_id, email, phone_number')
-      .eq('role', 'student')
-
-    if (targetStudentIds) {
-      profileQuery = profileQuery.in('id', targetStudentIds)
-    }
+    // Inner joins apply semester filtering within the profile query rather than
+    // waiting for semester and enrollment ID requests before loading profiles.
+    const studentFields = 'id, full_name, student_id, email, phone_number, applications:job_applications!job_applications_student_id_fkey(status), checklists:student_checklists!student_checklists_student_id_fkey(is_completed), documents:digital_wallet_items!digital_wallet_items_student_id_fkey(id)' as const
+    const profiles = supabase.from('users')
+    const profileQuery = semester_id === 'all'
+      ? profiles.select(studentFields).eq('role', 'student')
+      : semester_id
+        ? profiles.select(`${studentFields}, enrollment:student_semesters!inner(semester_id)`)
+          .eq('role', 'student').eq('enrollment.semester_id', positiveId(semester_id, 'semester ID'))
+        : profiles.select(`${studentFields}, enrollment:student_semesters!inner(semester:semesters!inner(is_active))`)
+          .eq('role', 'student').eq('enrollment.semester.is_active', true)
 
     const { data: studentsData, error: studentsError } = await profileQuery
 
     if (studentsError) throw studentsError
 
-    const allStudentIds = (studentsData || []).map(s => s.id)
-
-    // 4. Fetch related data in parallel for efficiency
-    const [appsRes, checklistRes, walletRes] = await Promise.all([
-      supabase.from('job_applications').select('student_id, status').in('student_id', allStudentIds),
-      supabase.from('student_checklists').select('student_id, is_completed').in('student_id', allStudentIds),
-      supabase.from('digital_wallet_items').select('student_id').in('student_id', allStudentIds)
-    ])
-
-    // Process and merge data
+    // Related rows arrive grouped by the database, so each is inspected only
+    // for its owning student rather than rescanning whole tables per student.
     const results = (studentsData || []).map(student => {
-      // Placement Status Logic
-      const studentApps = appsRes.data?.filter(app => app.student_id === student.id) || []
-      let placementStatus = 'Searching'
-      if (studentApps.some(app => app.status === 'Accepted')) {
-        placementStatus = 'Accepted'
-      } else if (studentApps.some(app => app.status === 'Interview')) {
-        placementStatus = 'Interview'
-      } else if (studentApps.length > 0 && studentApps[0]) {
-        placementStatus = studentApps[0].status || 'Pending'
-      }
-
-      // Checklist Progress Logic
-      const studentChecklists = checklistRes.data?.filter(c => c.student_id === student.id) || []
-      const totalItems = studentChecklists.length
-      const doneItems = studentChecklists.filter(c => c.is_completed).length
-      const completionPercent = totalItems > 0 ? Math.round((doneItems / totalItems) * 100) : 0
-
-      // Document Count
-      const documentCount = walletRes.data?.filter(w => w.student_id === student.id).length || 0
+      const apps = student.applications || []
+      const placementStatus = apps.some(app => app.status === 'Accepted') ? 'Accepted'
+        : apps.some(app => app.status === 'Interview') ? 'Interview'
+          : apps.length > 0 ? apps[0]?.status || 'Pending' : 'Searching'
+      const checklists = student.checklists || []
+      const doneItems = checklists.filter(item => item.is_completed).length
+      const completionPercent = checklists.length > 0 ? Math.round((doneItems / checklists.length) * 100) : 0
+      const documentCount = student.documents?.length || 0
 
       return {
         id: student.id,
@@ -110,6 +54,7 @@ export default defineEventHandler(async (event) => {
       totalCount: results.length
     }
   } catch (error: any) {
+    if (error.statusCode) throw error
     console.error('[Students API Error]:', error)
     throw createError({ statusCode: 500, statusMessage: 'Failed to fetch student directory' })
   }

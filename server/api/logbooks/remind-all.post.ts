@@ -1,11 +1,8 @@
-import { serverSupabaseServiceRole, serverSupabaseUser } from '~~/server/utils/supabase-server'
+import { serverSupabaseServiceRole } from '~~/server/utils/supabase-server'
 import type { Database } from '~/types/supabase'
 
 export default defineEventHandler(async (event) => {
-  const user = await serverSupabaseUser(event)
-  if (!user) {
-    throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
-  }
+  await requireCoordinator(event)
 
   const serviceRole = serverSupabaseServiceRole<Database>(event)
 

@@ -1,148 +1,166 @@
 <template>
-  <div class="space-y-8 md:space-y-12">
-    <!-- Top Half: Compose Broadcast -->
-    <section class="bg-white border border-stone-200 p-4 sm:p-8 lg:p-12 shadow-sm relative overflow-hidden">
-      <div class="absolute top-0 right-0 p-12 opacity-5 pointer-events-none">
-        <i class="pi pi-megaphone text-[120px] text-black"></i>
-      </div>
-
-      <header class="mb-6 md:mb-10">
-        <h1 class="text-2xl md:text-3xl font-black text-slate-800 tracking-tight uppercase">Dispatch Intelligence</h1>
-        <p class="text-stone-500 mt-2 font-bold uppercase text-[10px] tracking-widest">Send instant push notifications to the student mobile app.</p>
+  <div class="app-surface-ui space-y-8 md:space-y-10">
+    <section>
+      <header v-if="!embedded" class="mb-6">
+        <h1 class="text-2xl md:text-3xl font-black text-slate-800 tracking-tight uppercase">Broadcasts</h1>
+        <p class="text-text-muted mt-2 font-bold uppercase text-[10px] tracking-widest">Send announcements to students or coordinators.</p>
       </header>
 
-      <form @submit.prevent="sendBroadcast" class="max-w-3xl space-y-8 relative z-10">
-        <div class="space-y-2">
-          <label class="text-[9px] font-black text-stone-500 uppercase tracking-widest">Announcement Title</label>
+      <form @submit.prevent="sendBroadcast" class="rounded-card max-w-3xl space-y-6 bg-surface border border-surface-border p-5 md:p-7 shadow-sm">
+        <div class="flex flex-col gap-2">
+          <label for="announcement-audience" class="text-[10px] font-black text-text-muted uppercase tracking-widest">Audience</label>
+          <select
+            id="announcement-audience"
+            v-model="form.target_audience"
+            :disabled="isSending"
+            class="rounded-control w-full sm:w-72 bg-surface-muted border border-surface-control px-4 py-3 text-sm font-semibold outline-none focus:border-sky-700 focus:ring-1 focus:ring-sky-700 cursor-pointer"
+          >
+            <option value="students_all">All students</option>
+            <option value="coordinators_all">All coordinators</option>
+          </select>
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <label for="announcement-title" class="text-[10px] font-black text-text-muted uppercase tracking-widest">Title</label>
           <input 
+            id="announcement-title"
             v-model="form.title" 
+            :disabled="isSending"
+            maxlength="200"
             type="text" 
-            placeholder="e.g., Mandatory Industry Briefing"
+            placeholder="e.g., Industry briefing"
             required 
-            class="w-full bg-white border border-stone-200 rounded-none px-6 py-4 text-xs font-black uppercase tracking-widest focus:border-sky-600 focus:ring-1 focus:ring-sky-600 outline-none transition-all text-slate-800 placeholder:text-stone-400"
+            class="w-full bg-surface-muted border border-surface-control rounded-control px-4 py-3 text-sm font-semibold focus:border-sky-700 focus:ring-1 focus:ring-sky-700 outline-none transition-all text-slate-800 placeholder:text-text-muted"
           >
         </div>
 
-        <div class="space-y-2">
-          <label class="text-[9px] font-black text-stone-500 uppercase tracking-widest">Detailed Content</label>
+        <div class="flex flex-col gap-2">
+          <label for="announcement-message" class="text-[10px] font-black text-text-muted uppercase tracking-widest">Message</label>
           <textarea 
-            ref="bodyTextareaRef"
+            id="announcement-message"
             v-model="form.body" 
+            :disabled="isSending"
+            maxlength="18000"
             rows="5" 
-            placeholder="Enter the message you want to broadcast to all students..."
+            placeholder="Write your announcement..."
             required 
-            class="w-full bg-white border border-stone-200 rounded-none px-6 py-4 text-xs font-bold uppercase tracking-widest focus:border-sky-600 focus:ring-1 focus:ring-sky-600 outline-none transition-all resize-none leading-relaxed text-slate-800 placeholder:text-stone-400"
+            class="w-full bg-surface-muted border border-surface-control rounded-control px-4 py-3 text-sm font-medium focus:border-sky-700 focus:ring-1 focus:ring-sky-700 outline-none transition-all resize-none leading-relaxed text-slate-800 placeholder:text-text-muted"
           ></textarea>
 
-          <div class="flex items-center gap-3">
-            <input ref="imageInputRef" type="file" accept="image/*" class="hidden" @change="uploadImage">
-            <button type="button" :disabled="uploadingImage" class="h-9 px-4 border border-stone-200 text-stone-500 hover:text-slate-800 hover:border-slate-800 text-[9px] font-black uppercase tracking-widest transition-all flex items-center gap-2" @click="imageInputRef?.click()">
+          <p id="announcement-image-help" class="text-xs text-text-muted">Up to 3 images, 5 MB each. PNG, JPEG, GIF, or WebP. Images upload only when you send.</p>
+          <div class="flex flex-wrap items-center gap-3">
+            <input ref="imageInputRef" type="file" accept="image/png,image/jpeg,image/gif,image/webp" multiple class="hidden" aria-label="Choose announcement images" aria-describedby="announcement-image-help" :disabled="isSending || isAddingImages" @change="attachImages">
+            <button type="button" :disabled="isSending || isAddingImages || attachments.length >= BROADCAST_IMAGE_LIMIT" class="rounded-control h-9 px-4 border border-surface-control text-text-muted hover:text-slate-800 hover:border-slate-800 text-xs font-semibold transition-all flex items-center gap-2 disabled:opacity-50" @click="imageInputRef?.click()">
               <i class="pi pi-image"></i>
-              {{ uploadingImage ? 'Uploading...' : 'Attach Image' }}
+              {{ isAddingImages ? 'Checking images...' : 'Attach Image' }}
             </button>
-            <span v-if="uploadedImages.length > 0" class="text-[9px] font-black text-stone-400 tabular-nums">{{ uploadedImages.length }} image{{ uploadedImages.length > 1 ? 's' : '' }} attached</span>
+            <span v-if="attachments.length > 0" class="text-xs font-medium text-text-muted tabular-nums">{{ attachments.length }} image{{ attachments.length > 1 ? 's' : '' }} attached</span>
           </div>
 
-          <div v-if="uploadedImages.length > 0" class="flex flex-wrap gap-3 mt-2">
-            <div v-for="(url, idx) in uploadedImages" :key="idx" class="relative group">
-              <img :src="url" class="h-16 w-16 object-cover border border-stone-200">
-              <button type="button" class="absolute -top-2 -right-2 h-5 w-5 bg-red-500 text-white flex items-center justify-center text-[8px] opacity-0 group-hover:opacity-100 transition-all" @click="removeImage(idx)">
-                <i class="pi pi-times"></i>
-              </button>
-            </div>
+          <p v-if="attachmentError" role="alert" class="text-sm text-rose-700">{{ attachmentError }}</p>
+          <div v-if="attachments.length > 0" class="flex flex-wrap gap-3 mt-2">
+            <figure v-for="(attachment, idx) in attachments" :key="attachment.preview" class="w-36 rounded-control border border-surface-border bg-surface-muted p-2 space-y-2">
+              <img v-if="attachment.status !== 'invalid'" :src="attachment.preview" :alt="`Selected attachment ${idx + 1}: ${attachment.file.name}`" class="rounded-control h-24 w-full object-contain" @load="attachment.status = 'ready'" @error="attachment.status = 'invalid'">
+              <p v-else class="text-xs text-rose-700">This image cannot be previewed. Remove it and choose another image.</p>
+              <figcaption class="text-xs text-text-muted break-words">{{ attachment.file.name }}</figcaption>
+              <p v-if="attachment.status === 'pending'" role="status" class="text-xs text-text-muted">Checking preview…</p>
+              <button type="button" :disabled="isSending" :aria-label="`Remove attached image ${idx + 1}`" class="rounded-control w-full border border-red-400 px-2 py-1 text-red-700 hover:bg-red-50 disabled:opacity-50" @click="removeImage(idx)">Remove</button>
+            </figure>
           </div>
         </div>
 
-        <div class="space-y-2 pt-4">
-          <label class="text-[9px] font-black text-stone-500 uppercase tracking-widest">Target Audience</label>
-          <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
-            <select
-              v-model="form.target_audience"
-              class="w-full sm:w-72 bg-white border border-stone-200 px-5 py-4 text-[10px] font-black uppercase tracking-widest outline-none focus:border-sky-600 focus:ring-1 focus:ring-sky-600 cursor-pointer shadow-sm"
-            >
-              <option value="students_all">Student</option>
-              <option value="coordinators_all">Coordinator</option>
-            </select>
+        <p v-if="sendError" role="alert" class="text-sm text-rose-700">{{ sendError }}</p>
+        <p v-if="isSending" role="status" class="text-sm text-text-muted">{{ attachments.length ? 'Uploading images and sending announcement. Please wait…' : 'Sending announcement…' }}</p>
 
-            <button 
-              type="submit" 
-              :disabled="isSending" 
-              class="w-full sm:w-auto bg-sky-600 text-white px-10 py-4 font-black text-[10px] uppercase tracking-[0.3em] hover:brightness-110 transition-all flex items-center justify-center gap-3 disabled:opacity-30 whitespace-nowrap"
-            >
-              <i class="pi pi-send"></i>
-              {{ isSending ? 'Broadcasting...' : 'Confirm Dispatch' }}
-            </button>
-          </div>
+        <div class="flex justify-end pt-1">
+          <button
+            type="submit"
+            :disabled="isSending || isAddingImages || attachments.some(image => image.status !== 'ready')"
+            class="rounded-control w-full sm:w-auto bg-sky-700 text-white px-6 py-3 font-black text-xs uppercase tracking-widest hover:bg-sky-800 transition-all flex items-center justify-center gap-2 disabled:opacity-30 whitespace-nowrap"
+          >
+            <i class="pi pi-send"></i>
+            {{ isSending ? 'Sending...' : 'Send broadcast' }}
+          </button>
         </div>
       </form>
     </section>
 
     <section class="space-y-6">
       <div class="flex items-center justify-between">
-        <h2 class="text-[11px] font-black text-slate-800 uppercase tracking-[0.2em]">Transmission History</h2>
+        <h2 class="text-[11px] font-black text-slate-800 uppercase tracking-[0.2em]">Broadcast History</h2>
         <div class="flex items-center gap-3">
           <button
-            class="h-8 px-3 bg-indigo-600 hover:bg-indigo-700 text-white text-[9px] font-black uppercase tracking-widest transition-all flex items-center gap-1.5"
+            class="rounded-control h-8 px-3 bg-sky-700 hover:bg-sky-800 text-white text-[9px] font-black uppercase tracking-widest transition-all flex items-center gap-1.5"
             @click="downloadAuditTrail"
           >
             <i class="pi pi-file-pdf"></i>
-            Download Audit Trail
+            Export PDF
           </button>
-          <span class="text-[8px] font-black text-stone-400 uppercase tracking-widest tabular-nums">{{ broadcasts.length }} Logs Detected</span>
+          <span class="text-[10px] font-black text-text-muted uppercase tracking-widest tabular-nums">{{ broadcasts.length }} broadcast{{ broadcasts.length === 1 ? '' : 's' }}</span>
         </div>
       </div>
 
-      <div v-if="broadcasts.length === 0" class="py-12 md:py-20 text-center text-[10px] font-black text-stone-400 uppercase tracking-widest bg-white border border-stone-200">No previous transmissions recorded</div>
+      <div v-if="isLoading" class="rounded-card py-12 md:py-16 text-center text-text-muted bg-surface border border-surface-border">
+        <i class="pi pi-spin pi-spinner text-xl text-sky-600 mr-2" />
+        <span class="text-sm font-medium">Loading broadcasts...</span>
+      </div>
+
+      <div v-else-if="historyError" class="rounded-card p-5 bg-rose-50 border border-rose-100 text-rose-700 flex items-center justify-between gap-4">
+        <span class="text-sm font-medium">{{ historyError }}</span>
+        <button type="button" class="rounded-control shrink-0 border border-rose-300 px-3 py-2 text-xs font-semibold hover:bg-rose-100 transition-colors" @click="fetchBroadcasts(true)">Retry</button>
+      </div>
+
+      <div v-else-if="broadcasts.length === 0" class="rounded-card py-12 md:py-20 text-center text-sm font-medium text-text-muted bg-surface border border-surface-border">No broadcasts have been sent yet.</div>
 
       <div v-else class="space-y-3">
       <div class="block md:hidden space-y-3">
-        <div v-for="msg in broadcasts" :key="msg.id" class="bg-white border border-stone-200 p-4">
+        <div v-for="msg in broadcasts" :key="msg.id" class="rounded-card bg-surface border border-surface-border p-4">
           <div class="flex items-start justify-between mb-3">
             <div class="min-w-0 flex-1">
               <div class="font-black text-slate-800 uppercase tracking-tight text-sm">{{ msg.title }}</div>
-              <div class="text-[9px] text-stone-400 font-medium mt-1 line-clamp-2 uppercase tracking-tighter">{{ msg.body }}</div>
+              <AnnouncementBody :body="msg.body" :image-paths="msg.image_paths" compact class="mt-1" />
             </div>
-            <button class="h-8 w-8 border border-red-400 text-red-400 hover:bg-red-500 hover:text-white flex items-center justify-center flex-shrink-0 ml-2" @click="deleteBroadcast(msg.id)">
+            <button class="rounded-control h-8 w-8 border border-red-400 text-red-700 hover:bg-red-700 hover:text-white flex items-center justify-center flex-shrink-0 ml-2" @click="deleteBroadcast(msg.id)">
               <i class="pi pi-trash text-[10px]"></i>
             </button>
           </div>
-          <div class="flex items-center justify-between pt-3 border-t border-stone-100">
+          <div class="flex items-center justify-between pt-3 border-t border-surface-border">
             <div class="flex gap-2">
-              <span v-for="role in msg.target_roles" :key="role" class="px-2 py-0.5 bg-slate-900 text-white text-[8px] font-black uppercase tracking-tighter">{{ audienceLabels[role] || role }}</span>
+              <span v-for="role in msg.target_roles" :key="role" class="rounded-badge px-2 py-0.5 bg-slate-900 text-white text-[8px] font-black uppercase tracking-tighter">{{ audienceLabels[role] || role }}</span>
             </div>
-            <span class="text-[10px] font-black text-stone-400 tabular-nums uppercase">{{ msg.sent_at ? new Date(msg.sent_at).toLocaleDateString() : 'Unknown' }}</span>
+            <span class="text-xs font-medium text-text-muted tabular-nums">{{ formatDateTime(msg.sent_at) }}</span>
           </div>
         </div>
       </div>
 
-      <div class="hidden md:block bg-white border border-stone-200 overflow-x-auto">
+      <div class="rounded-card hidden md:block bg-surface border border-surface-border overflow-x-auto">
         <table class="w-full text-left">
           <thead>
-            <tr class="text-[9px] font-black text-stone-500 uppercase tracking-[0.2em] bg-stone-50/50">
-              <th class="px-10 py-6">Message Identifier</th>
-              <th class="px-10 py-6">Recipients</th>
-              <th class="px-10 py-6 text-right">Timestamp</th>
+            <tr class="text-[9px] font-black text-text-muted uppercase tracking-[0.2em] bg-surface-muted">
+              <th class="px-8 py-5">Announcement</th>
+              <th class="px-8 py-5">Audience</th>
+              <th class="px-8 py-5 text-right">Sent at</th>
               <th class="px-10 py-6 text-right w-20">Actions</th>
             </tr>
           </thead>
-          <tbody class="text-xs divide-y divide-stone-100">
-            <tr v-for="msg in broadcasts" :key="msg.id" class="hover:bg-stone-50 transition-colors group">
-              <td class="px-10 py-8">
+          <tbody class="text-xs divide-y divide-surface-border">
+            <tr v-for="msg in broadcasts" :key="msg.id" class="hover:bg-surface-hover transition-colors group">
+              <td class="px-8 py-5">
                 <div class="flex flex-col gap-1">
                   <span class="font-black text-slate-800 uppercase tracking-tight text-xs">{{ msg.title }}</span>
-                  <span class="text-[9px] text-stone-400 font-medium line-clamp-1 uppercase tracking-tighter">{{ msg.body }}</span>
+                  <AnnouncementBody :body="msg.body" :image-paths="msg.image_paths" compact />
                 </div>
               </td>
-              <td class="px-10 py-8">
+              <td class="px-8 py-5">
                 <div class="flex gap-2">
-                  <span v-for="role in msg.target_roles" :key="role" class="px-2 py-0.5 bg-slate-900 text-white text-[8px] font-black uppercase tracking-tighter">{{ audienceLabels[role] || role }}</span>
+                  <span v-for="role in msg.target_roles" :key="role" class="rounded-badge px-2 py-0.5 bg-slate-900 text-white text-[8px] font-black uppercase tracking-tighter">{{ audienceLabels[role] || role }}</span>
                 </div>
               </td>
-              <td class="px-10 py-8 text-right text-stone-400 font-black tabular-nums group-hover:text-slate-800 transition-colors uppercase text-xs">
-                {{ msg.sent_at ? new Date(msg.sent_at).toLocaleDateString() : 'Unknown' }}
+              <td class="px-8 py-5 text-right text-text-muted font-medium tabular-nums group-hover:text-slate-800 transition-colors text-xs">
+                {{ formatDateTime(msg.sent_at) }}
               </td>
-              <td class="px-10 py-8 text-right">
-                <button class="h-8 w-8 border border-red-400 text-red-400 hover:bg-red-500 hover:text-white flex items-center justify-center transition-all" @click="deleteBroadcast(msg.id)">
+              <td class="px-8 py-5 text-right">
+                <button class="rounded-control h-8 w-8 border border-red-400 text-red-700 hover:bg-red-700 hover:text-white flex items-center justify-center transition-all" @click="deleteBroadcast(msg.id)">
                   <i class="pi pi-trash text-[10px]"></i>
                 </button>
               </td>
@@ -154,13 +172,13 @@
     </section>
 
     <Transition name="fade">
-      <div v-if="successToast" class="fixed bottom-4 right-4 md:bottom-10 md:right-10 left-4 md:left-auto z-[100] bg-slate-900 text-white px-6 md:px-8 py-5 md:py-6 shadow-2xl flex items-center gap-4 md:gap-6 border-l-8 border-sky-600">
-        <div class="h-8 w-8 md:h-10 md:w-10 bg-sky-600 text-white flex items-center justify-center">
+      <div v-if="successToast" class="rounded-card fixed bottom-4 right-4 md:bottom-10 md:right-10 left-4 md:left-auto z-[100] bg-slate-900 text-white px-6 md:px-8 py-5 md:py-6 shadow-2xl flex items-center gap-4 md:gap-6 border-l-8 border-sky-600">
+        <div class="rounded-control h-8 w-8 md:h-10 md:w-10 bg-sky-700 text-white flex items-center justify-center">
           <i class="pi pi-check text-sm"></i>
         </div>
         <div>
           <p class="text-[10px] font-black uppercase tracking-widest">Broadcast Successful</p>
-          <p class="text-[9px] font-bold text-white/60 uppercase mt-1">Notifications have been dispatched.</p>
+          <p class="text-[9px] font-bold text-white/60 uppercase mt-1">Announcement saved.</p>
         </div>
       </div>
     </Transition>
@@ -170,22 +188,34 @@
 <script setup lang="ts">
 import type { Database } from '~/types/supabase'
 import { generateReport } from '~/utils/pdfGenerator'
+import { BROADCAST_IMAGE_LIMIT, imageMatchesType, imageValidationError } from '~/utils/broadcast-attachments'
+import { onBeforeRouteLeave, onBeforeRouteUpdate } from 'vue-router'
+
+const { embedded = false } = defineProps<{ embedded?: boolean }>()
 
 definePageMeta({
   requiredRole: 'coordinator'
 })
 
 const supabase = useSupabaseClient<Database>()
+const pageCache = usePageCache()
 
-const broadcasts = ref<Database['public']['Tables']['broadcast_messages']['Row'][]>([])
-const isLoading = ref(true)
+type Broadcast = Database['public']['Tables']['broadcast_messages']['Row']
+const cachedBroadcasts = pageCache.read<Broadcast[]>('/api/broadcasts')
+const broadcasts = ref<Broadcast[]>(cachedBroadcasts || [])
+const isLoading = ref(!cachedBroadcasts)
+const historyError = ref('')
 const isSending = ref(false)
 const successToast = ref(false)
-const uploadingImage = ref(false)
-const uploadedImages = ref<string[]>([])
+type Attachment = { file: File; preview: string; status: 'pending' | 'ready' | 'invalid' }
+const attachments = ref<Attachment[]>([])
+const isAddingImages = ref(false)
+const attachmentError = ref('')
+const sendError = ref('')
+let disposed = false
+let successTimer: ReturnType<typeof setTimeout> | undefined
 
 const imageInputRef = ref<HTMLInputElement | null>(null)
-const bodyTextareaRef = ref<HTMLTextAreaElement | null>(null)
 
 const audienceLabels: Record<string, string> = {
   students_all: 'All Students',
@@ -201,65 +231,58 @@ const form = ref({
   target_audience: 'students_all'
 })
 
-const uploadImage = async () => {
-  const file = imageInputRef.value?.files?.[0]
-  if (!file) return
-
-  uploadingImage.value = true
+const attachImages = async () => {
+  if (isSending.value || isAddingImages.value) return
+  const files = Array.from(imageInputRef.value?.files || [])
+  if (!files.length) return
+  attachmentError.value = ''
+  isAddingImages.value = true
   try {
-    const fileExt = file.name.split('.').pop()
-    const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`
-    const filePath = `broadcast-images/${fileName}`
-
-    const { data, error } = await supabase.storage
-      .from('broadcast-media')
-      .upload(filePath, file, { contentType: file.type })
-
-    if (error) {
-      alert('Image upload failed: ' + error.message)
-      return
+    if (attachments.value.length + files.length > BROADCAST_IMAGE_LIMIT) throw new Error('Attach at most 3 images. Remove an image before choosing more.')
+    // Validate the whole selection before making any object URLs.
+    const seen = new Set<string>()
+    for (const file of files) {
+      const invalid = imageValidationError(file)
+      if (invalid) throw new Error(invalid)
+      if (!imageMatchesType(new Uint8Array(await file.slice(0, 12).arrayBuffer()), file.type)) throw new Error('The selected file is not a valid supported image.')
+      const key = `${file.name}:${file.size}:${file.type}`
+      if (seen.has(key) || attachments.value.some(item => item.file.name === file.name && item.file.size === file.size && item.file.type === file.type)) throw new Error('That image is already attached.')
+      seen.add(key)
     }
-
-    const { data: urlData } = supabase.storage
-      .from('broadcast-media')
-      .getPublicUrl(filePath)
-
-    const publicUrl = urlData?.publicUrl
-    if (!publicUrl) {
-      alert('Failed to get public URL')
-      return
-    }
-
-    uploadedImages.value.push(publicUrl)
-
-    const imgTag = `<img src="${publicUrl}" />`
-    const textarea = bodyTextareaRef.value
-    if (textarea) {
-      const start = textarea.selectionStart
-      const end = textarea.selectionEnd
-      form.value.body = form.value.body.slice(0, start) + imgTag + form.value.body.slice(end)
-    } else {
-      form.value.body += '\n' + imgTag
-    }
+    if (disposed) return
+    for (const file of files) attachments.value.push({ file, preview: URL.createObjectURL(file), status: 'pending' })
+  } catch (error: any) {
+    attachmentError.value = error?.message || 'Unable to read this image. Please choose it again.'
   } finally {
-    uploadingImage.value = false
+    isAddingImages.value = false
     if (imageInputRef.value) imageInputRef.value.value = ''
   }
 }
 
 const removeImage = (idx: number) => {
-  const url = uploadedImages.value[idx]
-  uploadedImages.value.splice(idx, 1)
-  form.value.body = form.value.body.replace(`<img src="${url}" />`, '').replace(`<img src="${url}">`, '')
+  if (isSending.value) return
+  const attachment = attachments.value[idx]
+  if (!attachment) return
+  URL.revokeObjectURL(attachment.preview)
+  attachments.value.splice(idx, 1)
+  attachmentError.value = ''
 }
 
-const fetchBroadcasts = async () => {
-  isLoading.value = true
+const clearAttachments = () => {
+  for (const attachment of attachments.value) URL.revokeObjectURL(attachment.preview)
+  attachments.value = []
+}
+
+const fetchBroadcasts = async (force = false) => {
+  const cached = pageCache.read<Broadcast[]>('/api/broadcasts')
+  if (cached) broadcasts.value = cached
+  isLoading.value = !cached
+  historyError.value = ''
   try {
-    const data = await $fetch<Database['public']['Tables']['broadcast_messages']['Row'][]>('/api/broadcasts')
+    const data = await pageCache.fetch<Broadcast[]>('/api/broadcasts', { force })
     broadcasts.value = data || []
-  } catch (error) {
-    console.error('Failed to sync history')
+  } catch {
+    if (!cached) historyError.value = 'Unable to load broadcast history.'
   } finally {
     isLoading.value = false
   }
@@ -295,39 +318,59 @@ const deleteBroadcast = async (id: number) => {
   if (!confirm('Permanently delete this transmission record?')) return
   try {
     await $fetch(`/api/broadcasts/${id}`, { method: 'DELETE' })
-    await fetchBroadcasts()
+    pageCache.invalidate('/api/broadcasts')
+    await fetchBroadcasts(true)
   } catch (error) {
     alert('Delete failed')
   }
 }
 
 const sendBroadcast = async () => {
+  if (isSending.value || isAddingImages.value || attachments.value.some(image => image.status !== 'ready')) return
+  if (!form.value.title.trim() || !form.value.body.trim()) return
+  sendError.value = ''
   isSending.value = true
   try {
+    const payload = new FormData()
+    payload.set('title', form.value.title)
+    payload.set('body', form.value.body)
+    payload.set('target_roles', JSON.stringify([form.value.target_audience]))
+    for (const attachment of attachments.value) payload.append('images', attachment.file, attachment.file.name)
     await $fetch('/api/broadcasts', {
-      method: 'POST',
-      body: {
-        title: form.value.title,
-        body: form.value.body,
-        target_roles: [form.value.target_audience]
-      }
+      method: 'POST', body: payload, retry: 0
     })
-    
+    if (disposed) return
     form.value = { title: '', body: '', target_audience: 'students_all' }
-    uploadedImages.value = []
-    
+    clearAttachments()
+    attachmentError.value = ''
     successToast.value = true
-    setTimeout(() => successToast.value = false, 5000)
+    if (successTimer) clearTimeout(successTimer)
+    successTimer = setTimeout(() => successToast.value = false, 5000)
     
-    await fetchBroadcasts()
-  } catch (error) {
-    alert('Transmission failed')
+    pageCache.invalidate('/api/broadcasts')
+    await fetchBroadcasts(true)
+  } catch (error: any) {
+    if (disposed) return
+    sendError.value = error?.data?.statusMessage || 'Sending could not be confirmed. Your draft is preserved. Check announcement history before retrying to avoid a duplicate.'
+    await fetchBroadcasts(true)
   } finally {
     isSending.value = false
   }
 }
 
 onMounted(fetchBroadcasts)
+const canLeaveComposer = () => {
+  if (!isSending.value) return true
+  sendError.value = 'Please wait until this announcement finishes sending before leaving.'
+  return false
+}
+onBeforeRouteLeave(canLeaveComposer)
+onBeforeRouteUpdate(canLeaveComposer)
+onBeforeUnmount(() => {
+  disposed = true
+  clearAttachments()
+  if (successTimer) clearTimeout(successTimer)
+})
 </script>
 
 <style scoped>

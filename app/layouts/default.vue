@@ -1,80 +1,74 @@
 <template>
-  <div class="min-h-screen bg-brand-bg flex font-sans selection:bg-brand-azure selection:text-white">
+  <div class="min-h-screen bg-brand-bg flex font-sans selection:bg-brand-azure selection:text-white" :class="{ 'dashboard-layout': route.path === '/' }">
     <aside
-      class="hidden lg:flex bg-slate-900 text-white flex-col fixed h-screen z-50 transition-all duration-300 ease-in-out"
-      :class="collapsed ? 'w-20' : 'w-72'"
+      class="hidden lg:flex bg-slate-900 text-white flex-col fixed h-screen z-50 overflow-hidden transition-[width] duration-[240ms] ease-out motion-reduce:transition-none"
+      :class="collapsed ? 'w-20 sidebar--collapsed' : 'w-72'"
     >
-      <div :class="collapsed ? 'p-5' : 'p-8'">
-        <div class="flex items-center gap-3" :class="collapsed ? 'justify-center' : ''">
-          <div class="bg-white p-1.5 flex-shrink-0">
+      <div class="shrink-0 flex items-center gap-2 px-4 py-6" :class="collapsed ? 'justify-center' : ''">
+        <div v-show="!collapsed" class="sidebar-brand flex min-w-0 flex-1 items-center gap-3">
+          <div class="rounded-control bg-surface p-1.5 flex-shrink-0">
             <i class="pi pi-graduation-cap text-slate-900 text-xl"></i>
           </div>
-          <Transition name="fade-text">
-            <div v-if="!collapsed" class="flex flex-col">
-              <span class="text-lg font-black tracking-[0.3em] uppercase text-white whitespace-nowrap">INTRA BUDDY</span>
-              <span class="text-[10px] text-slate-400 uppercase tracking-widest font-semibold mt-1">COORDINATOR PORTAL</span>
-            </div>
-          </Transition>
+          <div class="sidebar-copy flex flex-col">
+            <span class="text-lg font-black tracking-[0.3em] uppercase text-white whitespace-nowrap">INTRA BUDDY</span>
+            <span class="text-xs text-slate-400 tracking-wide font-semibold mt-1 whitespace-nowrap">Coordinator portal</span>
+          </div>
         </div>
-      </div>
-
-      <nav class="flex-1 px-4 space-y-1">
-        <NuxtLink
-          v-for="item in navigation"
-          :key="item.path"
-          :to="item.path"
-          class="flex items-center gap-4 px-4 py-3 text-xs font-bold uppercase tracking-wider transition-all rounded-lg"
-          :class="[
-            collapsed ? 'justify-center px-0' : '',
-            route.path === item.path
-              ? 'bg-sky-600 text-white shadow-md'
-              : 'text-white/70 hover:bg-white/10 hover:text-white'
-          ]"
-        >
-          <i :class="[item.icon, 'text-lg flex-shrink-0']"></i>
-          <Transition name="fade-text">
-            <span v-if="!collapsed">{{ item.name }}</span>
-          </Transition>
-          <span
-            v-if="item.path === '/notifications' && unreadCount > 0"
-            class="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold text-white bg-red-500 rounded-full animate-pulse"
-            :class="collapsed ? '' : 'ml-auto'"
-          >
-            {{ unreadCount > 99 ? '99+' : unreadCount }}
-          </span>
-        </NuxtLink>
-      </nav>
-
-      <div class="px-4 pb-2">
         <button
-          class="w-full flex items-center justify-center gap-3 px-4 py-3 text-white/50 hover:text-white hover:bg-white/10 transition-all rounded-lg"
-          :class="collapsed ? 'px-0' : ''"
+          type="button"
+          class="sidebar-collapse-control flex h-11 w-11 shrink-0 items-center justify-center text-white/70 hover:text-white hover:bg-white/10 transition-colors rounded-lg"
+          :aria-label="collapsed ? 'Expand sidebar' : 'Collapse sidebar'"
+          :aria-expanded="!collapsed"
+          :title="collapsed ? 'Expand sidebar' : 'Collapse sidebar'"
           @click="collapsed = !collapsed"
         >
-          <i class="pi text-sm transition-transform duration-300" :class="collapsed ? 'pi-chevron-right' : 'pi-chevron-left'"></i>
-          <Transition name="fade-text">
-            <span v-if="!collapsed" class="text-[10px] font-bold uppercase tracking-wider">Collapse</span>
-          </Transition>
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5">
+            <rect x="3" y="4" width="18" height="16" rx="2" />
+            <path d="M9 4v16" />
+            <path :d="collapsed ? 'm14 10 2 2-2 2' : 'm16 10-2 2 2 2'" />
+          </svg>
         </button>
       </div>
 
-      <div class="p-6 border-t border-white/10" :class="collapsed ? 'p-4 flex justify-center' : ''">
-        <div
-          class="flex items-center gap-4 group cursor-pointer"
-          :class="collapsed ? 'justify-center' : ''"
-          @click="handleLogout"
-        >
-          <div class="h-10 w-10 bg-white/10 flex items-center justify-center group-hover:bg-white group-hover:text-slate-900 transition-colors rounded-lg flex-shrink-0">
-            <i class="pi pi-sign-out text-sm"></i>
+      <nav class="flex-1 min-h-0 px-4 py-2 space-y-5 overflow-x-hidden overflow-y-auto" aria-label="Primary navigation">
+        <div v-for="group in navigationGroups" :key="group.id">
+          <div
+            v-if="group.label"
+            class="sidebar-section-label px-4 pb-1 text-[10px] font-bold uppercase tracking-widest text-slate-400"
+          >
+            {{ group.label }}
           </div>
-          <Transition name="fade-text">
-            <div v-if="!collapsed" class="flex flex-col">
-              <span class="text-xs font-bold tracking-wider text-white/50 group-hover:text-white transition-colors">Sign Out</span>
-              <span class="text-[10px] text-white/30 tracking-wide">{{ profile?.email || 'System' }}</span>
-            </div>
-          </Transition>
+          <div class="space-y-1">
+            <NuxtLink
+              v-for="item in group.items"
+              :key="item.path"
+              :to="item.path"
+              :aria-label="collapsed ? item.name : undefined"
+              :title="collapsed ? item.name : undefined"
+              :aria-current="isActive(item) ? 'page' : undefined"
+              class="sidebar-nav-link relative flex min-h-11 items-center gap-3 px-4 py-2.5 text-sm font-semibold tracking-normal transition-colors rounded-lg"
+              :class="[
+                isActive(item)
+                  ? 'bg-sky-600 text-white shadow-md'
+                  : 'text-white/70 hover:bg-white/10 hover:text-white'
+              ]"
+              @mouseenter="prefetchRoute(item.path)"
+              @focus="prefetchRoute(item.path)"
+            >
+              <i aria-hidden="true" :class="[item.icon, 'w-5 text-center text-lg flex-shrink-0']"></i>
+              <span class="sidebar-copy min-w-0">{{ item.name }}</span>
+              <span
+                v-if="item.path === '/inbox' && unreadCount > 0"
+                class="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold text-white bg-red-500 rounded-full"
+                :class="collapsed ? 'sidebar-inbox-badge--collapsed' : 'ml-auto'"
+              >
+                {{ unreadCount > 99 ? '99+' : unreadCount }}
+              </span>
+            </NuxtLink>
+          </div>
         </div>
-      </div>
+      </nav>
+
     </aside>
 
     <div
@@ -84,89 +78,127 @@
     ></div>
 
     <div
-      class="fixed top-0 left-0 h-full z-50 flex flex-col bg-slate-900 text-white transition-transform duration-300 ease-in-out lg:hidden"
+      id="mobile-sidebar"
+      :inert="!mobileOpen"
+      class="fixed top-0 left-0 h-dvh z-50 flex flex-col bg-slate-900 text-white transition-transform duration-300 ease-in-out motion-reduce:transition-none lg:hidden"
       :class="mobileOpen ? 'translate-x-0' : '-translate-x-full'"
       style="width: 288px"
     >
-      <div class="flex items-center justify-between p-6 border-b border-white/10">
+      <div class="flex shrink-0 items-center justify-between gap-2 px-4 py-5 border-b border-white/10">
         <div class="flex items-center gap-3">
-          <div class="bg-white p-1.5 flex-shrink-0">
+          <div class="rounded-control bg-surface p-1.5 flex-shrink-0">
             <i class="pi pi-graduation-cap text-slate-900 text-xl"></i>
           </div>
           <div class="flex flex-col">
-            <span class="text-lg font-black tracking-[0.3em] uppercase text-white whitespace-nowrap">INTRA BUDDY</span>
-            <span class="text-[10px] text-slate-400 uppercase tracking-widest font-semibold mt-0.5">COORDINATOR PORTAL</span>
+            <span class="text-base font-black tracking-[0.15em] uppercase text-white whitespace-nowrap">INTRA BUDDY</span>
+            <span class="text-xs text-slate-400 tracking-wide font-semibold mt-0.5">Coordinator portal</span>
           </div>
         </div>
-        <button class="h-8 w-8 flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 transition-all rounded-lg" @click="mobileOpen = false">
+        <button type="button" aria-label="Close navigation" class="sidebar-collapse-control h-11 w-11 shrink-0 flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 transition-colors rounded-lg" @click="mobileOpen = false">
           <i class="pi pi-times text-sm"></i>
         </button>
       </div>
 
-      <nav class="flex-1 overflow-y-auto px-4 py-4 space-y-1">
-        <NuxtLink
-          v-for="item in navigation"
-          :key="item.path"
-          :to="item.path"
-          class="flex items-center gap-4 px-4 py-4 text-sm font-bold uppercase tracking-wider transition-all rounded-lg min-h-[48px]"
-          :class="[
-            route.path === item.path
-              ? 'bg-sky-600 text-white shadow-md'
-              : 'text-white/70 hover:bg-white/10 hover:text-white'
-          ]"
-          @click="mobileOpen = false"
-        >
-          <i :class="[item.icon, 'text-lg flex-shrink-0']"></i>
-          <span>{{ item.name }}</span>
-          <span
-            v-if="item.path === '/notifications' && unreadCount > 0"
-            class="ml-auto inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold text-white bg-red-500 rounded-full animate-pulse"
-          >
-            {{ unreadCount > 99 ? '99+' : unreadCount }}
-          </span>
-        </NuxtLink>
-      </nav>
-
-      <div class="p-6 border-t border-white/10">
-        <div class="flex items-center gap-4 group cursor-pointer min-h-[48px]" @click="handleLogout">
-          <div class="h-10 w-10 bg-white/10 flex items-center justify-center group-hover:bg-white group-hover:text-slate-900 transition-colors rounded-lg flex-shrink-0">
-            <i class="pi pi-sign-out text-sm"></i>
+      <nav class="flex-1 min-h-0 overflow-y-auto px-4 py-4 space-y-5" aria-label="Primary navigation">
+        <div v-for="group in navigationGroups" :key="group.id">
+          <div v-if="group.label" class="sidebar-section-label px-4 pb-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+            {{ group.label }}
           </div>
-          <div class="flex flex-col">
-            <span class="text-xs font-bold tracking-wider text-white/50 group-hover:text-white transition-colors">Sign Out</span>
-            <span class="text-[10px] text-white/30 tracking-wide">{{ profile?.email || 'System' }}</span>
+          <div class="space-y-1">
+            <NuxtLink
+              v-for="item in group.items"
+              :key="item.path"
+              :to="item.path"
+              :aria-current="isActive(item) ? 'page' : undefined"
+              class="sidebar-nav-link flex items-center gap-3 px-4 py-3 text-sm font-semibold tracking-normal transition-colors rounded-lg min-h-12"
+              :class="[
+                isActive(item)
+                  ? 'bg-sky-600 text-white shadow-md'
+                  : 'text-white/70 hover:bg-white/10 hover:text-white'
+              ]"
+              @mouseenter="prefetchRoute(item.path)"
+              @focus="prefetchRoute(item.path)"
+              @click="mobileOpen = false"
+            >
+              <i aria-hidden="true" :class="[item.icon, 'w-5 text-center text-lg flex-shrink-0']"></i>
+              <span>{{ item.name }}</span>
+              <span
+                v-if="item.path === '/inbox' && unreadCount > 0"
+                class="ml-auto inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold text-white bg-red-500 rounded-full"
+              >
+                {{ unreadCount > 99 ? '99+' : unreadCount }}
+              </span>
+            </NuxtLink>
           </div>
         </div>
-      </div>
+      </nav>
+
     </div>
 
     <div
-      class="flex-1 flex flex-col min-h-screen transition-all duration-300 ease-in-out"
+      class="flex-1 min-w-0 flex flex-col min-h-screen transition-[margin] duration-[240ms] ease-out motion-reduce:transition-none"
       :class="collapsed ? 'lg:ml-20' : 'lg:ml-72'"
     >
-      <header class="h-16 lg:h-20 bg-white border-b border-stone-200 flex items-center justify-between px-4 lg:px-10 sticky top-0 z-30">
-        <div class="flex items-center gap-3 lg:gap-4">
-          <button class="lg:hidden h-10 w-10 flex items-center justify-center text-stone-400 hover:text-slate-800 hover:bg-stone-100 transition-all rounded-lg" @click="mobileOpen = !mobileOpen">
+      <header class="h-16 bg-surface border-b border-surface-border flex items-center justify-between px-4 lg:px-10 sticky top-0 z-30">
+        <div class="flex min-w-0 items-center gap-3 lg:gap-4">
+          <button type="button" aria-label="Open navigation" aria-controls="mobile-sidebar" :aria-expanded="mobileOpen" class="lg:hidden h-11 w-11 flex items-center justify-center text-text-muted hover:text-text-primary hover:bg-surface-hover transition-all rounded-lg" @click="mobileOpen = !mobileOpen">
             <i class="pi pi-bars text-lg"></i>
           </button>
-          <div class="hidden sm:flex text-xs font-semibold tracking-wider text-stone-500 items-center gap-2">
-            <span>Internal</span>
-            <i class="pi pi-chevron-right text-[10px]"></i>
-            <span class="text-slate-800">{{ currentPageName }}</span>
+          <div v-if="activeSemesterName !== null" class="min-w-0 truncate text-sm text-text-muted">
+            <span class="hidden sm:inline">Active semester · </span><span class="font-semibold text-slate-800">{{ activeSemesterName || 'No active semester' }}</span>
           </div>
         </div>
 
-        <div class="flex items-center gap-4 lg:gap-6">
-          <div class="hidden sm:flex flex-col items-end">
-            <span class="text-sm font-bold text-slate-800">{{ profile?.full_name || 'Coordinator' }}</span>
-            <div class="flex items-center gap-2">
-              <span class="text-xs text-stone-500 font-medium">{{ role || '' }}</span>
-              <span v-if="isSuperCoordinator" class="px-2 py-0.5 bg-amber-100 text-amber-800 text-[10px] font-bold rounded">Super</span>
+        <div ref="accountMenuRoot" class="relative shrink-0">
+          <button
+            ref="accountMenuTrigger"
+            type="button"
+            class="flex items-center gap-3 rounded-lg px-2 py-1.5 -mr-2 hover:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-700 focus-visible:ring-offset-2 focus-visible:ring-offset-surface transition-colors"
+            aria-label="Open account menu"
+            aria-controls="account-menu"
+            :aria-expanded="accountMenuOpen"
+            @click="toggleAccountMenu"
+            @keydown.arrow-down.prevent="openAccountMenu(true)"
+          >
+            <div class="hidden sm:flex flex-col items-end">
+              <span class="text-sm font-bold text-slate-800">{{ profile?.full_name || 'Coordinator' }}</span>
+              <div class="flex items-center gap-2">
+                <span class="text-xs text-text-muted font-medium">{{ role || '' }}</span>
+                <span v-if="isSuperCoordinator" class="px-2 py-0.5 bg-amber-100 text-amber-800 text-[10px] font-bold rounded-badge">Super</span>
+              </div>
             </div>
-          </div>
-          <div class="h-10 w-10 bg-slate-800 flex items-center justify-center text-white text-sm font-bold rounded-lg flex-shrink-0">
-            {{ (profile?.full_name || 'U').charAt(0).toUpperCase() }}
-          </div>
+            <div class="h-10 w-10 bg-slate-800 flex items-center justify-center text-white text-sm font-bold rounded-lg flex-shrink-0">
+              {{ (profile?.full_name || 'U').charAt(0).toUpperCase() }}
+            </div>
+            <i class="hidden sm:block pi pi-chevron-down text-[10px] text-text-muted transition-transform duration-150" :class="accountMenuOpen ? 'rotate-180' : ''" />
+          </button>
+
+          <Transition name="account-menu">
+            <div
+              v-if="accountMenuOpen"
+              id="account-menu"
+              class="rounded-card absolute right-0 top-[calc(100%+0.5rem)] z-50 w-72 overflow-hidden border border-surface-border bg-surface shadow-xl"
+              @keydown="handleAccountMenuKeydown"
+            >
+              <div class="p-4 border-b border-surface-border">
+                <p class="text-sm font-bold text-slate-800 truncate">{{ profile?.full_name || 'Coordinator' }}</p>
+                <p class="mt-1 text-xs text-text-muted truncate">{{ profile?.email || '' }}</p>
+                <p class="mt-2 text-[10px] font-bold uppercase tracking-wider text-text-muted">
+                  {{ role || 'Coordinator' }}<span v-if="isSuperCoordinator"> · Super</span>
+                </p>
+              </div>
+              <div class="p-2">
+                <button ref="accountSettingsButton" type="button" class="rounded-control w-full flex items-center gap-3 px-3 py-2.5 text-left text-sm font-semibold text-slate-700 hover:bg-surface-hover focus-visible:outline-none focus-visible:bg-surface-hover" @click="goToSettings">
+                  <i aria-hidden="true" class="pi pi-cog text-sm text-text-muted" />
+                  Account settings
+                </button>
+                <button ref="accountSignOutButton" type="button" class="rounded-control w-full flex items-center gap-3 px-3 py-2.5 text-left text-sm font-semibold text-red-700 hover:bg-red-50 focus-visible:outline-none focus-visible:bg-red-50 disabled:opacity-50" :disabled="isSigningOut" @click="handleLogout">
+                  <i aria-hidden="true" class="pi pi-sign-out text-sm" />
+                  {{ isSigningOut ? 'Signing out...' : 'Sign out' }}
+                </button>
+              </div>
+            </div>
+          </Transition>
         </div>
       </header>
 
@@ -174,7 +206,7 @@
         <slot />
       </main>
 
-      <footer class="p-4 lg:p-12 border-t border-stone-200 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-stone-500 text-center sm:text-left">
+      <footer class="p-4 lg:p-12 border-t border-surface-border flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-text-muted text-center sm:text-left">
         <span>&copy; 2026 INTRA Buddy Management System</span>
         <span>Version 2.4.0</span>
       </footer>
@@ -188,57 +220,275 @@ const supabase = useSupabaseClient()
 const { profile, role, clearProfile } = useCurrentProfile()
 const { isSuperCoordinator } = useCoordinatorPrivileges()
 const { unreadCount, fetchInitialCount, setupRealtimeListener, cleanup } = useNotifications()
+const pageCache = usePageCache()
+const activeSemesterName = useState<string | null>('active-semester-name', () => null)
+
+const loadActiveSemester = async () => {
+  const { data, error } = await supabase.from('semesters').select('name').eq('is_active', true).maybeSingle()
+  if (!error) activeSemesterName.value = data?.name || ''
+}
 
 const collapsed = ref(false)
 const mobileOpen = ref(false)
+const accountMenuOpen = ref(false)
+const isSigningOut = ref(false)
+const accountMenuRoot = ref<HTMLElement | null>(null)
+const accountMenuTrigger = ref<HTMLButtonElement | null>(null)
+const accountSettingsButton = ref<HTMLButtonElement | null>(null)
+const accountSignOutButton = ref<HTMLButtonElement | null>(null)
 
-watch(route, () => { mobileOpen.value = false })
+const handleDocumentKeydown = (event: KeyboardEvent) => {
+  if (event.key !== 'Escape') return
+  mobileOpen.value = false
+  if (accountMenuOpen.value) closeAccountMenu(true)
+}
+
+const handleDocumentPointerDown = (event: PointerEvent) => {
+  if (accountMenuRoot.value && !accountMenuRoot.value.contains(event.target as Node)) closeAccountMenu()
+}
+
+const prefetchRoute = (path: string) => {
+  const requests: Record<string, string[]> = {
+    '/': ['/api/dashboard'],
+    '/students': ['/api/students'],
+    '/logbooks': ['/api/logbooks'],
+    '/communications': ['/api/broadcasts'],
+    '/inbox': ['/api/notifications'],
+    '/checklists': ['/api/checklists'],
+    '/faqs': ['/api/faqs']
+  }
+  for (const url of requests[path] || []) void pageCache.fetch(url).catch(() => {})
+}
+
+watch(route, () => {
+  mobileOpen.value = false
+  accountMenuOpen.value = false
+  void loadActiveSemester()
+})
 
 watch(mobileOpen, (val) => {
   document.body.style.overflow = val ? 'hidden' : ''
 })
 
 onMounted(async () => {
+  void loadActiveSemester()
   await fetchInitialCount()
   setupRealtimeListener()
-
-  const handler = (e: KeyboardEvent) => {
-    if (e.key === 'Escape') mobileOpen.value = false
-  }
-  document.addEventListener('keydown', handler)
+  document.addEventListener('keydown', handleDocumentKeydown)
+  document.addEventListener('pointerdown', handleDocumentPointerDown)
 })
 
 onUnmounted(() => {
   document.body.style.overflow = ''
+  document.removeEventListener('keydown', handleDocumentKeydown)
+  document.removeEventListener('pointerdown', handleDocumentPointerDown)
   cleanup()
 })
 
-const navigation = computed(() => [
-  { name: 'Dashboard', path: '/', icon: 'pi pi-chart-bar' },
-  { name: 'Students', path: '/students', icon: 'pi pi-users' },
-  { name: 'Logbook Status', path: '/logbooks', icon: 'pi pi-file' },
-  { name: 'Broadcasts', path: '/broadcasts', icon: 'pi pi-megaphone' },
-  { name: 'Notifications', path: '/notifications', icon: 'pi pi-bell' },
-  { name: 'Master Checklist', path: '/checklists', icon: 'pi pi-check-square' },
-  { name: 'Knowledge Base', path: '/faqs', icon: 'pi pi-book' },
-  { name: 'Semesters', path: '/semesters', icon: 'pi pi-calendar' },
-  ...(isSuperCoordinator.value ? [{ name: 'Coordinators', path: '/coordinators', icon: 'pi pi-user-plus' }] : []),
-  { name: 'Settings', path: '/settings', icon: 'pi pi-cog' }
-])
+const navigationGroups = computed(() => [
+  {
+    id: 'dashboard',
+    label: null,
+    items: [
+      { name: 'Dashboard', path: '/', icon: 'pi pi-chart-bar' }
+    ]
+  },
+  {
+    id: 'student-management',
+    label: 'Student management',
+    items: [
+      { name: 'Students', path: '/students', icon: 'pi pi-users' },
+      { name: 'Logbooks', path: '/logbooks', icon: 'pi pi-file' },
+      { name: 'Submission Requirements', path: '/checklists', icon: 'pi pi-check-square' }
+    ]
+  },
+  {
+    id: 'communication',
+    label: 'Communication',
+    items: [
+      { name: 'Notifications', path: '/inbox', icon: 'pi pi-bell' },
+      { name: 'Announcements & Alerts', path: '/communications', icon: 'pi pi-megaphone' }
+    ]
+  },
+  {
+    id: 'resources',
+    label: 'Resources',
+    items: [
+      { name: 'FAQs', path: '/faqs', icon: 'pi pi-book' }
+    ]
+  },
+  {
+    id: 'administration',
+    label: 'Administration',
+    items: [
+      { name: 'Semesters', path: '/semesters', icon: 'pi pi-calendar' },
+      ...(isSuperCoordinator.value ? [{ name: 'Coordinators', path: '/coordinators', icon: 'pi pi-user-plus' }] : [])
+    ]
+  }
+].filter(group => group.items.length > 0))
 
-const currentPageName = computed(() => {
-  const item = navigation.value.find(n => n.path === route.path)
-  return item ? item.name : 'View'
-})
+const isActive = (item: { path: string }) => {
+  if (item.path === '/') return route.path === '/'
+  return route.path === item.path || route.path.startsWith(`${item.path}/`)
+}
 
 const handleLogout = async () => {
-  await supabase.auth.signOut()
-  clearProfile()
-  navigateTo('/login')
+  if (isSigningOut.value) return
+  isSigningOut.value = true
+  accountMenuOpen.value = false
+  try {
+    await supabase.auth.signOut()
+    clearProfile()
+    await navigateTo('/login')
+  } finally {
+    isSigningOut.value = false
+  }
+}
+
+const closeAccountMenu = (restoreFocus = false) => {
+  if (!accountMenuOpen.value) return
+  accountMenuOpen.value = false
+  if (restoreFocus) nextTick(() => accountMenuTrigger.value?.focus())
+}
+
+const openAccountMenu = async (focusFirstAction = false) => {
+  accountMenuOpen.value = true
+  if (focusFirstAction) {
+    await nextTick()
+    accountSettingsButton.value?.focus()
+  }
+}
+
+const toggleAccountMenu = () => {
+  if (accountMenuOpen.value) closeAccountMenu()
+  else openAccountMenu()
+}
+
+const goToSettings = async () => {
+  closeAccountMenu()
+  await navigateTo('/settings')
+}
+
+const handleAccountMenuKeydown = (event: KeyboardEvent) => {
+  if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return
+  event.preventDefault()
+  const actions = [accountSettingsButton.value, accountSignOutButton.value].filter((action): action is HTMLButtonElement => Boolean(action))
+  const current = actions.indexOf(document.activeElement as HTMLButtonElement)
+  const next = event.key === 'ArrowDown'
+    ? actions[(current + 1) % actions.length]
+    : actions[(current - 1 + actions.length) % actions.length]
+  next?.focus()
 }
 </script>
 
 <style>
+@media (min-width: 1024px) {
+  .dashboard-layout main {
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .dashboard-layout footer {
+    padding: 0.75rem 1.5rem;
+  }
+}
+
+.sidebar-copy {
+  max-width: 12rem;
+  min-width: 0;
+  overflow: hidden;
+  opacity: 1;
+  transform: translateX(0) scale(1);
+  transform-origin: left center;
+  transition: opacity 120ms ease-out, transform 180ms ease-out;
+}
+
+.sidebar--collapsed .sidebar-copy {
+  position: absolute;
+  width: 0;
+  max-width: 0;
+  opacity: 0;
+  transform: translateX(-0.25rem) scale(0.98);
+  pointer-events: none;
+}
+
+.sidebar--collapsed .sidebar-nav-link,
+.sidebar--collapsed .sidebar-collapse-control {
+  justify-content: center;
+  gap: 0;
+}
+
+.sidebar--collapsed .sidebar-nav-link,
+.sidebar--collapsed .sidebar-collapse-control {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.sidebar-nav-link:focus-visible,
+.sidebar-collapse-control:focus-visible {
+  outline: 2px solid #38bdf8;
+  outline-offset: -2px;
+}
+
+.sidebar-section-label {
+  height: 1.5rem;
+  position: relative;
+  opacity: 1;
+  transition: color 120ms ease-out;
+  white-space: nowrap;
+}
+
+.sidebar-section-label::after {
+  content: '';
+  position: absolute;
+  top: 0.65rem;
+  left: 0.5rem;
+  right: 0.5rem;
+  border-top: 1px solid rgb(255 255 255 / 0);
+  transition: border-color 120ms ease-out;
+}
+
+.sidebar--collapsed .sidebar-section-label {
+  color: transparent;
+}
+
+.sidebar--collapsed .sidebar-section-label::after {
+  border-color: rgb(255 255 255 / 0.1);
+}
+
+.sidebar-inbox-badge--collapsed {
+  position: absolute;
+  top: 0.25rem;
+  right: 0.25rem;
+  padding-left: 0.375rem;
+  padding-right: 0.375rem;
+}
+
+.account-menu-enter-active,
+.account-menu-leave-active {
+  transition: opacity 120ms ease-out, transform 120ms ease-out;
+}
+
+.account-menu-enter-from,
+.account-menu-leave-to {
+  opacity: 0;
+  transform: translateY(-0.25rem);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar-copy,
+  .sidebar-section-label,
+  .sidebar-section-label::after {
+    transition: none;
+  }
+
+  .account-menu-enter-active,
+  .account-menu-leave-active {
+    transition: none;
+  }
+}
+
 .pi {
   vertical-align: middle;
 }
@@ -251,21 +501,13 @@ nav {
   width: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #FAFAF9;
+  background: #EEF1F4;
 }
 ::-webkit-scrollbar-thumb {
-  background: #e7e5e4;
+  background: #94A3B8;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #000;
+  background: #64748B;
 }
 
-.fade-text-enter-active,
-.fade-text-leave-active {
-  transition: opacity 0.2s ease;
-}
-.fade-text-enter-from,
-.fade-text-leave-to {
-  opacity: 0;
-}
 </style>

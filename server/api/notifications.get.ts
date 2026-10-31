@@ -3,13 +3,14 @@ import type { Database } from '~/types/supabase'
 
 export default defineEventHandler(async (event) => {
   try {
-    await requireCoordinator(event)
+    const actor = await requireCoordinator(event)
 
     const supabase = await serverSupabaseClient<Database>(event)
 
     const { data: notifications, error } = await supabase
       .from('notifications')
       .select('*, broadcast:broadcast_messages(title, body)')
+      .eq('recipient_id', actor.id)
       .order('created_at', { ascending: false })
       .limit(200)
 

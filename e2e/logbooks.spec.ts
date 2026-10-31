@@ -9,21 +9,21 @@ test.describe('Logbooks', () => {
   })
 
   test('renders logbook review page', async ({ page }) => {
-    await expect(page.locator('h1').first()).toContainText('Logbook Review')
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Logbooks')
     await expect(page.locator('text=Logbook Submissions')).toBeVisible()
   })
 
   test('displays logbook entries', async ({ page }) => {
-    await expect(page.locator('text=Alice Johnson')).toBeVisible()
-    await expect(page.locator('text=Bob Smith')).toBeVisible()
+    await expect(page.getByRole('table').getByText('Alice Johnson')).toBeVisible()
+    await expect(page.getByRole('table').getByText('MATRIC001')).toBeVisible()
   })
 
-  test('shows week number for each entry', async ({ page }) => {
-    await expect(page.locator('text=Week 6')).toBeVisible()
+  test('shows submission progress for each student', async ({ page }) => {
+    await expect(page.getByRole('table').getByText('1 / 2 submitted')).toBeVisible()
   })
 
   test('has status filter dropdown', async ({ page }) => {
-    const filter = page.locator('select')
+    const filter = page.getByLabel('Filter by status')
     await expect(filter).toBeVisible()
     await filter.selectOption('Submitted')
   })

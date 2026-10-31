@@ -12,7 +12,7 @@ export default defineConfig({
   workers: 1,
   reporter: 'list',
   use: {
-    baseURL: 'http://localhost:3000',
+    baseURL: 'http://localhost:3100',
     trace: 'on-first-retry',
   },
   projects: [
@@ -22,9 +22,16 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'NUXT_SSR=false npm run dev',
-    url: 'http://localhost:3000',
-    reuseExistingServer: !process.env.CI,
+    command: 'npm run dev -- --port 3100',
+    env: {
+      NUXT_SSR: 'false',
+      SUPABASE_URL: 'https://intrabuddy-test.supabase.co',
+      SUPABASE_KEY: 'test-public-key',
+      NUXT_PUBLIC_SUPABASE_URL: 'https://intrabuddy-test.supabase.co',
+      NUXT_PUBLIC_SUPABASE_KEY: 'test-public-key'
+    },
+    url: 'http://localhost:3100',
+    reuseExistingServer: false,
     timeout: 120000,
   },
 })

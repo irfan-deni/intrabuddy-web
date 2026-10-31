@@ -1,6 +1,6 @@
 <template>
   <span
-    class="inline-flex items-center px-3 py-1 text-xs font-semibold rounded"
+    class="inline-flex items-center px-3 py-1 text-xs font-semibold rounded-badge"
     :class="badgeClass"
   >
     {{ label }}
@@ -14,24 +14,27 @@ const props = defineProps<{
 }>()
 
 const label = computed(() => {
+  if (props.status) {
+    return props.status
+  }
   if (props.positive !== undefined) {
     return props.positive ? 'YES' : 'NO'
   }
-  return props.status || 'UNKNOWN'
+  return 'UNKNOWN'
 })
 
 const badgeClass = computed(() => {
   const isPositive = props.positive === true || ['Accepted', 'Completed', 'Placed', 'YES', 'Submitted'].includes(props.status || '')
-  const isWarning = ['Interview', 'Pending', 'NO', 'Not Submitted', 'Late', 'Searching'].includes(props.status || '')
+  const isWarning = ['Interview', 'Pending', 'NO', 'Not Submitted', 'Late', 'Overdue', 'Searching'].includes(props.status || '')
 
   if (isPositive) {
-    return 'bg-emerald-500 text-white'
+    return 'bg-emerald-100 text-emerald-900'
   }
 
   if (isWarning) {
     return 'bg-amber-400 text-slate-900'
   }
 
-  return 'bg-white text-stone-400 border border-stone-200'
+  return 'bg-surface-muted text-text-muted border border-surface-border'
 })
 </script>

@@ -8,8 +8,11 @@ export const serverSupabaseClient = <T = any>(event: H3Event) => {
     const config = useRuntimeConfig(event)
     const url = config.public.supabase.url as string
     const key = config.public.supabase.key as string
+    const authorization = getHeader(event, 'authorization')
     const allCookies = parseCookieHeader(getHeader(event, 'cookie') ?? '')
     event.context._supabaseClient = createServerClient(url, key, {
+      // Mobile clients authenticate with bearer tokens; web clients use cookies.
+      ...(authorization ? { global: { headers: { Authorization: authorization } } } : {}),
       cookies: {
         getAll: () => allCookies.filter((c): c is { name: string; value: string } => c.value !== undefined),
         setAll: () => {}
@@ -36,9 +39,14 @@ export const serverSupabaseServiceRole = <T = any>(event: H3Event) => {
 
 export const serverSupabaseUser = async (event: H3Event) => {
   const client = serverSupabaseClient(event)
-  const { data, error } = await client.auth.getUser()
+  const authorization = getHeader(event, 'authorization')
+  const token = authorization?.match(/^Bearer\s+(\S+)$/i)?.[1]
+  if (authorization && !token) {
+    throw createError({ statusCode: 401, statusMessage: 'Invalid authorization header' })
+  }
+  const { data, error } = await client.auth.getUser(token)
   if (error) {
-    throw createError({ statusMessage: error?.message })
+    throw createError({ statusCode: 401, statusMessage: 'Invalid or expired session' })
   }
   return data?.user ?? null
 }

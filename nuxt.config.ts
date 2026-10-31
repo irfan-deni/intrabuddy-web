@@ -24,6 +24,9 @@ export default defineNuxtConfig({
   },
 
   primevue: {
+    components: {
+      include: ['Card', 'Checkbox', 'InputText', 'Password']
+    },
     options: {
       ripple: true,
       theme: 'none' 
@@ -57,9 +60,7 @@ export default defineNuxtConfig({
   },
 
   runtimeConfig: {
-    public: {
-      superCoordinatorEmails: process.env.NUXT_PUBLIC_SUPER_COORDINATOR_EMAILS || ''
-    }
+    superCoordinatorEmails: ''
   },
 
   devtools: { enabled: true },

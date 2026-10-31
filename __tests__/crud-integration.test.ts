@@ -2,9 +2,15 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { createClient } from '@supabase/supabase-js'
 import type { Database } from '../app/types/supabase'
 
-const supabaseUrl = process.env.SUPABASE_URL || 'https://yyqoleelprtldlvvizdk.supabase.co'
+const supabaseUrl = process.env.SUPABASE_URL || ''
 const supabaseKey = process.env.SUPABASE_KEY!
 const serviceKey = process.env.SUPABASE_SERVICE_KEY!
+
+// This legacy suite mutates data. Run only against a disposable local INTRA database.
+if (process.env.RUN_SUPABASE_INTEGRATION !== '1' || !supabaseUrl || !supabaseKey || !serviceKey ||
+  !['127.0.0.1', 'localhost', '[::1]'].includes(new URL(supabaseUrl).hostname)) {
+  throw new Error('Integration tests require RUN_SUPABASE_INTEGRATION=1 and explicit local Supabase URL/keys.')
+}
 
 // Service role client bypasses RLS for admin operations
 const admin = createClient<Database>(supabaseUrl, serviceKey, {

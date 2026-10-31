@@ -10,4 +10,10 @@ services:
       - NUXT_PUBLIC_SUPABASE_KEY=${SUPABASE_KEY}
       - SUPABASE_URL=${SUPABASE_URL}
       - SUPABASE_KEY=${SUPABASE_KEY}
-    restart: always
+      - NUXT_SUPABASE_SECRET_KEY=${NUXT_SUPABASE_SECRET_KEY}
+      - NUXT_SUPER_COORDINATOR_EMAILS=${NUXT_SUPER_COORDINATOR_EMAILS}
+    restart: "no"
+    # Leave RAM headroom for the laptop desktop and other development tools.
+    mem_limit: 768m
+    mem_reservation: 384m
+    memswap_limit: 1024m

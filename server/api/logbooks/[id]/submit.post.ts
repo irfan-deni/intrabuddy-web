@@ -3,26 +3,26 @@ import type { Database } from '~/types/supabase'
 
 export default defineEventHandler(async (event) => {
   try {
-    await requireCoordinator(event)
+    await requireSuperCoordinator(event)
 
     const supabase = await serverSupabaseClient<Database>(event)
-    const id = getRouterParam(event, 'id')
+    const id = positiveId(getRouterParam(event, 'id'), 'logbook ID')
 
-    if (!id) {
-      throw createError({ statusCode: 400, statusMessage: 'Missing logbook entry ID' })
-    }
-
-    const { error: updateError } = await supabase
+    const { data, error: updateError } = await supabase
       .from('weekly_logbook_tracking')
       .update({
         is_submitted: true,
         submitted_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       })
-      .eq('id', Number(id))
+      .eq('id', id)
+      .select('id')
 
     if (updateError) {
       throw createError({ statusCode: 500, statusMessage: 'Failed to mark logbook as submitted' })
+    }
+    if (!data?.length) {
+      throw createError({ statusCode: 404, statusMessage: 'Logbook not found' })
     }
 
     return { success: true }

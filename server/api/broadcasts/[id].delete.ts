@@ -1,29 +1,10 @@
-import { serverSupabaseServiceRole, serverSupabaseUser } from '~~/server/utils/supabase-server'
+import { serverSupabaseServiceRole } from '~~/server/utils/supabase-server'
 import type { Database } from '~/types/supabase'
+import { cleanupBroadcastImages } from '~~/server/utils/broadcast-media'
 
 export default defineEventHandler(async (event) => {
-  const user = await serverSupabaseUser(event)
-  if (!user) {
-    throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
-  }
-
-  const userId = getUserId(user)
-
-  const runtimeConfig = useRuntimeConfig()
-  const superEmails = (runtimeConfig.public?.superCoordinatorEmails as string || '')
-    .split(',')
-    .map((e: string) => e.trim().toLowerCase())
-  const isSuper = user.email ? superEmails.includes(user.email.toLowerCase()) : false
-
-  const broadcastId = getRouterParam(event, 'id')
-  if (!broadcastId) {
-    throw createError({ statusCode: 400, statusMessage: 'Broadcast ID is required' })
-  }
-
-  const id = Number(broadcastId)
-  if (isNaN(id)) {
-    throw createError({ statusCode: 400, statusMessage: 'Invalid broadcast ID' })
-  }
+  const actor = await requireCoordinator(event)
+  const id = positiveId(getRouterParam(event, 'id'), 'broadcast ID')
 
   const serviceRole = serverSupabaseServiceRole<Database>(event)
 
@@ -32,15 +13,25 @@ export default defineEventHandler(async (event) => {
     .delete()
     .eq('id', id)
 
-  if (!isSuper) {
-    query.eq('coordinator_id', userId)
+  if (!isSuperCoordinator(event, actor)) {
+    query.eq('coordinator_id', actor.id)
   }
 
-  const { error } = await query
+  const { data, error } = await query.select('id, coordinator_id, image_paths')
 
   if (error) {
     throw createError({ statusCode: 500, statusMessage: `Failed to delete broadcast: ${error.message}` })
   }
+  if (!data?.length) {
+    throw createError({ statusCode: 404, statusMessage: 'Broadcast not found' })
+  }
 
+  const broadcast = data[0]!
+  // Only delete generated objects under this broadcast owner's folder.
+  const prefix = `broadcast-images/${broadcast.coordinator_id}/`
+  const paths = (broadcast.image_paths || []).filter(path =>
+    broadcast.coordinator_id && path.startsWith(prefix) && /^[0-9a-f-]{36}\.(png|jpg|gif|webp)$/i.test(path.slice(prefix.length))
+  )
+  await cleanupBroadcastImages(event, paths)
   return { success: true }
 })

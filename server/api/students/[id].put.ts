@@ -1,50 +1,25 @@
-import { serverSupabaseServiceRole, serverSupabaseUser } from '~~/server/utils/supabase-server'
-import type { Database } from '~/types/supabase'
+import { assertManagementFields, managementReason, mutateStudentRecord, resolveManagementSemester } from '~~/server/utils/student-management'
 
 export default defineEventHandler(async (event) => {
-  const user = await serverSupabaseUser(event)
-  if (!user) {
-    throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
-  }
-
-  const userId = getUserId(user)
-  const serviceRole = serverSupabaseServiceRole<Database>(event)
-
-  const { data: actor, error: actorError } = await serviceRole
-    .from('users')
-    .select('role')
-    .eq('id', userId)
-    .single()
-
-  if (actorError || actor.role !== 'coordinator') {
-    throw createError({ statusCode: 403, statusMessage: 'Forbidden' })
-  }
+  const actor = await requireSuperCoordinator(event)
 
   const studentId = getRouterParam(event, 'id')
   if (!studentId) {
     throw createError({ statusCode: 400, statusMessage: 'Student ID is required' })
   }
-
   const body = await readBody(event)
-  const { full_name, student_id, email, phone_number } = body
-
-  if (!full_name) {
-    throw createError({ statusCode: 400, statusMessage: 'Full name is required' })
+  const fields = ['full_name', 'student_id', 'email', 'phone_number']
+  assertManagementFields(body, [...fields, 'reason', 'semester_id'])
+  const semesterId = await resolveManagementSemester(event, body.semester_id)
+  await requireStudentTarget(event, studentId)
+  const payload: Record<string, string | null> = { reason: managementReason(body.reason) }
+  for (const field of fields) {
+    if (!(field in body)) continue
+    if (body[field] !== null && (typeof body[field] !== 'string' || body[field].length > (field === 'phone_number' ? 50 : 200))) {
+      throw createError({ statusCode: 400, statusMessage: 'Invalid profile field' })
+    }
+    payload[field] = body[field]
   }
-
-  const { error } = await serviceRole
-    .from('users')
-    .update({
-      full_name,
-      student_id: student_id || null,
-      email: email || null,
-      phone_number: phone_number || null
-    })
-    .eq('id', studentId)
-
-  if (error) {
-    throw createError({ statusCode: 500, statusMessage: `Failed to update student: ${error.message}` })
-  }
-
-  return { success: true }
+  if (Object.keys(payload).length === 1) throw createError({ statusCode: 400, statusMessage: 'No profile fields supplied' })
+  return mutateStudentRecord(event, actor, studentId, semesterId, 'profile', payload)
 })

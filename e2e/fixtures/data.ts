@@ -54,6 +54,7 @@ export const MOCK_DASHBOARD = {
   placedStudents: 30,
   unplacedStudents: 20,
   placementPercentage: 60,
+  logbookSummary: { total: 2, submitted: 1, late: 0, pending: 1 },
 }
 
 export const MOCK_LOGBOOKS = [

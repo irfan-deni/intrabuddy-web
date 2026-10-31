@@ -1,136 +1,54 @@
-import { serverSupabaseServiceRole, serverSupabaseUser } from '~~/server/utils/supabase-server'
+import { serverSupabaseServiceRole } from '~~/server/utils/supabase-server'
 import type { Database } from '~/types/supabase'
+import { cleanupBroadcastImages, readBroadcastRequest, uploadBroadcastImages } from '~~/server/utils/broadcast-media'
 
 type Audience = 'students_all' | 'students_unplaced' | 'students_placed' | 'students_late_logbooks' | 'coordinators_all'
 
 export default defineEventHandler(async (event) => {
   try {
-    const body = await readBody<{ title: string; body: string; target_roles: Audience[] }>(event)
-    if (!body.title || !body.body) {
+    const actor = await requireCoordinator(event)
+    const userId = actor.id
+    const body = await readBroadcastRequest(event)
+    if (!body || typeof body.title !== 'string' || !body.title.trim() || body.title.length > 200 ||
+      typeof body.body !== 'string' || !body.body.trim() || body.body.length > 20000) {
       throw createError({ statusCode: 400, statusMessage: 'Title and body are required.' })
     }
 
-    const audience = body.target_roles?.[0]
-    if (!audience) {
+    const audience = Array.isArray(body.target_roles) ? body.target_roles[0] as Audience : undefined
+    if (!Array.isArray(body.target_roles) || body.target_roles.length !== 1 ||
+      !['students_all', 'students_unplaced', 'students_placed', 'students_late_logbooks', 'coordinators_all'].includes(audience || '')) {
       throw createError({ statusCode: 400, statusMessage: 'Target audience is required.' })
     }
 
     const serviceRole = serverSupabaseServiceRole<Database>(event)
-    const authUser = await serverSupabaseUser(event)
-    const userId = getUserId(authUser)
 
-    if (!userId) {
-      throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
+    const media = body.images.length ? await uploadBroadcastImages(event, userId, body.images) : { paths: [], urls: [] }
+    const storedBody = body.body
+    if (storedBody.length > 20000) {
+      await cleanupBroadcastImages(event, media.paths)
+      throw createError({ statusCode: 400, statusMessage: 'Message and attachments exceed the announcement length limit.' })
     }
-
-    const { data: actor, error: actorError } = await serviceRole
-      .from('users')
-      .select('role')
-      .eq('id', userId)
-      .single()
-
-    if (actorError) {
-      throw createError({ statusCode: 500, statusMessage: `Failed to fetch user: ${actorError.message}` })
-    }
-
-    if (!actor || actor.role !== 'coordinator') {
-      throw createError({ statusCode: 403, statusMessage: 'Only coordinators can dispatch broadcasts.' })
-    }
-
-    // 1. Insert into broadcast_messages
-    const { error: broadcastError, data: broadcast } = await serviceRole
-      .from('broadcast_messages')
-      .insert({
-        coordinator_id: userId,
-        title: body.title,
-        body: body.body,
-        target_roles: [audience],
-        sent_at: new Date().toISOString()
-      })
-      .select('id')
-
+    const { error: broadcastError, data: broadcast } = await serviceRole.from('broadcast_messages').insert({
+      coordinator_id: userId, title: body.title.trim(), body: storedBody, image_paths: media.paths, target_roles: [audience], sent_at: new Date().toISOString()
+    }).select('id')
     if (broadcastError) {
-      console.error('[Broadcasts API] Insert error:', broadcastError)
-      throw createError({
-        statusCode: 500,
-        statusMessage: `Broadcast Insert Error: ${broadcastError.message} (Code: ${broadcastError.code})`
-      })
+      // A SQL validation/constraint/permission error proves the insert rolled
+      // back. On timeouts or ambiguous responses, retain the images: the record
+      // might already be committed, and deleting them would break a sent post.
+      const rolledBack = /^(22|23|42)/.test(broadcastError.code || '')
+      if (rolledBack) await cleanupBroadcastImages(event, media.paths)
+      console.error('[Announcements] Save failed', { code: broadcastError.code })
+      throw createError({ statusCode: 502, statusMessage: rolledBack
+        ? 'The announcement was not saved. Your draft is unchanged; please try again.'
+        : 'Sending could not be confirmed. Check announcement history before retrying to avoid a duplicate.' })
     }
-
     const broadcastId = broadcast?.[0]?.id
+    if (!broadcastId) throw createError({ statusCode: 502, statusMessage: 'Sending could not be confirmed. Check announcement history before retrying.' })
 
-    // 2. Resolve targeted user IDs
-    let targetUserIds: string[] = []
-
-    if (audience === 'students_all' || audience === 'students_unplaced' || audience === 'students_placed' || audience === 'students_late_logbooks') {
-      const { data: activeSemester } = await serviceRole
-        .from('semesters')
-        .select('id')
-        .eq('is_active', true)
-        .maybeSingle()
-
-      if (activeSemester) {
-        const { data: enrolled } = await serviceRole
-          .from('student_semesters')
-          .select('student_id')
-          .eq('semester_id', activeSemester.id)
-
-        let ids = enrolled?.map(e => e.student_id).filter(Boolean) as string[] || []
-
-        if (audience === 'students_unplaced') {
-          const { data: placed } = await (serviceRole.from('users') as any)
-            .select('id')
-            .in('id', ids)
-            .in('internship_status', ['placed', 'completed'])
-
-          const placedIds = new Set(placed?.map((p: any) => p.id) || [])
-          ids = ids.filter(id => !placedIds.has(id))
-        } else if (audience === 'students_placed') {
-          const { data: placed } = await (serviceRole.from('users') as any)
-            .select('id')
-            .in('id', ids)
-            .in('internship_status', ['placed', 'completed'])
-
-          ids = placed?.map((p: any) => p.id) || []
-        } else if (audience === 'students_late_logbooks') {
-          const lateSubmissionDate = new Date()
-          lateSubmissionDate.setDate(lateSubmissionDate.getDate() - 7)
-          const { data: lateStudents } = await (serviceRole.from('weekly_logbook_tracking') as any)
-            .select('student_id')
-            .in('student_id', ids)
-            .eq('is_submitted', false)
-            .lt('week_end_date', lateSubmissionDate.toISOString().split('T')[0])
-
-          ids = [...new Set<string>(lateStudents?.map((s: any) => s.student_id) || [])]
-        }
-
-        targetUserIds = ids
-      }
-    } else if (audience === 'coordinators_all') {
-      const { data: coordinators } = await serviceRole
-        .from('users')
-        .select('id')
-        .eq('role', 'coordinator')
-        .neq('id', userId)
-
-      targetUserIds = coordinators?.map(c => c.id).filter(Boolean) as string[] || []
-    }
-
-    // 3. Create in-app notifications for targeted users
-    if (targetUserIds.length > 0 && broadcastId) {
-      const notificationRows = targetUserIds.map(id => ({
-        recipient_id: id,
-        broadcast_id: broadcastId,
-        title: body.title,
-        body: body.body,
-        type: 'broadcast' as const
-      }))
-      await serviceRole.from('notifications').insert(notificationRows)
-    }
-
-    return { success: true, queued: targetUserIds.length }
+    return { success: true, broadcastId }
   } catch (error: any) {
     if (error.statusCode) throw error
-    throw createError({ statusCode: 500, statusMessage: `Unexpected error: ${error.message || String(error)}` })
+    console.error('[Announcements] Unexpected send failure')
+    throw createError({ statusCode: 502, statusMessage: 'Sending could not be confirmed. Check announcement history before retrying to avoid a duplicate.' })
   }
 })

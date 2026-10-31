@@ -8,12 +8,13 @@ export default defineEventHandler(async (event) => {
     const supabase = await serverSupabaseClient<Database>(event)
     
     // 1. Get Active Semester
-    const { data: activeSemester } = await supabase
+    const { data: activeSemester, error: semesterError } = await supabase
       .from('semesters')
       .select('id')
       .eq('is_active', true)
       .maybeSingle()
 
+    if (semesterError) throw semesterError
     if (!activeSemester) {
       return []
     }
@@ -30,12 +31,13 @@ export default defineEventHandler(async (event) => {
         submitted_at,
         reminder_sent,
         student_id,
-        users:student_id (
+        users:student_id!inner (
           full_name,
           student_id
         )
       `)
       .eq('semester_id', activeSemester.id)
+      .eq('users.role', 'student')
       .order('week_end_date', { ascending: false })
 
     if (logbooksError) {
@@ -43,26 +45,7 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 500, statusMessage: 'Logbook sync failed' })
     }
 
-    // 3. Filter out non-student entries (coordinators shouldn't appear in logbook tracking)
-    let filteredLogbooks = logbooks || []
-    if (filteredLogbooks.length > 0) {
-      const userIds = filteredLogbooks.map(l => l.student_id).filter(Boolean) as string[]
-      const { data: userRoles } = await supabase
-        .from('users')
-        .select('id, role')
-        .in('id', userIds)
-
-      const validStudentIds = new Set(
-        (userRoles || []).filter(u => u.role === 'student').map(u => u.id)
-      )
-
-      const removedCount = filteredLogbooks.filter(l => l.student_id && !validStudentIds.has(l.student_id)).length
-      if (removedCount > 0) {
-        console.warn(`[Logbooks API] Filtered out ${removedCount} non-student entries`)
-      }
-
-      filteredLogbooks = filteredLogbooks.filter(l => l.student_id && validStudentIds.has(l.student_id))
-    }
+    const filteredLogbooks = logbooks || []
 
     const today = new Date().toISOString().split('T')[0] as string
     const staleThreshold = 7 // days past week_end_date before considered stale

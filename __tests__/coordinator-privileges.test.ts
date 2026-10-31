@@ -1,14 +1,6 @@
 import { describe, it, expect } from 'vitest'
 
-/**
- * Tests the super coordinator email parsing logic.
- * This function is defined in both useCoordinatorPrivileges.ts and coordinators.post.ts
- */
-
-const parseSuperCoordinatorEmails = (value: string | undefined) => {
-  if (!value) return []
-  return value.split(',').map((e) => e.trim().toLowerCase()).filter(Boolean)
-}
+import { parseSuperCoordinatorEmails } from '../server/utils/super-coordinator'
 
 describe('parseSuperCoordinatorEmails', () => {
   it('returns empty array for undefined', () => {

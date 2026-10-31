@@ -1,12 +1,18 @@
 import type { Page } from '@playwright/test'
 import { MOCK_USER, MOCK_PROFILE, MOCK_STUDENTS, MOCK_DASHBOARD, MOCK_LOGBOOKS } from './fixtures/data'
+import { managementFixture } from './fixtures/student-management'
 
-const SUPABASE_URL = 'https://yyqoleelprtldlvvizdk.supabase.co'
-const PROJECT_REF = 'yyqoleelprtldlvvizdk'
+const SUPABASE_URL = 'https://intrabuddy-test.supabase.co'
+const PROJECT_REF = 'intrabuddy-test'
+const MOCK_ACCESS_TOKEN = [
+  Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url'),
+  Buffer.from(JSON.stringify({ ...MOCK_USER, sub: MOCK_USER.id, exp: Math.floor(Date.now() / 1000) + 3600, iat: Math.floor(Date.now() / 1000) })).toString('base64url'),
+  Buffer.from('mock-signature').toString('base64url')
+].join('.')
 
 export async function setupAuthSession(page: Page) {
   const session = {
-    access_token: 'mock-access-token',
+    access_token: MOCK_ACCESS_TOKEN,
     token_type: 'bearer',
     expires_in: 3600,
     expires_at: Math.floor(Date.now() / 1000) + 3600,
@@ -14,7 +20,14 @@ export async function setupAuthSession(page: Page) {
     user: MOCK_USER,
   }
 
-  await page.evaluate(
+  await page.context().addCookies([{
+    name: `sb-${PROJECT_REF}-auth-token`,
+    value: `base64-${Buffer.from(JSON.stringify(session)).toString('base64url')}`,
+    url: 'http://localhost:3100',
+    sameSite: 'Lax'
+  }])
+
+  await page.addInitScript(
     ({ key, value }) => {
       localStorage.setItem(key, JSON.stringify(value))
     },
@@ -32,7 +45,7 @@ export async function mockSupabaseAuth(page: Page) {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify({ access_token: 'mock-token', token_type: 'bearer', user: MOCK_USER }),
+        body: JSON.stringify({ access_token: MOCK_ACCESS_TOKEN, refresh_token: 'mock-refresh-token', expires_in: 3600, token_type: 'bearer', user: MOCK_USER }),
       })
     } else if (url.includes('/auth/v1/logout')) {
       await route.fulfill({ status: 204 })
@@ -42,7 +55,7 @@ export async function mockSupabaseAuth(page: Page) {
   })
 }
 
-export async function mockSupabaseRest(page: Page) {
+export async function mockSupabaseRest(page: Page, profile = MOCK_PROFILE) {
   await page.route(`${SUPABASE_URL}/rest/v1/**`, async (route) => {
     const url = route.request().url()
     const method = route.request().method()
@@ -53,7 +66,8 @@ export async function mockSupabaseRest(page: Page) {
     if (method === 'GET') {
       if (table === 'users') {
         if (url.includes(`id=eq.${MOCK_PROFILE.id}`) || url.includes('id=eq.user-1')) {
-          return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify([MOCK_PROFILE]) })
+          const isSingle = route.request().headers()['accept']?.includes('application/vnd.pgrst.object+json')
+          return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(isSingle ? profile : [profile]) })
         }
         if (url.includes('role=eq.student')) {
           return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(MOCK_STUDENTS.map(s => ({ id: s.id, full_name: s.full_name, student_id: s.student_id }))) })
@@ -61,13 +75,15 @@ export async function mockSupabaseRest(page: Page) {
         return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify([]) })
       }
       if (table === 'semesters') {
+        const semesters = [
+          { id: 1, name: 'Jan-Jun 2026', start_date: '2026-01-15', end_date: '2026-06-30', is_active: true, created_at: '2025-12-01T00:00:00Z' },
+          { id: 2, name: 'Jul-Dec 2025', start_date: '2025-07-01', end_date: '2025-12-31', is_active: false, created_at: '2025-06-01T00:00:00Z' }
+        ]
+        const isSingle = route.request().headers()['accept']?.includes('application/vnd.pgrst.object+json')
         return route.fulfill({
           status: 200,
           contentType: 'application/json',
-          body: JSON.stringify([
-            { id: 1, name: 'Jan-Jun 2026', start_date: '2026-01-15', end_date: '2026-06-30', is_active: true, created_at: '2025-12-01T00:00:00Z' },
-            { id: 2, name: 'Jul-Dec 2025', start_date: '2025-07-01', end_date: '2025-12-31', is_active: false, created_at: '2025-06-01T00:00:00Z' },
-          ]),
+          body: JSON.stringify(isSingle ? semesters[0] : semesters),
         })
       }
       if (table === 'student_checklists') {
@@ -88,6 +104,7 @@ export async function mockSupabaseRest(page: Page) {
           body: JSON.stringify([
             { id: 1, title: 'Upload Resume', description: 'Upload your latest resume', display_order: 1, required: true, semester_id: 1 },
             { id: 2, title: 'Submit Insurance Form', description: null, display_order: 2, required: true, semester_id: 1 },
+            { id: 3, title: 'Complete Orientation', description: null, display_order: 3, required: true, semester_id: 1 },
           ]),
         })
       }
@@ -96,7 +113,7 @@ export async function mockSupabaseRest(page: Page) {
           status: 200,
           contentType: 'application/json',
           body: JSON.stringify([
-            { id: 1, student_id: 'student-1', company_name: 'Tech Corp', position: 'Software Engineer Intern', status: 'Accepted', application_date: '2026-03-15', override_reason: null, updated_by_admin: null, updated_at: '2026-03-20T00:00:00Z' },
+            { id: 1, student_id: 'student-1', semester_id: 1, company_name: 'Tech Corp', position: 'Software Engineer Intern', status: 'Accepted', application_date: '2026-03-15', override_reason: null, updated_by_admin: null, updated_at: '2026-03-20T00:00:00Z' },
           ]),
         })
       }
@@ -105,9 +122,9 @@ export async function mockSupabaseRest(page: Page) {
           status: 200,
           contentType: 'application/json',
           body: JSON.stringify([
-            { id: 1, student_id: 'student-1', week_number: 1, week_end_date: '2026-04-07', is_submitted: true },
-            { id: 2, student_id: 'student-1', week_number: 2, week_end_date: '2026-04-14', is_submitted: true },
-            { id: 3, student_id: 'student-1', week_number: 3, week_end_date: '2026-04-21', is_submitted: false },
+            { id: 1, student_id: 'student-1', semester_id: 1, week_number: 1, week_end_date: '2026-04-07', is_submitted: true },
+            { id: 2, student_id: 'student-1', semester_id: 1, week_number: 2, week_end_date: '2026-04-14', is_submitted: true },
+            { id: 3, student_id: 'student-1', semester_id: 1, week_number: 3, week_end_date: '2026-04-21', is_submitted: false },
           ]),
         })
       }
@@ -116,7 +133,7 @@ export async function mockSupabaseRest(page: Page) {
           status: 200,
           contentType: 'application/json',
           body: JSON.stringify([
-            { id: 1, item_name: 'Resume.pdf', uploaded_at: '2026-03-10T00:00:00Z' },
+            { id: 1, item_name: 'Resume.pdf', file_path: 'student-1/resume.pdf', uploaded_at: '2026-03-10T00:00:00Z' },
           ]),
         })
       }
@@ -152,12 +169,24 @@ export async function mockSupabaseRest(page: Page) {
 }
 
 export async function mockApiRoutes(page: Page) {
-  await page.route('http://localhost:3000/api/**', async (route) => {
+  await page.route(/^http:\/\/localhost:3100\/api\//, async (route) => {
     const url = route.request().url()
     const method = route.request().method()
 
+    if (url.includes('/api/auth/privileges') && method === 'GET') {
+      return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ isSuperCoordinator: true }) })
+    }
+
     if (url.includes('/api/dashboard') && method === 'GET') {
       return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(MOCK_DASHBOARD) })
+    }
+
+    if (url.includes('/api/students/lookup') && method === 'GET') {
+      return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(MOCK_STUDENTS) })
+    }
+
+    if (/\/api\/students\/[\w-]+\/management/.test(url) && method === 'GET') {
+      return route.fulfill({ json: managementFixture() })
     }
 
     if (url.includes('/api/students') && method === 'GET') {
@@ -176,6 +205,12 @@ export async function mockApiRoutes(page: Page) {
       return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true }) })
     }
 
+    if (url.includes('/api/logbooks/summary') && method === 'GET') {
+      const submitted = MOCK_LOGBOOKS.filter(entry => entry.statusLabel === 'Submitted').length
+      const late = MOCK_LOGBOOKS.filter(entry => entry.statusLabel === 'Late').length
+      return route.fulfill({ json: { total: MOCK_LOGBOOKS.length, submitted, late, pending: MOCK_LOGBOOKS.length - submitted - late } })
+    }
+
     if (url.includes('/api/logbooks') && method === 'GET') {
       return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(MOCK_LOGBOOKS) })
     }
@@ -189,6 +224,31 @@ export async function mockApiRoutes(page: Page) {
     }
 
     if (url.includes('/api/broadcasts') && method === 'GET') {
+      return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify([]) })
+    }
+
+    if (url.includes('/api/checklists') && method === 'GET') {
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          semesterId: 1,
+          templates: [
+            { id: 1, title: 'Upload Resume', description: 'Upload your latest resume', display_order: 1, required: true, semester_id: 1 }
+          ]
+        })
+      })
+    }
+
+    if (url.includes('/api/faqs') && method === 'GET') {
+      return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ faqs: [], categories: [] }) })
+    }
+
+    if (url.includes('/api/notifications') && method === 'GET') {
+      return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify([]) })
+    }
+
+    if (url.includes('/api/alerts') && method === 'GET') {
       return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify([]) })
     }
 

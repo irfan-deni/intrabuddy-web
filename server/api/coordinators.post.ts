@@ -1,32 +1,9 @@
-import { serverSupabaseServiceRole, serverSupabaseUser } from '~~/server/utils/supabase-server'
+import { serverSupabaseServiceRole } from '~~/server/utils/supabase-server'
 import type { Database } from '~/types/supabase'
 
 export default defineEventHandler(async (event) => {
-  const user = await serverSupabaseUser(event)
-  if (!user) {
-    throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
-  }
-
-  const userId = getUserId(user)
+  await requireSuperCoordinator(event)
   const serviceRole = serverSupabaseServiceRole<Database>(event)
-
-  // Use service role for actor check to bypass RLS
-  const { data: actor, error: actorError } = await serviceRole
-    .from('users')
-    .select('role')
-    .eq('id', userId)
-    .single()
-
-  if (actorError || !actor || actor.role !== 'coordinator') {
-    throw createError({ statusCode: 403, statusMessage: 'Forbidden' })
-  }
-
-  const runtimeConfig = useRuntimeConfig(event)
-  const allowedEmails = parseSuperCoordinatorEmails(runtimeConfig.public.superCoordinatorEmails)
-  const actorEmail = user.email?.trim().toLowerCase() || ''
-  if (!allowedEmails.includes(actorEmail)) {
-    throw createError({ statusCode: 403, statusMessage: 'Only super coordinators can create coordinators' })
-  }
 
   const body = await readBody(event)
   const { email, password, full_name } = body

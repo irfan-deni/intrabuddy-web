@@ -1,4 +1,4 @@
-import { serverSupabaseClient, serverSupabaseUser } from '~~/server/utils/supabase-server'
+import { serverSupabaseClient } from '~~/server/utils/supabase-server'
 
 const EMBEDDING_SIZE = 1536
 
@@ -26,10 +26,7 @@ const toPgVectorLiteral = (embedding: number[]) => {
 }
 
 export default defineEventHandler(async (event) => {
-  const user = await serverSupabaseUser(event)
-  if (!user) {
-    throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
-  }
+  const user = await requireCoordinator(event)
 
   const body = await readBody<{ faqId?: string; text?: string }>(event)
   if (!body.faqId || !body.text) {

@@ -1,6 +1,3 @@
-import jsPDF from 'jspdf'
-import autoTable from 'jspdf-autotable'
-
 interface TableConfig {
   headers: string[]
   data: any[][]
@@ -9,7 +6,7 @@ interface TableConfig {
   columnStyles?: Record<string, any>
 }
 
-export function generateReport(
+export async function generateReport(
   title: string,
   headers: string[],
   data: any[][],
@@ -22,6 +19,10 @@ export function generateReport(
     extraTables?: TableConfig[]
   }
 ) {
+  const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([
+    import('jspdf'),
+    import('jspdf-autotable')
+  ])
   const doc = new jsPDF()
 
   doc.setFontSize(16)

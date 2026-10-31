@@ -1,33 +1,15 @@
-import { serverSupabaseServiceRole, serverSupabaseUser } from '~~/server/utils/supabase-server'
+import { serverSupabaseServiceRole } from '~~/server/utils/supabase-server'
 import type { Database } from '~/types/supabase'
 
 export default defineEventHandler(async (event) => {
-  const user = await serverSupabaseUser(event)
-  if (!user) {
-    throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
-  }
-
-  const userId = getUserId(user)
-  if (!userId) {
-    throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
-  }
-
+  await requireSuperCoordinator(event)
   const serviceRole = serverSupabaseServiceRole<Database>(event)
-
-  const { data: actor, error: actorError } = await serviceRole
-    .from('users')
-    .select('role')
-    .eq('id', userId)
-    .single()
-
-  if (actorError || actor.role !== 'coordinator') {
-    throw createError({ statusCode: 403, statusMessage: 'Forbidden' })
-  }
 
   const studentId = getRouterParam(event, 'id')
   if (!studentId) {
     throw createError({ statusCode: 400, statusMessage: 'Student ID is required' })
   }
+  await requireStudentTarget(event, studentId)
 
   // Delete related records first to avoid FK constraint violations
   await serviceRole.from('student_semesters').delete().eq('student_id', studentId)
@@ -39,6 +21,7 @@ export default defineEventHandler(async (event) => {
     .from('users')
     .delete()
     .eq('id', studentId)
+    .eq('role', 'student')
 
   if (deleteError) {
     throw createError({ statusCode: 500, statusMessage: `Failed to delete student: ${deleteError.message}` })
