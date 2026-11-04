@@ -87,6 +87,23 @@ the existing INTRA Buddy schema before starting this version. It adds the
 coordinator-only `get_coordinator_dashboard()` RPC used by `/api/dashboard`.
 The function uses invoker permissions and preserves table RLS policies.
 
+Also apply `supabase/migrations/20261104090000_checklist_phase_due_date.sql`
+so the Submission Requirements editor can persist each template's `phase` and
+`due_date`; without it those two fields are ignored when saving.
+
+The Submission Requirements page (`/checklists`) can now:
+- switch between semesters and manage each semester's template;
+- search/filter templates, duplicate them, toggle required inline, and bulk delete;
+- edit phase and due date;
+- open **Student Progress**, pick a student, and (as a Super Coordinator) mark or
+  revert requirements with a required audit reason.
+
+The Semester Management page (`/semesters`) shows student, requirement, logbook,
+and application counts for every semester. Active semesters cannot be deleted,
+and semesters with historical records are blocked from deletion so their data is
+preserved; the confirmation dialog explains the reason and warns when checklist
+templates will be removed with an otherwise empty semester.
+
 ```bash
 npm run dev
 ```

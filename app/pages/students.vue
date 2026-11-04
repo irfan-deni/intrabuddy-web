@@ -49,7 +49,7 @@
           </button>
           <button 
             v-if="isSuperCoordinator"
-            class="rounded-control bg-sky-700 text-white px-6 md:px-8 py-3 md:py-4 text-sm font-semibold hover:bg-sky-800 transition-all flex items-center justify-center gap-3 shadow-xl shadow-black/10"
+            class="rounded-control bg-sky-700 text-white px-4 py-3 text-sm font-semibold whitespace-nowrap hover:bg-sky-800 transition-all flex items-center justify-center gap-2"
             @click="openAddModal"
           >
             <i class="pi pi-user-plus"></i>

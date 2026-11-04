@@ -16,9 +16,9 @@
           </div>
         </div>
 
-        <div v-if="isSuperCoordinator" class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
+        <div v-if="isSuperCoordinator" class="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center md:self-end">
           <button
-            class="bg-sky-700 text-white px-6 py-3 rounded-control font-black text-[10px] uppercase tracking-[0.2em] hover:bg-sky-800 transition-all flex items-center gap-3"
+            class="flex items-center justify-center gap-3 whitespace-nowrap rounded-control border border-transparent bg-sky-700 px-6 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-white transition-all hover:bg-sky-800"
             @click="openAddModal"
           >
             <i class="pi pi-plus"></i>

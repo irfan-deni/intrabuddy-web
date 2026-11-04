@@ -64,7 +64,7 @@ test('returning to the checklist page uses its cached snapshot', async ({ page }
   await setupPage(page)
   const requests: string[] = []
   page.on('request', request => {
-    if (new URL(request.url()).pathname === '/rest/v1/checklist_templates') requests.push(request.url())
+    if (new URL(request.url()).pathname === '/api/checklists') requests.push(request.url())
   })
 
   await page.goto('/checklists')

@@ -10,7 +10,7 @@
             <i class="pi pi-graduation-cap text-slate-900 text-xl"></i>
           </div>
           <div class="sidebar-copy flex flex-col">
-            <span class="text-lg font-black tracking-[0.3em] uppercase text-white whitespace-nowrap">INTRA BUDDY</span>
+            <span class="text-lg font-black tracking-[0.12em] uppercase text-white whitespace-nowrap">INTRA BUDDY</span>
             <span class="text-xs text-slate-400 tracking-wide font-semibold mt-1 whitespace-nowrap">Coordinator portal</span>
           </div>
         </div>

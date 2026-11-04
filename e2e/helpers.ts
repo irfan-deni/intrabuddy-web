@@ -177,6 +177,39 @@ export async function mockApiRoutes(page: Page) {
       return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ isSuperCoordinator: true }) })
     }
 
+    if (url.includes('/api/semesters') && method === 'GET') {
+      return route.fulfill({
+        json: {
+          semesters: [
+            {
+              id: 1, name: 'Jan-Jun 2026', start_date: '2026-01-15', end_date: '2026-06-30', is_active: true, created_at: '2025-12-01T00:00:00Z',
+              counts: { students: 3, templates: 2, logbooks: 9, applications: 1, audits: 0 },
+              deletion: { allowed: false, message: 'Active semester cannot be deleted. Activate another semester first.' }
+            },
+            {
+              id: 2, name: 'Jul-Dec 2025', start_date: '2025-07-01', end_date: '2025-12-31', is_active: false, created_at: '2025-06-01T00:00:00Z',
+              counts: { students: 0, templates: 0, logbooks: 0, applications: 0, audits: 0 },
+              deletion: { allowed: true, message: null }
+            },
+            {
+              id: 3, name: 'Jan-Jun 2025', start_date: '2025-01-15', end_date: '2025-06-30', is_active: false, created_at: '2024-12-01T00:00:00Z',
+              counts: { students: 2, templates: 1, logbooks: 5, applications: 1, audits: 0 },
+              deletion: { allowed: false, message: 'This semester has 2 students, 5 logbook entries and 1 application. Set it inactive to preserve its history.' }
+            },
+            {
+              id: 4, name: 'Jul-Dec 2024', start_date: '2024-07-01', end_date: '2024-12-31', is_active: false, created_at: '2024-06-01T00:00:00Z',
+              counts: { students: 0, templates: 2, logbooks: 0, applications: 0, audits: 0 },
+              deletion: { allowed: true, message: null }
+            }
+          ]
+        }
+      })
+    }
+
+    if (url.includes('/api/administration/configuration') && method === 'POST') {
+      return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true }) })
+    }
+
     if (url.includes('/api/dashboard') && method === 'GET') {
       return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(MOCK_DASHBOARD) })
     }
@@ -187,6 +220,23 @@ export async function mockApiRoutes(page: Page) {
 
     if (/\/api\/students\/[\w-]+\/management/.test(url) && method === 'GET') {
       return route.fulfill({ json: managementFixture() })
+    }
+
+    if (/\/api\/students\/[\w-]+\/checklists/.test(url) && method === 'GET') {
+      const studentId = url.match(/\/api\/students\/([\w-]+)\/checklists/)?.[1] || 'student-1'
+      const student = MOCK_STUDENTS.find(item => item.id === studentId) || MOCK_STUDENTS[0]!
+      return route.fulfill({
+        json: {
+          semesterId: 1,
+          semester: { id: 1, name: 'Jan-Jun 2026', is_active: true },
+          student: { id: student.id, full_name: student.full_name, student_id: student.student_id, email: 'student@example.com' },
+          capabilities: { correctRecords: true },
+          items: [
+            { entryId: 1, templateId: 1, title: 'Upload Resume', description: 'Upload your latest resume', required: true, displayOrder: 1, phase: 'before', dueDate: '2026-03-01', isCompleted: true, completedAt: '2026-02-01T00:00:00Z', overrideReason: null, hasEntry: true },
+            { entryId: 2, templateId: 2, title: 'Submit Insurance Form', description: null, required: true, displayOrder: 2, phase: 'during', dueDate: '2026-04-01', isCompleted: false, completedAt: null, overrideReason: null, hasEntry: true }
+          ]
+        }
+      })
     }
 
     if (url.includes('/api/students') && method === 'GET') {
@@ -234,7 +284,12 @@ export async function mockApiRoutes(page: Page) {
         body: JSON.stringify({
           semesterId: 1,
           templates: [
-            { id: 1, title: 'Upload Resume', description: 'Upload your latest resume', display_order: 1, required: true, semester_id: 1 }
+            { id: 1, title: 'Upload Resume', description: 'Upload your latest resume', display_order: 1, required: true, phase: 'before', due_date: '2026-03-01', semester_id: 1 },
+            { id: 2, title: 'Submit Insurance Form', description: null, display_order: 2, required: true, phase: 'during', due_date: '2026-04-01', semester_id: 1 }
+          ],
+          semesters: [
+            { id: 1, name: 'Jan-Jun 2026', is_active: true, start_date: '2026-01-15' },
+            { id: 2, name: 'Jul-Dec 2025', is_active: false, start_date: '2025-07-01' }
           ]
         })
       })

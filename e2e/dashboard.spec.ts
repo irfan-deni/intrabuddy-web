@@ -71,6 +71,7 @@ test.describe('Dashboard', () => {
       await expect(page.locator('.dashboard-stat-content').first()).toHaveCSS('padding-left', '20px')
       await expect(page.locator('.dashboard-logbooks')).toHaveCSS('padding-top', viewport.height >= 850 ? '20px' : '16px')
       await expect(page.locator('.dashboard-stats')).toHaveCSS('flex-grow', '0')
+      await expect(page.locator('.dashboard > .p-card')).toHaveCSS('flex-grow', '0')
       for (const collapsed of [false, true]) {
         if (collapsed) await page.getByRole('button', { name: 'Collapse sidebar', exact: true }).click()
 

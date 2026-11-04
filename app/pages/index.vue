@@ -279,8 +279,7 @@ onMounted(() => fetchData())
     gap: 1rem;
   }
 
-  .dashboard-overview,
-  .dashboard > .p-card {
+  .dashboard-overview {
     flex-grow: 1;
   }
 
@@ -336,10 +335,6 @@ onMounted(() => fetchData())
 
   .dashboard-logbooks h2 {
     margin-bottom: 0.75rem;
-  }
-
-  .dashboard-logbooks {
-    height: 100%;
   }
 
   .dashboard-compliance-bar {

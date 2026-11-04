@@ -139,7 +139,8 @@ export type Database = {
           id: number
           title: string
           description: string | null
-          due_offset_days: number | null
+          phase: string | null
+          due_date: string | null
           required: boolean | null
           display_order: number | null
           semester_id: number | null
@@ -149,7 +150,8 @@ export type Database = {
           id?: number
           title: string
           description?: string | null
-          due_offset_days?: number | null
+          phase?: string | null
+          due_date?: string | null
           required?: boolean | null
           display_order?: number | null
           semester_id?: number | null
@@ -159,7 +161,8 @@ export type Database = {
           id?: number
           title?: string
           description?: string | null
-          due_offset_days?: number | null
+          phase?: string | null
+          due_date?: string | null
           required?: boolean | null
           display_order?: number | null
           semester_id?: number | null

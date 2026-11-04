@@ -29,7 +29,7 @@ const coordinatorEndpoints = [
   'students.get', 'logbooks.get', 'logbooks/summary.get', 'logbooks/remind-all.post',
   'logbooks/[id]/reminder.post', 'broadcasts.get', 'broadcasts.post',
    'broadcasts/[id].delete', 'notifications.get', 'notifications.post', 'alerts.get', 'faqs/embed.post',
-    'students/[id]/management.get',
+    'students/[id]/management.get', 'students/[id]/checklists.get', 'checklists.get', 'semesters.get',
    'students/[id]/wallet/[entryId].get'
 ]
 const superEndpoints = [
