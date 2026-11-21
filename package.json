@@ -34,9 +34,20 @@
     "@nuxt/test-utils": "^4.4.0",
     "@playwright/test": "^1.63.0",
     "@vue/test-utils": "^2.4.10",
-    "happy-dom": "^20.9.0",
+    "happy-dom": "^21.0.4",
     "nitro-cloudflare-dev": "^0.2.2",
-    "vitest": "^4.1.11",
+    "vitest": "^4.1.12",
     "wrangler": "^4.135.0"
+  },
+  "overrides": {
+    "archiver": {
+      "readdir-glob": "^4.0.0"
+    },
+    "js-beautify": {
+      "glob": "^14.0.6"
+    },
+    "editorconfig": {
+      "minimatch": "^11.0.9"
+    }
   }
 }
