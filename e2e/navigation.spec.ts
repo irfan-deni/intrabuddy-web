@@ -11,14 +11,14 @@ test.describe('Layout & Navigation', () => {
 
   test('sidebar shows navigation links', async ({ page }) => {
     const navigation = page.getByRole('complementary')
-    for (const label of ['Dashboard', 'Students', 'Announcements & Alerts', 'Logbooks', 'FAQs', 'Semesters', 'Notifications']) {
+    for (const label of ['Dashboard', 'Students', 'Announcements', 'Logbooks', 'FAQs', 'Semesters']) {
       await expect(navigation.getByRole('link', { name: new RegExp(label) })).toBeVisible()
     }
   })
 
   test('sidebar separates coordinator work by task', async ({ page }) => {
     const navigation = page.getByRole('navigation', { name: 'Primary navigation' }).first()
-    for (const heading of ['Student management', 'Communication', 'Resources', 'Administration']) {
+    for (const heading of ['Student management', 'Student communications', 'Administration']) {
       await expect(navigation.getByText(heading, { exact: true })).toBeVisible()
     }
     await expect(navigation.getByText('Overview', { exact: true })).toHaveCount(0)
@@ -33,7 +33,7 @@ test.describe('Layout & Navigation', () => {
   test('sidebar orders tasks and separates bottom utilities', async ({ page }) => {
     const sidebar = page.getByRole('complementary')
     await expect(sidebar.getByRole('navigation', { name: 'Primary navigation' }).getByRole('link')).toHaveText([
-      'Dashboard', 'Students', 'Logbooks', 'Submission Requirements', 'Notifications', 'Announcements & Alerts',
+      'Dashboard', 'Students', 'Logbooks', 'Checklists', 'Announcements',
       'FAQs', 'Semesters', 'Coordinators'
     ])
     await expect(sidebar.getByRole('button', { name: 'Collapse sidebar' })).toBeVisible()
@@ -42,15 +42,15 @@ test.describe('Layout & Navigation', () => {
   test('collapsed sidebar retains accessible links and keyboard focus', async ({ page }) => {
     const sidebar = page.getByRole('complementary')
     await sidebar.getByRole('button', { name: 'Collapse sidebar' }).click()
-    const inbox = sidebar.getByRole('link', { name: 'Notifications', exact: true })
-    await expect(inbox).toHaveAttribute('title', 'Notifications')
+    const inbox = sidebar.getByRole('link', { name: 'Students', exact: true })
+    await expect(inbox).toHaveAttribute('title', 'Students')
     await inbox.focus()
     await page.keyboard.press('Tab')
     await page.keyboard.press('Shift+Tab')
     await expect(inbox).toBeFocused()
     await expect(inbox).toHaveCSS('outline-style', 'solid')
     await page.keyboard.press('Enter')
-    await page.waitForURL('**/inbox')
+    await page.waitForURL('**/students')
     await sidebar.getByRole('button', { name: 'Expand sidebar' }).click()
     await expect(sidebar.getByRole('link', { name: 'Students', exact: true })).toBeVisible()
   })
@@ -70,7 +70,7 @@ test.describe('Layout & Navigation', () => {
     await expect(drawer).toHaveAttribute('inert', '')
     await page.getByRole('button', { name: 'Open navigation' }).click()
     await expect(drawer.getByRole('navigation', { name: 'Primary navigation' }).getByRole('link')).toHaveText([
-      'Dashboard', 'Students', 'Logbooks', 'Submission Requirements', 'Notifications', 'Announcements & Alerts',
+      'Dashboard', 'Students', 'Logbooks', 'Checklists', 'Announcements',
       'FAQs', 'Semesters', 'Coordinators'
     ])
     await expect(drawer.getByRole('link', { name: 'Dashboard', exact: true })).toBeInViewport()
@@ -107,7 +107,7 @@ test.describe('Layout & Navigation', () => {
     await page.waitForURL('**/communications?tab=broadcasts')
     await expect(page.getByRole('heading', { name: 'Announcements & Alerts', exact: true })).toBeVisible()
     await expect(navigation.getByRole('link', { name: 'Individual alerts', exact: true })).toBeVisible()
-    await expect(page.getByRole('complementary').getByRole('link', { name: 'Announcements & Alerts', exact: true })).toBeVisible()
+    await expect(page.getByRole('complementary').getByRole('link', { name: 'Announcements', exact: true })).toBeVisible()
   })
 
   test('announcement labels sit above their fields with consistent spacing', async ({ page }) => {

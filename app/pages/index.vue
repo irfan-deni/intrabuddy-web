@@ -30,11 +30,14 @@
     <div class="dashboard-stats grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
       <div
         v-for="stat in stats" :key="stat.label"
-        class="rounded-card bg-surface shadow-sm border"
-        :class="[stat.borderClass, stat.to ? 'cursor-pointer hover:shadow-md hover:-translate-y-1 transition-all' : '']"
+        class="rounded-card relative overflow-hidden shadow-sm border"
+        :class="[stat.label === 'Unplaced' && !isLoading && !logbooksError && unplacedStudents > 0 ? 'border-amber-400 bg-amber-50 shadow-[inset_4px_0_0_0_#d97706]' : `${stat.borderClass} bg-surface`, stat.to ? 'cursor-pointer hover:shadow-md hover:-translate-y-1 transition-all' : '']"
         @click="stat.to ? navigateTo(stat.to) : undefined"
       >
-        <div class="dashboard-stat-content p-4 md:p-6">
+        <div aria-hidden="true" class="pointer-events-none absolute right-3 top-3 flex h-16 w-16 items-center justify-center rounded-full border-2 border-current opacity-[0.16]" :class="stat.iconClass">
+          <i :class="[stat.icon, 'text-2xl']"></i>
+        </div>
+        <div class="dashboard-stat-content relative p-4 pr-20 md:p-6 md:pr-20">
           <div class="dashboard-stat-label flex items-center gap-3 mb-2 md:mb-4">
             <div class="h-8 w-8 md:h-10 md:w-10 shrink-0 flex items-center justify-center rounded-lg" :class="stat.iconClass">
               <i :class="[stat.icon, 'text-xs md:text-sm']"></i>
@@ -44,36 +47,46 @@
           <p class="dashboard-stat-value text-2xl md:text-4xl font-bold text-slate-800 tabular-nums tracking-tight">
             {{ isLoading ? '...' : stat.value }}
           </p>
+          <p v-if="stat.label === 'Unplaced' && !isLoading && !logbooksError && unplacedStudents > 0" class="mt-1 text-xs font-semibold text-amber-800">Needs follow-up</p>
         </div>
       </div>
     </div>
 
-    <div class="dashboard-overview grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <Card class="rounded-card lg:col-span-2 bg-surface shadow-sm border border-surface-border">
+    <div class="dashboard-overview grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <Card class="rounded-card bg-surface shadow-sm border border-surface-border">
         <template #content>
-          <div class="dashboard-placement p-4 md:p-8 flex flex-col md:flex-row items-center gap-6 md:gap-8">
-            <div class="dashboard-placement-chart relative w-36 h-36 md:w-48 md:h-48 flex-shrink-0">
-              <svg viewBox="0 0 36 36" class="w-full h-full transform -rotate-90">
+          <div class="dashboard-placement relative overflow-hidden p-4 md:p-8 flex flex-col md:flex-row items-center gap-6 md:gap-8">
+            <svg aria-hidden="true" viewBox="0 0 240 150" class="pointer-events-none absolute bottom-0 right-0 hidden h-36 w-60 text-emerald-700 opacity-[0.12] xl:block" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M8 139h224M147 139V41l40-22 40 22v98M158 139V54h58v85M179 139v-25h18v25" />
+              <path d="M169 65h8v9h-8zM197 65h8v9h-8zM169 86h8v9h-8zM197 86h8v9h-8zM28 139v-23l22-12 22 12v23" />
+              <circle cx="105" cy="92" r="9" />
+              <path d="M96 139v-26c0-6 4-11 9-11s9 5 9 11v26M96 115l-10 12M114 115l10 10M116 128h16v11h-16zM122 128v-4h5v4M74 72h40m-8-7 8 7-8 7" />
+            </svg>
+            <div v-if="!isLoading && !logbooksError && totalStudents > 0" class="dashboard-placement-chart relative order-last w-36 h-36 md:w-48 md:h-48 flex-shrink-0">
+              <div aria-hidden="true" class="pointer-events-none absolute -inset-3 rounded-full bg-emerald-50/70 ring-1 ring-emerald-100"></div>
+              <div aria-hidden="true" class="pointer-events-none absolute inset-2 rounded-full ring-1 ring-emerald-100/80"></div>
+              <svg aria-hidden="true" viewBox="0 0 36 36" class="relative w-full h-full transform -rotate-90">
                 <circle cx="18" cy="18" r="16" fill="none" class="stroke-surface-border" stroke-width="3"></circle>
-                <circle cx="18" cy="18" r="16" fill="none" class="stroke-sky-600" stroke-width="3" stroke-dasharray="100" :stroke-dashoffset="100 - (placementPercentage || 0)" stroke-linecap="round"></circle>
+                <circle cx="18" cy="18" r="16" fill="none" class="stroke-emerald-600" stroke-width="3" stroke-dasharray="100" :stroke-dashoffset="100 - (placementPercentage || 0)" stroke-linecap="round"></circle>
               </svg>
               <div class="absolute inset-0 flex flex-col items-center justify-center">
                 <span class="text-3xl font-bold text-slate-800 tabular-nums">{{ placementPercentage }}%</span>
                 <span class="text-sm font-medium leading-relaxed text-text-muted">Placed</span>
               </div>
             </div>
-            <div class="dashboard-placement-details flex-1 space-y-6">
+            <div class="dashboard-placement-details relative w-full min-w-0 flex-1 space-y-6">
               <h2 class="dashboard-section-heading text-lg font-semibold text-slate-800">Placement Status</h2>
-              <div class="grid grid-cols-2 gap-3">
-                <div class="rounded-lg bg-sky-50 px-3 py-2">
-                  <p class="text-sm font-medium leading-relaxed text-sky-800">Placed</p>
-                  <p class="text-xl font-bold text-slate-800 tabular-nums">{{ placedStudents }}</p>
-                </div>
-                <div class="rounded-lg bg-slate-100 px-3 py-2">
-                  <p class="text-sm font-medium leading-relaxed text-text-muted">Still searching</p>
-                  <p class="text-xl font-bold text-slate-800 tabular-nums">{{ unplacedStudents }}</p>
-                </div>
+              <p v-if="isLoading" role="status" class="text-sm text-text-muted">Loading placement data…</p>
+              <p v-else-if="logbooksError" class="text-sm text-text-muted">Placement data is unavailable. Please refresh to try again.</p>
+              <p v-else-if="totalStudents === 0" class="text-sm text-text-muted">No students in the active semester yet.</p>
+              <div v-else class="space-y-3">
+                <p class="text-base font-semibold text-slate-800 tabular-nums">{{ placedStudents }} of {{ totalStudents }} students placed</p>
+                <p v-if="unplacedStudents > 0" class="text-sm font-medium text-amber-800 tabular-nums">Needs follow-up: {{ unplacedStudents }} unplaced</p>
+                <p v-else class="text-sm font-medium text-emerald-700">All students are placed</p>
               </div>
+              <NuxtLink :to="!isLoading && !logbooksError && unplacedStudents > 0 ? '/students?status=unplaced' : '/students'" class="inline-flex items-center gap-2 text-sm font-semibold text-sky-700 hover:text-sky-800 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700">
+                {{ !isLoading && !logbooksError && unplacedStudents > 0 ? 'View unplaced students' : 'View students' }} <i aria-hidden="true" class="pi pi-arrow-right text-xs"></i>
+              </NuxtLink>
             </div>
           </div>
         </template>
@@ -81,17 +94,26 @@
 
       <Card class="rounded-card bg-slate-800 text-white shadow-sm border border-slate-800">
         <template #content>
-          <div class="dashboard-semester p-6 flex flex-col justify-center h-full min-h-[180px] md:min-h-[200px]">
-            <div>
+          <div class="dashboard-semester p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 h-full min-h-[180px] md:min-h-[200px]">
+            <div class="min-w-0">
               <p class="text-sm font-medium leading-relaxed text-slate-300 mb-4">Semester Control</p>
               <h3 class="text-2xl font-bold leading-tight">
                 Active:<br>{{ semesterName || 'Scanning...' }}
               </h3>
+              <div v-if="activeSemester" class="mt-3 space-y-1 text-sm text-slate-300">
+                <p>{{ semesterPeriod(activeSemester.start_date, activeSemester.end_date) }}</p>
+                <p>Registration: <span class="font-semibold text-white">{{ activeSemester.registration_open ? 'Open' : 'Closed' }}</span></p>
+              </div>
+              <p v-else-if="semesterDetailsError" class="mt-3 text-sm text-slate-300">Semester details unavailable.</p>
             </div>
-            <NuxtLink to="/communications" class="inline-flex items-center gap-2 mt-6 text-sky-400 hover:text-sky-300 transition-colors text-sm font-semibold">
-              <span>Dispatch Alert</span>
-              <i class="pi pi-arrow-right text-xs"></i>
-            </NuxtLink>
+            <div class="flex shrink-0 flex-col items-start gap-3 sm:items-end">
+              <NuxtLink to="/semesters" class="inline-flex items-center gap-2 text-sky-300 hover:text-white hover:underline transition-colors text-sm font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-300">
+                View semesters <i aria-hidden="true" class="pi pi-arrow-right text-xs"></i>
+              </NuxtLink>
+              <NuxtLink to="/students" class="inline-flex items-center gap-2 text-sky-300 hover:text-white hover:underline transition-colors text-sm font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-300">
+                View students <i aria-hidden="true" class="pi pi-arrow-right text-xs"></i>
+              </NuxtLink>
+            </div>
           </div>
         </template>
       </Card>
@@ -165,6 +187,28 @@ const logbooksLoading = ref(!cachedLogbooks)
 const logbooksError = ref(false)
 const exporting = ref(false)
 const refreshing = ref(false)
+type ActiveSemester = { is_active: boolean; start_date: string | null; end_date: string | null; registration_open: boolean }
+const activeSemester = ref<ActiveSemester | null>(null)
+const semesterDetailsError = ref(false)
+
+const semesterPeriod = (start: string | null, end: string | null) => {
+  const format = (date: string) => new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }).format(new Date(date))
+  if (!start && !end) return 'Dates not set'
+  if (!start) return `Until ${format(end!)}`
+  if (!end) return `From ${format(start)}`
+  return `${format(start)} – ${format(end)}`
+}
+
+const fetchSemesterDetails = async () => {
+  try {
+    const data = await $fetch<{ semesters: ActiveSemester[] }>('/api/semesters')
+    activeSemester.value = data.semesters.find(semester => semester.is_active) || null
+    semesterDetailsError.value = false
+  } catch {
+    activeSemester.value = null
+    semesterDetailsError.value = true
+  }
+}
 
 const logbookSummary = ref<LogbookSummary>(cachedLogbooks || { total: 0, submitted: 0, late: 0, pending: 0 })
 
@@ -208,6 +252,7 @@ const stats = computed(() => [
 const fetchData = async (force = false) => {
   refreshing.value = true
   logbooksError.value = false
+  void fetchSemesterDetails()
   try {
     const dash = await pageCache.fetch<DashboardResponse>('/api/dashboard', { force })
     semesterName.value = dash.semesterName
@@ -327,10 +372,6 @@ onMounted(() => fetchData())
 
   .dashboard-semester {
     min-height: 10rem;
-  }
-
-  .dashboard-semester a {
-    margin-top: 1rem;
   }
 
   .dashboard-logbooks h2 {

@@ -22,16 +22,16 @@
   "dependencies": {
     "@nuxtjs/supabase": "^2.0.4",
     "@nuxtjs/tailwindcss": "^6.14.0",
-    "@primevue/nuxt-module": "^4.5.4",
+    "@primevue/nuxt-module": "^4.5.5",
     "jspdf-autotable": "^5.0.8",
-    "nuxt": "^4.5.2",
+    "nuxt": "^4.6.4",
     "primeicons": "^7.0.0",
     "sharp": "^0.35.4",
-    "vue": "^3.5.30",
-    "vue-router": "^5.0.3"
+    "vue": "^3.5.45",
+    "vue-router": "^4.6.5"
   },
   "devDependencies": {
-    "@nuxt/test-utils": "^4.3.2",
+    "@nuxt/test-utils": "^4.4.0",
     "@playwright/test": "^1.63.0",
     "@vue/test-utils": "^2.4.10",
     "happy-dom": "^20.9.0",

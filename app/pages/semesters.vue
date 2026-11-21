@@ -35,104 +35,90 @@
       <div v-else-if="semesters.length === 0" class="py-12 md:py-20 text-center text-text-muted font-black uppercase tracking-widest text-[10px]">No semesters defined</div>
 
       <template v-else>
-        <div class="block md:hidden space-y-3 p-4">
-          <div v-for="sem in semesters" :key="sem.id" class="rounded-card bg-surface-muted border border-surface-border p-4">
+        <div class="block xl:hidden space-y-3 p-4">
+          <div v-for="sem in sortedSemesters" :key="sem.id" class="rounded-card bg-surface border border-surface-border border-l-4 p-4" :class="sem.is_active ? 'border-l-emerald-600' : 'border-l-transparent'">
             <div class="flex items-start justify-between mb-3">
-              <div class="font-black text-slate-800 uppercase tracking-tight text-sm">{{ sem.name }}</div>
+              <div class="font-bold text-slate-800 text-base">{{ sem.name }}</div>
               <div class="flex items-center gap-2 flex-shrink-0 ml-2">
-                <span class="rounded-badge px-2 py-0.5 text-[9px] font-black uppercase tracking-tighter whitespace-nowrap" :class="sem.is_active ? 'bg-emerald-100 text-emerald-900' : 'bg-surface-muted text-text-muted'">
+                <span class="rounded-badge px-2 py-1 text-xs font-semibold whitespace-nowrap" :class="sem.is_active ? 'bg-emerald-100 text-emerald-900' : 'bg-surface-muted text-text-muted'">
                   {{ sem.is_active ? 'Active' : 'Inactive' }}
                 </span>
-                <button
-                  v-if="isSuperCoordinator && !sem.is_active"
-                  class="rounded-control h-6 px-2 bg-sky-700 text-white text-[8px] font-black uppercase tracking-wider hover:bg-sky-800 transition-all disabled:opacity-50"
-                  :disabled="activatingId !== null"
-                  @click="activateSemester(sem)"
-                >
-                  {{ activatingId === sem.id ? 'Activating...' : 'Set Active' }}
-                </button>
               </div>
             </div>
-            <div class="text-[10px] font-bold text-text-muted tabular-nums mb-3">
-              {{ formatDate(sem.start_date) }} — {{ formatDate(sem.end_date) }}
+            <div class="text-sm text-text-muted tabular-nums mb-3">
+              {{ formatPeriod(sem.start_date, sem.end_date) }}
             </div>
-            <div class="grid grid-cols-2 gap-2 mb-3">
-              <div v-for="item in countItems(sem)" :key="item.label" class="rounded-control bg-surface border border-surface-border px-2 py-1.5">
-                <div class="text-[8px] font-black uppercase tracking-widest text-text-muted">{{ item.label }}</div>
-                <div class="text-xs font-black tabular-nums text-slate-800">{{ item.value }}</div>
-              </div>
+            <div class="flex items-center justify-between gap-2 mb-3">
+              <span class="text-sm font-medium text-text-muted">Registration</span>
+              <button type="button" role="switch" :aria-checked="sem.registration_open" :aria-label="`Registration for ${sem.name}`" :disabled="!isSuperCoordinator || updatingRegistrationId !== null" class="inline-flex min-h-10 items-center gap-2 rounded-control text-sm font-semibold text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-700 disabled:opacity-50" @click="toggleRegistration(sem)">
+                <span aria-hidden="true" class="relative h-6 w-11 rounded-full transition-colors" :class="sem.registration_open ? 'bg-sky-700' : 'bg-slate-500'"><span class="absolute left-0 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform" :class="sem.registration_open ? 'translate-x-[22px]' : 'translate-x-0.5'"></span></span>
+                {{ updatingRegistrationId === sem.id ? 'Saving...' : sem.registration_open ? 'Open' : 'Closed' }}
+              </button>
             </div>
-            <div v-if="isSuperCoordinator" class="flex items-center justify-between pt-3 border-t border-surface-border">
+            <div class="mb-3">
+              <div class="text-sm font-semibold tabular-nums text-slate-800">{{ countItems(sem)[0]?.value }} {{ countItems(sem)[0]?.label.toLowerCase() }}</div>
+              <div class="mt-1 text-xs leading-relaxed text-text-muted tabular-nums">{{ countItems(sem).slice(1).map(item => `${item.value} ${item.label.toLowerCase()}`).join(' · ') }}</div>
+            </div>
+            <div v-if="isSuperCoordinator" class="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-surface-border">
               <span class="text-[9px] font-bold text-text-muted">Created: {{ formatDate(sem.created_at) }}</span>
               <div class="flex gap-2">
-                <button class="h-7 w-7 border border-surface-control text-text-muted hover:bg-surface-hover flex items-center justify-center rounded-control" title="Edit semester" @click="openEditForm(sem)">
-                  <i class="pi pi-pencil text-[8px]"></i>
+                <button v-if="!sem.is_active" class="rounded-control min-h-10 px-3 bg-sky-700 text-white text-sm font-semibold whitespace-nowrap hover:bg-sky-800 transition-all disabled:opacity-50" :disabled="activatingId !== null" @click="activateSemester(sem)">
+                  {{ activatingId === sem.id ? 'Activating...' : 'Set Active' }}
                 </button>
-                <button v-if="sem.is_active" class="rounded-control h-7 w-7 border border-surface-border text-text-muted opacity-50 cursor-not-allowed flex items-center justify-center" disabled title="Cannot delete active semester">
-                  <i class="pi pi-trash text-[8px]"></i>
+                <button class="h-10 w-10 border border-surface-control text-text-muted hover:bg-surface-hover flex items-center justify-center rounded-control" title="Edit semester" @click="openEditForm(sem)">
+                  <i class="pi pi-pencil text-sm"></i>
                 </button>
-                <button v-else class="rounded-control h-7 w-7 border border-slate-900 text-slate-800 flex items-center justify-center disabled:opacity-50" :disabled="deletingId !== null" title="Review deletion" @click="openDelete(sem)">
-                  <i class="pi pi-trash text-[8px]"></i>
+                <button v-if="sem.is_active" class="rounded-control h-10 w-10 border border-surface-border text-text-muted opacity-50 cursor-not-allowed flex items-center justify-center" disabled title="Cannot delete active semester">
+                  <i class="pi pi-trash text-sm"></i>
+                </button>
+                <button v-else class="rounded-control h-10 w-10 border border-slate-900 text-slate-800 flex items-center justify-center disabled:opacity-50" :disabled="deletingId !== null" title="Review deletion" @click="openDelete(sem)">
+                  <i class="pi pi-trash text-sm"></i>
                 </button>
               </div>
             </div>
           </div>
         </div>
 
-        <div class="hidden md:block overflow-x-auto">
-          <table class="w-full text-left">
+        <div class="hidden xl:block overflow-x-auto">
+          <table class="w-full min-w-[960px] text-left">
             <thead>
               <tr class="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] bg-surface-muted border-b border-surface-border">
-                <th class="px-8 py-6">Semester</th>
-                <th class="px-8 py-6">Period</th>
-                <th class="px-8 py-6">Records</th>
-                <th class="px-8 py-6">Status</th>
-                <th v-if="isSuperCoordinator" class="px-8 py-6 text-right">Actions</th>
+                <th class="px-4 py-4">Semester</th>
+                <th class="px-4 py-4">Period</th>
+                <th class="px-4 py-4">Associated data</th>
+                <th class="px-4 py-4 w-28">Status</th>
+                <th class="px-4 py-4">Registration</th>
+                <th v-if="isSuperCoordinator" class="px-4 py-4 w-24 text-center">Actions</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-surface-border text-xs">
-              <tr v-for="sem in semesters" :key="sem.id" class="hover:bg-surface-hover transition-all group">
-                <td class="px-8 py-6">
-                  <div class="font-black text-slate-800 uppercase tracking-tight text-xs">{{ sem.name }}</div>
-                  <div class="text-[9px] font-bold text-text-muted uppercase tracking-tighter mt-1">Created {{ formatDate(sem.created_at) }}</div>
+              <tr v-for="sem in sortedSemesters" :key="sem.id" class="hover:bg-surface-hover transition-colors group">
+                <td class="px-4 py-5 min-w-[150px]" :class="sem.is_active ? 'shadow-[inset_4px_0_0_0_#059669]' : ''">
+                  <div class="font-bold text-slate-800 text-sm">{{ sem.name }}</div>
+                  <div class="text-xs text-text-muted mt-1">Created {{ formatDate(sem.created_at) }}</div>
                 </td>
-                <td class="px-8 py-6">
-                  <span class="font-bold text-text-muted tabular-nums text-xs">
-                    {{ formatDate(sem.start_date) }} — {{ formatDate(sem.end_date) }}
+                <td class="px-4 py-5 whitespace-nowrap">
+                  <div class="font-medium text-text-muted tabular-nums text-sm leading-relaxed">{{ formatPeriod(sem.start_date, sem.end_date) }}</div>
+                </td>
+                <td class="px-4 py-5 min-w-[220px]">
+                  <div class="text-sm font-semibold text-slate-800 tabular-nums">{{ countItems(sem)[0]?.value }} {{ countItems(sem)[0]?.label.toLowerCase() }}</div>
+                  <div class="mt-1 text-xs leading-relaxed text-text-muted tabular-nums">{{ countItems(sem).slice(1).map(item => `${item.value} ${item.label.toLowerCase()}`).join(' · ') }}</div>
+                </td>
+                <td class="px-4 py-5">
+                  <span class="rounded-badge px-2 py-1 text-xs font-semibold whitespace-nowrap" :class="sem.is_active ? 'bg-emerald-100 text-emerald-900' : 'bg-surface-muted text-text-muted'">
+                    {{ sem.is_active ? 'Active' : 'Inactive' }}
                   </span>
                 </td>
-                <td class="px-8 py-6">
-                  <div class="grid grid-cols-2 gap-x-4 gap-y-1 text-[9px] font-bold uppercase tracking-tighter text-text-muted">
-                    <span v-for="item in countItems(sem)" :key="item.label">
-                      <span class="text-slate-800 tabular-nums">{{ item.value }}</span> {{ item.label }}
-                    </span>
-                  </div>
+                <td class="px-4 py-5">
+                  <button type="button" role="switch" :aria-checked="sem.registration_open" :aria-label="`Registration for ${sem.name}`" :disabled="!isSuperCoordinator || updatingRegistrationId !== null" class="inline-flex min-h-10 items-center gap-2 rounded-control text-xs font-semibold text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-700 disabled:opacity-50" @click="toggleRegistration(sem)">
+                    <span aria-hidden="true" class="relative h-6 w-11 rounded-full transition-colors" :class="sem.registration_open ? 'bg-sky-700' : 'bg-slate-500'"><span class="absolute left-0 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform" :class="sem.registration_open ? 'translate-x-[22px]' : 'translate-x-0.5'"></span></span>
+                    {{ updatingRegistrationId === sem.id ? 'Saving...' : sem.registration_open ? 'Open' : 'Closed' }}
+                  </button>
                 </td>
-                <td class="px-8 py-6">
-                  <div class="flex items-center gap-2">
-                    <span class="rounded-badge px-2 py-0.5 text-[9px] font-black uppercase tracking-tighter" :class="sem.is_active ? 'bg-emerald-100 text-emerald-900' : 'bg-surface-muted text-text-muted'">
-                      {{ sem.is_active ? 'Active' : 'Inactive' }}
-                    </span>
-                    <button
-                      v-if="isSuperCoordinator && !sem.is_active"
-                      class="rounded-control h-6 px-2 bg-sky-700 text-white text-[8px] font-black uppercase tracking-wider hover:bg-sky-800 transition-all disabled:opacity-50"
-                      :disabled="activatingId !== null"
-                      @click="activateSemester(sem)"
-                    >
-                      {{ activatingId === sem.id ? 'Activating...' : 'Set Active' }}
-                    </button>
-                  </div>
-                </td>
-                <td v-if="isSuperCoordinator" class="px-8 py-6 text-right">
-                  <div class="flex items-center justify-end gap-2">
-                    <button class="h-8 w-8 border border-surface-control text-text-muted hover:bg-surface-hover rounded-control transition-all" title="Edit semester" @click="openEditForm(sem)">
-                      <i class="pi pi-pencil text-[10px]"></i>
-                    </button>
-                    <button v-if="sem.is_active" class="h-8 w-8 border border-surface-border text-text-muted opacity-50 cursor-not-allowed flex items-center justify-center rounded-control" disabled title="Cannot delete active semester">
-                      <i class="pi pi-trash text-[10px]"></i>
-                    </button>
-                    <button v-else class="rounded-control h-8 w-8 border border-slate-900 text-slate-800 hover:bg-slate-900 hover:text-white transition-all disabled:opacity-50" :disabled="deletingId !== null" title="Review deletion" @click="openDelete(sem)">
-                      <i class="pi pi-trash text-[10px]"></i>
+                <td v-if="isSuperCoordinator" class="px-4 py-5">
+                  <div class="flex items-center justify-center gap-2">
+                    <button type="button" class="h-10 w-10 border border-surface-control text-text-muted hover:bg-surface-hover rounded-control focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-700" :aria-label="`More actions for ${sem.name}`" :aria-expanded="actionSemester?.id === sem.id" aria-controls="semester-actions" @click="toggleActions(sem, $event)">
+                      <i aria-hidden="true" class="pi pi-ellipsis-h"></i>
                     </button>
                   </div>
                 </td>
@@ -142,6 +128,14 @@
         </div>
       </template>
     </article>
+
+    <Teleport to="body">
+      <div v-if="actionSemester" id="semester-actions" ref="actionMenu" class="fixed z-[150] w-48 rounded-card border border-surface-border bg-surface p-1 shadow-xl" :style="actionMenuStyle">
+        <button v-if="!actionSemester.is_active" type="button" class="rounded-control w-full px-3 py-2.5 text-left text-sm font-semibold text-slate-700 hover:bg-surface-hover focus-visible:bg-surface-hover focus-visible:outline-none disabled:opacity-50" :disabled="activatingId !== null" @click="runSemesterAction('activate')">Set active</button>
+        <button type="button" class="rounded-control w-full px-3 py-2.5 text-left text-sm font-semibold text-slate-700 hover:bg-surface-hover focus-visible:bg-surface-hover focus-visible:outline-none" @click="runSemesterAction('edit')">Edit semester</button>
+        <button type="button" class="rounded-control w-full px-3 py-2.5 text-left text-sm font-semibold text-red-700 hover:bg-red-50 focus-visible:bg-red-50 focus-visible:outline-none disabled:opacity-50" :disabled="actionSemester.is_active || deletingId !== null" :title="actionSemester.is_active ? 'Cannot delete active semester' : undefined" @click="runSemesterAction('delete')">{{ actionSemester.is_active ? 'Cannot delete active semester' : 'Delete semester' }}</button>
+      </div>
+    </Teleport>
 
     <div v-if="showForm" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-4 sm:p-6">
       <div class="rounded-dialog max-h-[calc(100dvh-2rem)] sm:max-h-[calc(100dvh-3rem)] overflow-y-auto bg-surface w-full max-w-lg p-6 sm:p-10 border border-surface-border shadow-2xl relative mx-4 sm:mx-0">
@@ -253,10 +247,71 @@ const activeSemesterName = useState<string | null>('active-semester-name', () =>
 const { isSuperCoordinator } = useCoordinatorPrivileges()
 
 const semesters = ref<SemesterOverview[]>([])
+const sortedSemesters = computed(() => [...semesters.value].sort((a, b) => Number(b.is_active) - Number(a.is_active)))
 const isLoading = ref(false)
 const isSaving = ref(false)
 const activatingId = ref<number | null>(null)
+const updatingRegistrationId = ref<number | null>(null)
 const deletingId = ref<number | null>(null)
+const actionSemester = ref<SemesterOverview | null>(null)
+const actionMenu = ref<HTMLElement | null>(null)
+const actionTrigger = ref<HTMLButtonElement | null>(null)
+const actionMenuStyle = ref<Record<string, string>>({})
+
+const closeActions = (restoreFocus = false) => {
+  const trigger = actionTrigger.value
+  actionSemester.value = null
+  actionTrigger.value = null
+  if (restoreFocus) nextTick(() => trigger?.focus())
+}
+
+const toggleActions = async (semester: SemesterOverview, event: MouseEvent) => {
+  if (actionSemester.value?.id === semester.id) return closeActions()
+  const trigger = event.currentTarget as HTMLButtonElement
+  const rect = trigger.getBoundingClientRect()
+  actionTrigger.value = trigger
+  actionMenuStyle.value = {
+    left: `${Math.max(8, Math.min(rect.right - 192, window.innerWidth - 200))}px`,
+    top: `${rect.bottom + 8}px`
+  }
+  actionSemester.value = semester
+  await nextTick()
+  if (!actionMenu.value) return
+  const height = actionMenu.value.offsetHeight
+  if (rect.bottom + 8 + height > window.innerHeight - 8) {
+    actionMenuStyle.value.top = `${Math.max(8, rect.top - height - 8)}px`
+  }
+  actionMenu.value.querySelector<HTMLButtonElement>('button:not(:disabled)')?.focus({ preventScroll: true })
+}
+
+const runSemesterAction = (action: 'activate' | 'edit' | 'delete') => {
+  const semester = actionSemester.value
+  if (!semester) return
+  closeActions()
+  if (action === 'activate') void activateSemester(semester)
+  else if (action === 'edit') openEditForm(semester)
+  else openDelete(semester)
+}
+
+const handleActionPointer = (event: PointerEvent) => {
+  const target = event.target as Node
+  if (actionSemester.value && !actionMenu.value?.contains(target) && !actionTrigger.value?.contains(target)) closeActions()
+}
+const handleActionKey = (event: KeyboardEvent) => {
+  if (event.key === 'Escape' && actionSemester.value) {
+    event.preventDefault()
+    closeActions(true)
+  }
+}
+const handleActionScroll = () => {
+  if (!actionSemester.value || !actionTrigger.value || !actionMenu.value) return
+  const rect = actionTrigger.value.getBoundingClientRect()
+  const height = actionMenu.value.offsetHeight
+  actionMenuStyle.value = {
+    left: `${Math.max(8, Math.min(rect.right - 192, window.innerWidth - 200))}px`,
+    top: `${rect.bottom + 8 + height > window.innerHeight - 8 ? Math.max(8, rect.top - height - 8) : rect.bottom + 8}px`
+  }
+}
 const errorMessage = ref('')
 const successMessage = ref('')
 
@@ -361,6 +416,27 @@ const activateSemester = async (sem: SemesterOverview) => {
   }
 }
 
+const toggleRegistration = async (sem: SemesterOverview) => {
+  if (updatingRegistrationId.value !== null) return
+  updatingRegistrationId.value = sem.id
+  errorMessage.value = ''
+  successMessage.value = ''
+
+  try {
+    const updated = await $fetch<{ id: number; registration_open: boolean }>(`/api/semesters/${sem.id}/registration`, {
+      method: 'PATCH',
+      body: { registration_open: !sem.registration_open }
+    })
+    sem.registration_open = updated.registration_open
+    successMessage.value = `Registration ${updated.registration_open ? 'opened' : 'closed'} for ${sem.name}`
+    pageCache.clear()
+  } catch (error: any) {
+    errorMessage.value = errorText(error, 'Unable to update registration')
+  } finally {
+    updatingRegistrationId.value = null
+  }
+}
+
 const openDelete = (sem: SemesterOverview) => {
   if (sem.is_active) return
   deleteTarget.value = sem
@@ -404,5 +480,24 @@ const formatDate = (date: string | null | undefined) => {
   }).format(new Date(date))
 }
 
-onMounted(loadSemesters)
+const formatPeriod = (start: string | null | undefined, end: string | null | undefined) => {
+  if (!start && !end) return 'Dates not set'
+  if (!start) return `Until ${formatDate(end)}`
+  if (!end) return `From ${formatDate(start)}`
+  return `${formatDate(start)} – ${formatDate(end)}`
+}
+
+onMounted(() => {
+  void loadSemesters()
+  document.addEventListener('pointerdown', handleActionPointer)
+  document.addEventListener('keydown', handleActionKey)
+  window.addEventListener('scroll', handleActionScroll, true)
+  window.addEventListener('resize', handleActionScroll)
+})
+onUnmounted(() => {
+  document.removeEventListener('pointerdown', handleActionPointer)
+  document.removeEventListener('keydown', handleActionKey)
+  window.removeEventListener('scroll', handleActionScroll, true)
+  window.removeEventListener('resize', handleActionScroll)
+})
 </script>

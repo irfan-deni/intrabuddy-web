@@ -69,6 +69,11 @@ export async function mockSupabaseRest(page: Page, profile = MOCK_PROFILE) {
           const isSingle = route.request().headers()['accept']?.includes('application/vnd.pgrst.object+json')
           return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(isSingle ? profile : [profile]) })
         }
+        const student = MOCK_STUDENTS.find(item => url.includes(`id=eq.${item.id}`))
+        if (student) {
+          const isSingle = route.request().headers()['accept']?.includes('application/vnd.pgrst.object+json')
+          return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(isSingle ? student : [student]) })
+        }
         if (url.includes('role=eq.student')) {
           return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(MOCK_STUDENTS.map(s => ({ id: s.id, full_name: s.full_name, student_id: s.student_id }))) })
         }
@@ -182,28 +187,32 @@ export async function mockApiRoutes(page: Page) {
         json: {
           semesters: [
             {
-              id: 1, name: 'Jan-Jun 2026', start_date: '2026-01-15', end_date: '2026-06-30', is_active: true, created_at: '2025-12-01T00:00:00Z',
+               id: 1, name: 'Jan-Jun 2026', start_date: '2026-01-15', end_date: '2026-06-30', is_active: true, registration_open: true, created_at: '2025-12-01T00:00:00Z',
               counts: { students: 3, templates: 2, logbooks: 9, applications: 1, audits: 0 },
               deletion: { allowed: false, message: 'Active semester cannot be deleted. Activate another semester first.' }
             },
             {
-              id: 2, name: 'Jul-Dec 2025', start_date: '2025-07-01', end_date: '2025-12-31', is_active: false, created_at: '2025-06-01T00:00:00Z',
+               id: 2, name: 'Jul-Dec 2025', start_date: '2025-07-01', end_date: '2025-12-31', is_active: false, registration_open: false, created_at: '2025-06-01T00:00:00Z',
               counts: { students: 0, templates: 0, logbooks: 0, applications: 0, audits: 0 },
               deletion: { allowed: true, message: null }
             },
             {
-              id: 3, name: 'Jan-Jun 2025', start_date: '2025-01-15', end_date: '2025-06-30', is_active: false, created_at: '2024-12-01T00:00:00Z',
+               id: 3, name: 'Jan-Jun 2025', start_date: '2025-01-15', end_date: '2025-06-30', is_active: false, registration_open: false, created_at: '2024-12-01T00:00:00Z',
               counts: { students: 2, templates: 1, logbooks: 5, applications: 1, audits: 0 },
               deletion: { allowed: false, message: 'This semester has 2 students, 5 logbook entries and 1 application. Set it inactive to preserve its history.' }
             },
             {
-              id: 4, name: 'Jul-Dec 2024', start_date: '2024-07-01', end_date: '2024-12-31', is_active: false, created_at: '2024-06-01T00:00:00Z',
+               id: 4, name: 'Jul-Dec 2024', start_date: '2024-07-01', end_date: '2024-12-31', is_active: false, registration_open: false, created_at: '2024-06-01T00:00:00Z',
               counts: { students: 0, templates: 2, logbooks: 0, applications: 0, audits: 0 },
               deletion: { allowed: true, message: null }
             }
           ]
         }
       })
+    }
+
+    if (/\/api\/semesters\/\d+\/registration$/.test(url) && method === 'PATCH') {
+      return route.fulfill({ json: { id: Number(url.match(/\/semesters\/(\d+)\//)?.[1]), registration_open: route.request().postDataJSON().registration_open } })
     }
 
     if (url.includes('/api/administration/configuration') && method === 'POST') {

@@ -72,10 +72,9 @@ test('students table and controls have distinct surfaces and readable states', a
   await expect(row).toHaveCSS('background-color', surface)
   await page.screenshot({ path: testInfo.outputPath('students-soft-theme.png') })
   await row.click()
-  const drawer = page.locator('.fixed.inset-y-0.right-0')
-  await expect(drawer).toHaveCSS('background-color', surface)
-  await expect(row).toHaveCSS('background-color', 'rgb(224, 242, 254)')
-  await page.screenshot({ path: testInfo.outputPath('student-drawer-soft-theme.png') })
+  await expect(page).toHaveURL(/\/student\?id=/)
+  await expect(page.getByRole('main').locator('article').first()).toHaveCSS('background-color', surface)
+  await page.screenshot({ path: testInfo.outputPath('student-profile-soft-theme.png') })
 })
 
 test('student enrollment dialog uses off-white surfaces and muted inputs', async ({ page }) => {

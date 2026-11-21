@@ -4,14 +4,14 @@
       class="hidden lg:flex bg-slate-900 text-white flex-col fixed h-screen z-50 overflow-hidden transition-[width] duration-[240ms] ease-out motion-reduce:transition-none"
       :class="collapsed ? 'w-20 sidebar--collapsed' : 'w-72'"
     >
-      <div class="shrink-0 flex items-center gap-2 px-4 py-6" :class="collapsed ? 'justify-center' : ''">
+      <div class="shrink-0 flex min-h-20 items-center gap-2 border-b border-white/10 px-4 py-4" :class="collapsed ? 'justify-center' : ''">
         <div v-show="!collapsed" class="sidebar-brand flex min-w-0 flex-1 items-center gap-3">
-          <div class="rounded-control bg-surface p-1.5 flex-shrink-0">
-            <i class="pi pi-graduation-cap text-slate-900 text-xl"></i>
+          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white text-slate-900">
+            <i class="pi pi-graduation-cap text-lg"></i>
           </div>
           <div class="sidebar-copy flex flex-col">
-            <span class="text-lg font-black tracking-[0.12em] uppercase text-white whitespace-nowrap">INTRA BUDDY</span>
-            <span class="text-xs text-slate-400 tracking-wide font-semibold mt-1 whitespace-nowrap">Coordinator portal</span>
+            <span class="text-sm font-bold tracking-wide text-white whitespace-nowrap">INTRA BUDDY</span>
+            <span class="mt-0.5 text-xs font-medium text-slate-400 whitespace-nowrap">Coordinator portal</span>
           </div>
         </div>
         <button
@@ -30,11 +30,11 @@
         </button>
       </div>
 
-      <nav class="flex-1 min-h-0 px-4 py-2 space-y-5 overflow-x-hidden overflow-y-auto" aria-label="Primary navigation">
+      <nav class="flex-1 min-h-0 px-4 py-4 space-y-3 overflow-x-hidden overflow-y-auto" aria-label="Primary navigation">
         <div v-for="group in navigationGroups" :key="group.id">
           <div
             v-if="group.label"
-            class="sidebar-section-label px-4 pb-1 text-[10px] font-bold uppercase tracking-widest text-slate-400"
+            class="sidebar-section-label px-4 pb-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400"
           >
             {{ group.label }}
           </div>
@@ -46,7 +46,7 @@
               :aria-label="collapsed ? item.name : undefined"
               :title="collapsed ? item.name : undefined"
               :aria-current="isActive(item) ? 'page' : undefined"
-              class="sidebar-nav-link relative flex min-h-11 items-center gap-3 px-4 py-2.5 text-sm font-semibold tracking-normal transition-colors rounded-lg"
+              class="sidebar-nav-link relative flex min-h-11 items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium tracking-normal transition-colors"
               :class="[
                 isActive(item)
                   ? 'bg-sky-600 text-white shadow-md'
@@ -57,13 +57,6 @@
             >
               <i aria-hidden="true" :class="[item.icon, 'w-5 text-center text-lg flex-shrink-0']"></i>
               <span class="sidebar-copy min-w-0">{{ item.name }}</span>
-              <span
-                v-if="item.path === '/inbox' && unreadCount > 0"
-                class="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold text-white bg-red-500 rounded-full"
-                :class="collapsed ? 'sidebar-inbox-badge--collapsed' : 'ml-auto'"
-              >
-                {{ unreadCount > 99 ? '99+' : unreadCount }}
-              </span>
             </NuxtLink>
           </div>
         </div>
@@ -84,14 +77,14 @@
       :class="mobileOpen ? 'translate-x-0' : '-translate-x-full'"
       style="width: 288px"
     >
-      <div class="flex shrink-0 items-center justify-between gap-2 px-4 py-5 border-b border-white/10">
+      <div class="flex min-h-20 shrink-0 items-center justify-between gap-2 border-b border-white/10 px-4 py-4">
         <div class="flex items-center gap-3">
-          <div class="rounded-control bg-surface p-1.5 flex-shrink-0">
-            <i class="pi pi-graduation-cap text-slate-900 text-xl"></i>
+          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white text-slate-900">
+            <i class="pi pi-graduation-cap text-lg"></i>
           </div>
           <div class="flex flex-col">
-            <span class="text-base font-black tracking-[0.15em] uppercase text-white whitespace-nowrap">INTRA BUDDY</span>
-            <span class="text-xs text-slate-400 tracking-wide font-semibold mt-0.5">Coordinator portal</span>
+            <span class="text-sm font-bold tracking-wide text-white whitespace-nowrap">INTRA BUDDY</span>
+            <span class="mt-0.5 text-xs font-medium text-slate-400">Coordinator portal</span>
           </div>
         </div>
         <button type="button" aria-label="Close navigation" class="sidebar-collapse-control h-11 w-11 shrink-0 flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 transition-colors rounded-lg" @click="mobileOpen = false">
@@ -99,9 +92,9 @@
         </button>
       </div>
 
-      <nav class="flex-1 min-h-0 overflow-y-auto px-4 py-4 space-y-5" aria-label="Primary navigation">
+      <nav class="flex-1 min-h-0 overflow-y-auto px-4 py-4 space-y-3" aria-label="Primary navigation">
         <div v-for="group in navigationGroups" :key="group.id">
-          <div v-if="group.label" class="sidebar-section-label px-4 pb-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+          <div v-if="group.label" class="sidebar-section-label px-4 pb-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
             {{ group.label }}
           </div>
           <div class="space-y-1">
@@ -110,7 +103,7 @@
               :key="item.path"
               :to="item.path"
               :aria-current="isActive(item) ? 'page' : undefined"
-              class="sidebar-nav-link flex items-center gap-3 px-4 py-3 text-sm font-semibold tracking-normal transition-colors rounded-lg min-h-12"
+              class="sidebar-nav-link flex min-h-11 items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium tracking-normal transition-colors"
               :class="[
                 isActive(item)
                   ? 'bg-sky-600 text-white shadow-md'
@@ -122,12 +115,6 @@
             >
               <i aria-hidden="true" :class="[item.icon, 'w-5 text-center text-lg flex-shrink-0']"></i>
               <span>{{ item.name }}</span>
-              <span
-                v-if="item.path === '/inbox' && unreadCount > 0"
-                class="ml-auto inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold text-white bg-red-500 rounded-full"
-              >
-                {{ unreadCount > 99 ? '99+' : unreadCount }}
-              </span>
             </NuxtLink>
           </div>
         </div>
@@ -149,28 +136,39 @@
           </div>
         </div>
 
-        <div ref="accountMenuRoot" class="relative shrink-0">
+        <div class="flex shrink-0 items-center gap-2">
+          <NuxtLink
+            to="/inbox"
+            aria-label="Notifications"
+            :aria-current="route.path === '/inbox' ? 'page' : undefined"
+            class="relative flex h-11 w-11 items-center justify-center rounded-lg text-text-muted hover:bg-surface-hover hover:text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-700"
+            @mouseenter="prefetchRoute('/inbox')"
+            @focus="prefetchRoute('/inbox')"
+          >
+            <i aria-hidden="true" class="pi pi-bell text-lg"></i>
+            <span v-if="unreadCount > 0" class="absolute right-0 top-0 inline-flex min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-xs font-bold text-white">
+              {{ unreadCount > 99 ? '99+' : unreadCount }}
+            </span>
+          </NuxtLink>
+          <div ref="accountMenuRoot" class="relative shrink-0">
           <button
             ref="accountMenuTrigger"
             type="button"
-            class="flex items-center gap-3 rounded-lg px-2 py-1.5 -mr-2 hover:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-700 focus-visible:ring-offset-2 focus-visible:ring-offset-surface transition-colors"
+            class="flex h-11 items-center gap-2 rounded-lg px-1.5 sm:px-2 hover:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-700 focus-visible:ring-offset-2 focus-visible:ring-offset-surface transition-colors"
             aria-label="Open account menu"
             aria-controls="account-menu"
             :aria-expanded="accountMenuOpen"
             @click="toggleAccountMenu"
             @keydown.arrow-down.prevent="openAccountMenu(true)"
           >
-            <div class="hidden sm:flex flex-col items-end">
-              <span class="text-sm font-bold text-slate-800">{{ profile?.full_name || 'Coordinator' }}</span>
-              <div class="flex items-center gap-2">
-                <span class="text-xs text-text-muted font-medium">{{ role || '' }}</span>
-                <span v-if="isSuperCoordinator" class="px-2 py-0.5 bg-amber-100 text-amber-800 text-[10px] font-bold rounded-badge">Super</span>
-              </div>
-            </div>
-            <div class="h-10 w-10 bg-slate-800 flex items-center justify-center text-white text-sm font-bold rounded-lg flex-shrink-0">
+            <div class="h-9 w-9 bg-slate-800 flex items-center justify-center text-white text-sm font-bold rounded-lg flex-shrink-0">
               {{ (profile?.full_name || 'U').charAt(0).toUpperCase() }}
             </div>
-            <i class="hidden sm:block pi pi-chevron-down text-[10px] text-text-muted transition-transform duration-150" :class="accountMenuOpen ? 'rotate-180' : ''" />
+            <div class="hidden sm:flex min-w-0 max-w-40 flex-col items-start text-left">
+              <span class="max-w-full truncate text-sm font-semibold text-slate-800">{{ profile?.full_name || 'Coordinator' }}</span>
+              <span class="max-w-full truncate text-xs font-medium text-text-muted">{{ isSuperCoordinator ? 'Super coordinator' : (role || 'Coordinator') }}</span>
+            </div>
+            <i aria-hidden="true" class="hidden sm:block pi pi-chevron-down ml-1 text-[10px] text-text-muted transition-transform duration-150" :class="accountMenuOpen ? 'rotate-180' : ''" />
           </button>
 
           <Transition name="account-menu">
@@ -199,6 +197,7 @@
               </div>
             </div>
           </Transition>
+          </div>
         </div>
       </header>
 
@@ -299,21 +298,14 @@ const navigationGroups = computed(() => [
     items: [
       { name: 'Students', path: '/students', icon: 'pi pi-users' },
       { name: 'Logbooks', path: '/logbooks', icon: 'pi pi-file' },
-      { name: 'Submission Requirements', path: '/checklists', icon: 'pi pi-check-square' }
+      { name: 'Checklists', path: '/checklists', icon: 'pi pi-check-square' }
     ]
   },
   {
     id: 'communication',
-    label: 'Communication',
+    label: 'Student communications',
     items: [
-      { name: 'Notifications', path: '/inbox', icon: 'pi pi-bell' },
-      { name: 'Announcements & Alerts', path: '/communications', icon: 'pi pi-megaphone' }
-    ]
-  },
-  {
-    id: 'resources',
-    label: 'Resources',
-    items: [
+      { name: 'Announcements', path: '/communications', icon: 'pi pi-megaphone' },
       { name: 'FAQs', path: '/faqs', icon: 'pi pi-book' }
     ]
   },
@@ -455,14 +447,6 @@ const handleAccountMenuKeydown = (event: KeyboardEvent) => {
 
 .sidebar--collapsed .sidebar-section-label::after {
   border-color: rgb(255 255 255 / 0.1);
-}
-
-.sidebar-inbox-badge--collapsed {
-  position: absolute;
-  top: 0.25rem;
-  right: 0.25rem;
-  padding-left: 0.375rem;
-  padding-right: 0.375rem;
 }
 
 .account-menu-enter-active,

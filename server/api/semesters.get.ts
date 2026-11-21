@@ -9,7 +9,7 @@ export default defineEventHandler(async (event) => {
     const db = serverSupabaseServiceRole<Database>(event)
     const { data: semesters, error } = await db
       .from('semesters')
-      .select('id, name, start_date, end_date, is_active, created_at')
+      .select('id, name, start_date, end_date, is_active, registration_open, created_at')
       .order('start_date', { ascending: false })
 
     if (error) throw error

@@ -37,7 +37,7 @@ const superEndpoints = [
   'coordinators.get', 'coordinators.post', 'coordinators/[id].delete',
   'logbooks/[id]/submit.post', 'notifications/broadcast-dispatch.post',
   'students/[id].put', 'students/[id]/checklists/[entryId].patch', 'students/[id]/applications/[entryId].patch',
-  'students/[id]/logbooks/[entryId]/review.post', 'administration/configuration.post'
+  'students/[id]/logbooks/[entryId]/review.post', 'administration/configuration.post', 'semesters/[id]/registration.patch'
 ]
 
 describe('API role enforcement before business operations', () => {

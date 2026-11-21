@@ -43,23 +43,24 @@ test.describe('Students Directory', () => {
     await expect(page.getByRole('cell', { name: 'No matching records found' })).toBeVisible()
   })
 
-  test('opens student dossier sidebar on click', async ({ page }) => {
+  test('opens the selected student profile on click', async ({ page }) => {
     await page.getByRole('table').getByText('Alice Johnson').click()
+    await expect(page).toHaveURL(/\/student\?id=student-1/)
     await expect(page.getByRole('heading', { name: 'Student Profile', exact: true })).toBeVisible()
-    await expect(page.getByRole('heading', { name: 'Alice Johnson' })).toBeVisible()
+    await expect(page.getByText('Alice Johnson', { exact: true })).toBeVisible()
   })
 
-  test('student dossier sidebar has full profile link', async ({ page }) => {
-    await page.getByRole('table').getByText('Alice Johnson').click()
-    const profileLink = page.getByRole('link', { name: 'Full Profile', exact: true })
-    await expect(profileLink).toBeVisible()
-    await expect(profileLink).toContainText('Full Profile')
+  test('opens the correct profile for a different student', async ({ page }) => {
+    await page.getByRole('table').getByText('Bob Smith').click()
+    await expect(page).toHaveURL(/\/student\?id=student-2/)
+    await expect(page.getByRole('heading', { name: 'Student Profile', exact: true })).toBeVisible()
   })
 
-  test('closes sidebar with close button', async ({ page }) => {
+  test('returns to the directory from the profile', async ({ page }) => {
     await page.getByRole('table').getByText('Alice Johnson').click()
     await expect(page.getByRole('heading', { name: 'Student Profile', exact: true })).toBeVisible()
-    await page.locator('button:has(.pi-arrow-left)').first().click()
+    await page.getByRole('link', { name: 'Back to students' }).click()
+    await expect(page).toHaveURL(/\/students$/)
     await expect(page.getByRole('heading', { name: 'Student Profile', exact: true })).toHaveCount(0)
   })
 })

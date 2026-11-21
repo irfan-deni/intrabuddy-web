@@ -78,6 +78,7 @@ export type Database = {
           start_date: string
           end_date: string
           is_active: boolean | null
+          registration_open: boolean
           created_at: string | null
         }
         Insert: {
@@ -86,6 +87,7 @@ export type Database = {
           start_date: string
           end_date: string
           is_active?: boolean | null
+          registration_open?: boolean
           created_at?: string | null
         }
         Update: {
@@ -94,6 +96,7 @@ export type Database = {
           start_date?: string
           end_date?: string
           is_active?: boolean | null
+          registration_open?: boolean
           created_at?: string | null
         }
         Relationships: []

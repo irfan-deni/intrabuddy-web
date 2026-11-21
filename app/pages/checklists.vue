@@ -2,7 +2,7 @@
   <div class="app-surface-ui space-y-6 md:space-y-8">
     <header class="flex flex-col md:flex-row flex-wrap md:items-end justify-between gap-6">
       <div>
-        <h1 class="text-2xl md:text-4xl font-bold text-slate-800 tracking-tight">Submission Requirements</h1>
+        <h1 class="text-2xl md:text-4xl font-bold text-slate-800 tracking-tight">Checklists</h1>
         <p class="mt-2 text-sm font-normal leading-relaxed text-text-muted">Manage the requirement template and track every student's completion.</p>
       </div>
       <div class="flex flex-wrap items-center gap-3">
@@ -86,7 +86,7 @@
 
     <!-- Requirement templates -->
     <template v-if="viewMode === 'templates'">
-      <div class="rounded-card bg-surface border border-surface-border p-4 flex flex-col lg:flex-row lg:items-center gap-3">
+      <div class="flex flex-col lg:flex-row lg:items-center gap-3">
         <div class="relative group flex-1 min-w-0">
           <i class="pi pi-search absolute left-4 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-sky-700 transition-colors"></i>
           <input

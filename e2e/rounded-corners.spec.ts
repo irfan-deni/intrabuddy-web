@@ -14,7 +14,7 @@ test('dashboard cards use shared radii without changing circular graphics', asyn
   await expect(cards).toHaveCount(7)
   for (const card of await cards.all()) await expect(card).toHaveCSS('border-radius', '12px')
   for (const button of await main.locator('header button').all()) await expect(button).toHaveCSS('border-radius', '8px')
-  await expect(main.locator('svg circle')).toHaveCount(2)
+  await expect(main.locator('.dashboard-placement-chart svg circle')).toHaveCount(2)
   await expect(main.locator('.rounded-full.h-4')).toHaveCSS('border-radius', '9999px')
   await expect(page.getByRole('complementary')).toHaveCSS('border-radius', '0px')
 })
@@ -33,9 +33,10 @@ test('student table, badges and controls have rounded outer edges', async ({ pag
   const badge = page.getByRole('cell', { name: 'Accepted', exact: true }).locator('span')
   await expect(badge).toHaveCSS('border-radius', '6px')
   await page.getByRole('table').locator('tbody tr').first().click()
-  const drawer = page.locator('.fixed.inset-y-0.right-0')
-  await expect(drawer).toHaveCSS('border-radius', '0px')
-  for (const card of await drawer.locator('.rounded-card').all()) await expect(card).toHaveCSS('border-radius', '12px')
+  await expect(page).toHaveURL(/\/student\?id=/)
+  const cards = page.getByRole('main').locator('.rounded-card')
+  await expect(cards.first()).toBeVisible()
+  for (const card of await cards.all()) await expect(card).toHaveCSS('border-radius', '12px')
 })
 
 test('rounded table preserves tablet scrolling and row-button focus clearance', async ({ page }) => {

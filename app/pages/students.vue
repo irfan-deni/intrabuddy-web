@@ -3,9 +3,9 @@
     <div class="space-y-6 md:space-y-8 pb-24">
       <!-- Header with Search & Add -->
       <header class="flex flex-col md:flex-row flex-wrap md:items-end justify-between gap-6">
-        <div class="w-full md:flex-1 md:min-w-[280px] max-w-xl">
+        <div class="w-full xl:flex-1 xl:min-w-[280px] max-w-xl">
           <h1 class="text-2xl md:text-4xl font-bold text-slate-800 tracking-tight">Student Directory</h1>
-          <p class="mt-2 text-sm font-normal leading-relaxed text-text-muted">Manage student placements, milestones, and records.</p>
+          <p class="mt-2 text-sm font-normal leading-relaxed text-text-muted xl:whitespace-nowrap">Manage student placements, milestones, and records.</p>
           <div class="relative group mt-4">
             <i class="pi pi-search absolute left-5 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-sky-700 transition-colors"></i>
             <input 
@@ -17,7 +17,7 @@
           </div>
         </div>
         
-        <div class="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3 w-full">
+        <div class="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3 w-full xl:w-auto">
           <select v-model="semesterFilter" @change="fetchStudents()" class="rounded-control bg-surface-muted border border-surface-control text-text-primary px-4 md:px-5 py-3 md:py-4 text-[10px] font-black uppercase tracking-widest outline-none focus:border-sky-700 focus:ring-1 focus:ring-sky-700 cursor-pointer shadow-sm min-w-0 sm:min-w-[180px]">
             <option value="">Active Semester</option>
             <option v-for="c in semesters" :key="c.id" :value="c.id">{{ c.name }}</option>
@@ -25,6 +25,7 @@
           </select>
           <select v-model="statusFilter" class="rounded-control bg-surface-muted border border-surface-control text-text-primary px-4 md:px-5 py-3 md:py-4 text-[10px] font-black uppercase tracking-widest outline-none focus:border-sky-700 focus:ring-1 focus:ring-sky-700 cursor-pointer shadow-sm">
             <option value="all">Status: All</option>
+            <option value="unplaced">Status: Unplaced</option>
             <option value="Accepted">Status: Placed</option>
             <option value="Searching">Status: Searching</option>
             <option value="Pending">Status: Pending</option>
@@ -64,7 +65,7 @@
           <i class="pi pi-spin pi-spinner text-2xl text-sky-600"></i>
         </div>
         <div v-else-if="filteredStudents.length === 0" class="py-12 text-center text-[10px] font-black text-text-muted uppercase tracking-widest">No matching records found</div>
-        <div v-for="student in filteredStudents" :key="student.id" class="rounded-card bg-surface border border-surface-border p-4 cursor-pointer hover:border-sky-700 transition-all" :class="selectedStudent?.id === student.id ? 'bg-surface-selected' : ''" @click="selectStudent(student)">
+        <div v-for="student in filteredStudents" :key="student.id" class="rounded-card bg-surface border border-surface-border p-4 cursor-pointer hover:border-sky-700 transition-all" @click="selectStudent(student)">
           <div class="flex items-start justify-between mb-3">
             <div class="flex items-center gap-3 min-w-0 flex-1">
               <div class="rounded-control h-10 w-10 bg-surface-muted border border-surface-border flex items-center justify-center font-black text-text-muted text-xs flex-shrink-0">
@@ -122,7 +123,7 @@
               <tr v-if="filteredStudents.length === 0 && !isLoading" class="text-center">
                 <td colspan="6" class="px-10 py-24 text-[10px] font-black text-text-muted uppercase tracking-widest">No matching records found</td>
               </tr>
-              <tr v-for="(student, index) in filteredStudents" :key="student.id" class="group hover:bg-surface-hover transition-all cursor-pointer" :class="selectedStudent?.id === student.id ? 'bg-surface-selected' : index % 2 ? 'bg-surface-muted' : 'bg-surface'" @click="selectStudent(student)">
+              <tr v-for="(student, index) in filteredStudents" :key="student.id" class="group hover:bg-surface-hover transition-all cursor-pointer" :class="index % 2 ? 'bg-surface-muted' : 'bg-surface'" @click="selectStudent(student)">
                 <td class="px-4 py-8 text-center text-[9px] font-black text-text-muted tabular-nums">{{ String(index + 1).padStart(2, '0') }}</td>
                 <td class="px-10 py-8">
                   <div class="flex items-center gap-4">
@@ -178,77 +179,6 @@
       </article>
     </div>
 
-    <!-- Sliding Sidebar Profile -->
-    <Transition name="slide">
-      <div v-if="selectedStudent" class="fixed inset-y-0 right-0 w-full max-w-2xl bg-surface shadow-[-20px_0_60px_rgba(0,0,0,0.1)] z-[100] border-l border-surface-border overflow-y-auto">
-        <div class="sticky top-0 bg-surface/95 backdrop-blur-md z-10 px-6 md:px-12 py-6 md:py-10 border-b border-surface-border flex items-center justify-between">
-          <div class="flex items-center gap-4 md:gap-6">
-            <button class="rounded-control h-10 w-10 border border-surface-control text-text-muted flex items-center justify-center hover:bg-slate-900 hover:text-white transition-all" @click="selectedStudent = null">
-              <i class="pi pi-arrow-left text-[10px]"></i>
-            </button>
-            <h2 class="text-lg md:text-xl font-black text-slate-800 uppercase tracking-widest">Student Profile</h2>
-          </div>
-          <NuxtLink :to="`/student?id=${selectedStudent.id}`" class="text-[10px] font-black text-text-muted uppercase tracking-widest hover:text-slate-800 hover:underline transition-all whitespace-nowrap">
-            Full Profile
-          </NuxtLink>
-        </div>
-
-        <div class="p-6 md:p-12 space-y-6 md:space-y-12">
-          <div class="rounded-card bg-slate-900 p-6 md:p-10 text-white flex flex-col gap-6 md:gap-8">
-            <div class="flex flex-col gap-2">
-              <span class="text-[9px] font-black uppercase tracking-[0.3em] text-slate-300">Identity Record</span>
-              <h3 class="text-2xl md:text-3xl font-black uppercase tracking-tight">{{ selectedStudent.full_name }}</h3>
-              <span class="text-xs font-bold text-slate-300 tabular-nums uppercase">{{ selectedStudent.student_id }}</span>
-            </div>
-            
-            <div class="grid grid-cols-3 gap-6 md:gap-8 pt-6 md:pt-8 border-t border-white/10">
-              <div>
-                <p class="text-[8px] font-black text-slate-300 uppercase tracking-widest mb-2">Email Access</p>
-                <p class="text-xs font-bold truncate text-slate-300">{{ selectedStudent.email || 'N/A' }}</p>
-              </div>
-              <div>
-                <p class="text-[8px] font-black text-slate-300 uppercase tracking-widest mb-2">Phone Number</p>
-                <p class="text-xs font-bold trunate text-slate-300">{{ selectedStudent.phone_number || 'N/A' }}</p>
-              </div>
-              <div>
-                <p class="text-[8px] font-black text-slate-300 uppercase tracking-widest mb-2">Market Status</p>
-                <p class="text-xs font-black uppercase tracking-tighter">{{ selectedStudent.placementStatus }}</p>
-              </div>
-            </div>
-          </div>
-
-          <div class="grid grid-cols-2 gap-4 md:gap-6">
-            <div class="rounded-card bg-surface-muted border border-surface-border p-4 md:p-6 flex flex-col gap-4">
-              <span class="text-[9px] font-black text-text-muted uppercase tracking-widest">Checklist State</span>
-              <div class="flex items-end justify-between">
-                <span class="text-2xl md:text-3xl font-black text-slate-800 tabular-nums">{{ selectedStudent.completionPercent }}%</span>
-                <div class="h-8 md:h-10 w-1 bg-sky-600"></div>
-              </div>
-            </div>
-            <div class="rounded-card bg-surface-muted border border-surface-border p-4 md:p-6 flex flex-col gap-4">
-              <span class="text-[9px] font-black text-text-muted uppercase tracking-widest">Vault Items</span>
-              <div class="flex items-end justify-between">
-                <span class="text-2xl md:text-3xl font-black text-slate-800 tabular-nums">{{ selectedStudent.documentCount }}</span>
-                <div class="h-8 md:h-10 w-1 bg-surface-border"></div>
-              </div>
-            </div>
-          </div>
-
-          <div class="rounded-card bg-surface-muted p-6 md:p-8 text-center border border-surface-border">
-            <p class="text-[10px] font-black text-text-muted uppercase tracking-widest mb-6 leading-relaxed">
-              For detailed logbook tracking and document validation, please proceed to the full profile view.
-            </p>
-            <NuxtLink :to="`/student?id=${selectedStudent.id}`" class="rounded-control inline-block bg-sky-700 text-white px-6 md:px-8 py-3 text-[9px] font-black uppercase tracking-[0.2em] hover:bg-sky-800 transition-all">
-              Launch Detailed View
-            </NuxtLink>
-          </div>
-        </div>
-      </div>
-    </Transition>
-
-    <!-- Overlay for Sidebar -->
-    <div v-if="selectedStudent" class="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-[90]" @click="selectedStudent = null"></div>
-
     <!-- Enrollment Modal -->
     <div v-if="showModal" class="fixed inset-0 z-[110] flex items-center justify-center bg-slate-900/90 p-4 sm:p-6">
       <div class="rounded-dialog max-h-[calc(100dvh-2rem)] sm:max-h-[calc(100dvh-3rem)] overflow-y-auto bg-surface w-full max-w-lg p-6 sm:p-12 shadow-2xl relative border border-surface-border mx-4 sm:mx-0">
@@ -300,6 +230,7 @@ import type { Database } from '~/types/supabase'
 const { isSuperCoordinator } = useCoordinatorPrivileges()
 
 const supabase = useSupabaseClient<Database>()
+const route = useRoute()
 const pageCache = usePageCache()
 const cachedStudents = pageCache.read<{ students: Array<Record<string, any>> }>('/api/students')
 const students = ref<Array<Record<string, any>>>(cachedStudents?.students || [])
@@ -308,18 +239,18 @@ const isLoading = ref(!cachedStudents)
 const isRefreshing = ref(false)
 const isSaving = ref(false)
 const searchQuery = ref('')
-const statusFilter = ref('all')
+const statusFilter = ref(['unplaced', 'Accepted', 'Searching', 'Pending'].includes(String(route.query.status)) ? String(route.query.status) : 'all')
 const semesterFilter = ref<number | string>('')
 const editReason = ref('')
 
 const showModal = ref(false)
-const selectedStudent = ref<Record<string, any> | null>(null)
 const editingId = ref<string | null>(null)
 const form = ref({ full_name: '', student_id: '', email: '', phone_number: '' })
 
 const filteredStudents = computed(() => {
   let list = students.value
-  if (statusFilter.value !== 'all') list = list.filter(s => s.placementStatus === statusFilter.value)
+  if (statusFilter.value === 'unplaced') list = list.filter(s => !['Accepted', 'Interview'].includes(s.placementStatus))
+  else if (statusFilter.value !== 'all') list = list.filter(s => s.placementStatus === statusFilter.value)
   if (searchQuery.value) {
     const q = searchQuery.value.toLowerCase()
     list = list.filter(s => s.full_name.toLowerCase().includes(q) || (s.student_id && s.student_id.toLowerCase().includes(q)))
@@ -353,7 +284,7 @@ const fetchSemesters = async () => {
 }
 
 const selectStudent = (student: any) => {
-  selectedStudent.value = student
+  navigateTo({ path: '/student', query: { id: student.id } })
 }
 
 const saveStudent = async () => {
@@ -429,19 +360,3 @@ onMounted(async () => {
   await Promise.all([fetchSemesters(), fetchStudents()])
 })
 </script>
-
-<style scoped>
-.slide-enter-active, .slide-leave-active {
-  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.slide-enter-from, .slide-leave-to {
-  transform: translateX(100%);
-}
-
-.fade-enter-active, .fade-leave-active {
-  transition: opacity 0.3s ease;
-}
-.fade-enter-from, .fade-leave-to {
-  opacity: 0;
-}
-</style>

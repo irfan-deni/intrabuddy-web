@@ -25,7 +25,7 @@ test.describe('Dashboard', () => {
     await expect(subtitle).toHaveCSS('letter-spacing', 'normal')
     await expect(subtitle).toHaveCSS('color', 'rgb(71, 85, 105)')
 
-    for (const label of ['Total Students', 'Still searching', 'Compliance']) {
+    for (const label of ['Total Students', 'Unplaced', 'Compliance']) {
       await expect(main.getByText(label, { exact: true })).toHaveCSS('font-size', '14px')
       await expect(main.getByText(label, { exact: true })).toHaveCSS('font-weight', '500')
     }
@@ -84,7 +84,7 @@ test.describe('Dashboard', () => {
           await expect(page.getByRole('heading', { name: heading, exact: true })).toBeInViewport({ ratio: 1 })
         }
         await expect(page.getByText('Pending', { exact: true })).toBeInViewport({ ratio: 1 })
-        await expect(page.getByRole('link', { name: 'Dispatch Alert' })).toBeInViewport({ ratio: 1 })
+        await expect(page.getByRole('link', { name: 'View semesters' })).toBeInViewport({ ratio: 1 })
         await expect(page.getByRole('contentinfo')).toBeInViewport({ ratio: 1 })
         const bottomGap = await page.evaluate(() => {
           const card = document.querySelector('.dashboard > .p-card')!.getBoundingClientRect()
@@ -125,27 +125,22 @@ test.describe('Dashboard', () => {
   test('shows concise placement figures', async ({ page }) => {
     const placement = page.locator('.dashboard-placement')
     await expect(placement.getByRole('heading', { name: 'Placement Status' })).toBeVisible()
-    await expect(placement.getByText('Placed', { exact: true }).last().locator('..')).toContainText('3')
-    await expect(placement.getByText('Still searching', { exact: true }).locator('..')).toContainText('2')
+    await expect(placement.getByText(`${MOCK_DASHBOARD.placedStudents} of ${MOCK_DASHBOARD.totalStudents} students placed`, { exact: true })).toBeVisible()
+    await expect(placement.getByText(`Needs follow-up: ${MOCK_DASHBOARD.unplacedStudents} unplaced`, { exact: true })).toBeVisible()
   })
 
-  test('has link to communications page', async ({ page }) => {
-    const dispatchLink = page.getByRole('link', { name: 'Dispatch Alert' })
-    await expect(dispatchLink).toBeVisible()
-    await expect(dispatchLink).toContainText('Dispatch Alert')
-    await expect(dispatchLink).toHaveAttribute('href', '/communications')
+  test('links unplaced students to the filtered directory', async ({ page }) => {
+    const link = page.getByRole('link', { name: 'View unplaced students' })
+    await expect(link).toBeVisible()
+    await expect(link).toHaveAttribute('href', '/students?status=unplaced')
   })
 
   test('keeps semester actions close to the active semester', async ({ page }) => {
     await page.setViewportSize({ width: 1469, height: 843 })
     const semester = page.locator('.dashboard-semester')
-    const name = semester.getByRole('heading', { name: /Active:/ })
-    const link = semester.getByRole('link', { name: 'Dispatch Alert' })
-    const gap = await link.evaluate((element, heading) => {
-      return element.getBoundingClientRect().top - (heading as HTMLElement).getBoundingClientRect().bottom
-    }, await name.elementHandle())
-    expect(gap).toBeGreaterThanOrEqual(0)
-    expect(gap).toBeLessThanOrEqual(24)
+    await expect(semester.getByRole('heading', { name: /Active:/ })).toBeVisible()
+    await expect(semester.getByRole('link', { name: 'View semesters' })).toHaveAttribute('href', '/semesters')
+    await expect(semester.getByRole('link', { name: 'View students' })).toHaveAttribute('href', '/students')
   })
 
   test('displays logbook compliance summary', async ({ page }) => {

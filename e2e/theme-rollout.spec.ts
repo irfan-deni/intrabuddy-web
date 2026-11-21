@@ -26,7 +26,7 @@ for (const path of routes) {
       await expect(panel).toHaveCSS('background-color', surface)
       await expect(panel).toHaveCSS('border-radius', '12px')
     }
-    await expect(main.locator('.bg-white')).toHaveCount(0)
+    await expect(main.locator('.bg-white:not([aria-hidden="true"] *)')).toHaveCount(0)
     await expect(main.locator('.rounded-none')).toHaveCount(0)
     const fields = main.locator('input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):visible, select:visible, textarea:visible')
     for (const field of await fields.all()) {

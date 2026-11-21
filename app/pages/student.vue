@@ -2,8 +2,8 @@
   <div class="app-surface-ui space-y-6 md:space-y-8">
     <header class="flex flex-col md:flex-row md:flex-nowrap md:items-end justify-between gap-6 border-b border-surface-border pb-6 md:pb-8">
       <div class="flex min-w-0 flex-1 items-start gap-4">
-        <NuxtLink to="/students" class="rounded-control shrink-0 mt-1 h-10 w-10 border border-surface-control flex items-center justify-center hover:bg-slate-900 hover:text-white transition-all text-text-muted">
-          <i class="pi pi-arrow-left text-sm"></i>
+        <NuxtLink to="/students" aria-label="Back to students" class="rounded-control shrink-0 mt-1 h-10 w-10 border border-surface-control flex items-center justify-center hover:bg-slate-900 hover:text-white transition-all text-text-muted">
+          <i aria-hidden="true" class="pi pi-arrow-left text-sm"></i>
         </NuxtLink>
         <div>
           <h1 class="text-2xl md:text-4xl font-black text-slate-800 tracking-tight uppercase">Student Profile</h1>

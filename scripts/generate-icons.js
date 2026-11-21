@@ -23,16 +23,28 @@ async function gen() {
       console.log('Written', out)
     }
 
-    // create a multi-size favicon.ico (16,32,48)
+    // ICO files can contain PNG images for each supported size.
     const faviconSizes = [16, 32, 48]
     const faviconBuffers = await Promise.all(
       faviconSizes.map((s) => sharp(src).resize(s, s).png().toBuffer())
     )
 
-    // sharp can write ico via toFile with .ico in filename on some platforms; fallback: write first as png
     const faviconOut = path.join(process.cwd(), 'public', 'favicon.ico')
-    // Use png buffers concatenated as a simple ico generator is non-trivial; instead write 32x32 as favicon
-    await sharp(faviconBuffers[1]).toFile(faviconOut)
+    const header = Buffer.alloc(6 + faviconSizes.length * 16)
+    header.writeUInt16LE(1, 2) // ICO type
+    header.writeUInt16LE(faviconSizes.length, 4)
+    let offset = header.length
+    faviconBuffers.forEach((buffer, index) => {
+      const entry = 6 + index * 16
+      header.writeUInt8(faviconSizes[index], entry)
+      header.writeUInt8(faviconSizes[index], entry + 1)
+      header.writeUInt16LE(1, entry + 4) // color planes
+      header.writeUInt16LE(32, entry + 6) // bits per pixel
+      header.writeUInt32LE(buffer.length, entry + 8)
+      header.writeUInt32LE(offset, entry + 12)
+      offset += buffer.length
+    })
+    fs.writeFileSync(faviconOut, Buffer.concat([header, ...faviconBuffers]))
     console.log('Written', faviconOut)
 
     console.log('Icon generation complete. Place the source at public/icons/logo.png to regenerate.')

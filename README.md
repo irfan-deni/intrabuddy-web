@@ -136,6 +136,7 @@ is applied automatically by the app or test commands.
 - Direct coordinator writes to protected student records, semesters, enrollment,
   and checklist templates are blocked. Super Coordinator configuration writes
   now go through `/api/administration/configuration`, not browser database writes.
+  Opening or closing semester registration is also restricted to Super Coordinators.
   Student own-record operations remain available, with identity and administrative
   audit fields protected by column grants. Check any external clients that write
   identity fields or include administrative columns in generic upserts.

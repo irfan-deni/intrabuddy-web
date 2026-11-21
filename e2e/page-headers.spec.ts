@@ -5,7 +5,7 @@ const pages = [
   { path: '/', title: 'Dashboard', subtitle: 'Real-time overview of the active semester.' },
   { path: '/students', title: 'Student Directory', subtitle: 'Manage student placements, milestones, and records.' },
   { path: '/logbooks', title: 'Logbooks', subtitle: 'Monitor semester logbook compliance and send reminders.' },
-  { path: '/checklists', title: 'Submission Requirements', subtitle: "Manage the requirement template and track every student's completion." },
+  { path: '/checklists', title: 'Checklists', subtitle: "Manage the requirement template and track every student's completion." },
   { path: '/inbox', title: 'Notifications', subtitle: 'Notifications sent directly to you.' },
   { path: '/communications?tab=broadcasts', title: 'Announcements & Alerts', subtitle: 'Send announcements and individual alerts.' },
   { path: '/faqs', title: 'FAQs', subtitle: 'Self-service FAQ library for internship candidates.' },
