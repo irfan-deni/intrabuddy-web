@@ -13,11 +13,11 @@ describe('semester report', () => {
       { studentName: 'Alice', studentMatric: '1', weekNumber: 1, weekEndDate: '2026-01-07', statusLabel: 'Not Submitted' }
     ])
     expect(Object.fromEntries(result.metrics)).toMatchObject({
-      'Enrolled students': '3', 'Placed or interviewing': '2', 'Unplaced': '1',
-      'Placement rate': '67%', 'Tracked logbooks': '3', Submitted: '1', Overdue: '1', Pending: '1',
+      'Enrolled students': '3', 'Confirmed placements': '1', 'Unplaced': '2',
+      'Placement rate': '33%', 'Tracked logbooks': '3', Submitted: '1', Overdue: '1', Pending: '1',
       'Logbook submission rate': '33%'
     })
-    expect(result.unplaced.map(student => student.full_name)).toEqual(['Bob'])
+    expect(result.unplaced.map(student => student.full_name)).toEqual(['Alice', 'Bob'])
     expect(result.overdue).toHaveLength(1)
     expect(result.records.map(record => `${record.studentName} ${record.weekNumber}`)).toEqual(['Alice 1', 'Bob 1', 'Bob 2'])
   })

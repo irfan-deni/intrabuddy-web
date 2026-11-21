@@ -1,164 +1,175 @@
 import { test, expect } from '@playwright/test'
 import { setupPage } from './helpers'
-import { MOCK_DASHBOARD } from './fixtures/data'
+import { MOCK_DASHBOARD, MOCK_LOGBOOKS, MOCK_STUDENTS } from './fixtures/data'
 
-test.describe('Dashboard', () => {
-  test.beforeEach(async ({ page }) => {
-    await setupPage(page)
-    await page.goto('/')
-    await page.waitForLoadState('networkidle')
-  })
+test.beforeEach(async ({ page }) => {
+  await setupPage(page)
+})
 
-  test('renders dashboard with stats cards', async ({ page }) => {
-    await expect(page.locator('text=Total Students')).toBeVisible()
-    await expect(page.getByText('Placed', { exact: true }).first()).toBeVisible()
-    await expect(page.getByText('Unplaced', { exact: true })).toBeVisible()
-    await expect(page.locator('text=Placement Rate')).toBeVisible()
-  })
+test('shows semester context, placement, follow-up and weekly submissions once', async ({ page }) => {
+  // The first request also cold-compiles the Nuxt client in the test server.
+  test.setTimeout(60_000)
+  await page.goto('/')
+  const header = page.getByRole('main').locator('header')
+  await expect(header.getByText('Jan-Jun 2026', { exact: true })).toBeVisible({ timeout: 45_000 })
+  await expect(header.getByText('Registration open')).toBeVisible()
+  await expect(header.getByRole('link', { name: 'Manage semester' })).toHaveAttribute('href', '/semesters')
+  await expect(header.getByRole('button', { name: 'Export Semester Report' })).toBeEnabled()
 
-  test('uses readable subtitle, label, and section-heading typography', async ({ page }) => {
-    const main = page.getByRole('main')
-    const subtitle = main.getByText('Real-time overview of the active semester.', { exact: true })
-    await expect(subtitle).toHaveCSS('font-size', '14px')
-    await expect(subtitle).toHaveCSS('font-weight', '400')
-    await expect(subtitle).toHaveCSS('text-transform', 'none')
-    await expect(subtitle).toHaveCSS('letter-spacing', 'normal')
-    await expect(subtitle).toHaveCSS('color', 'rgb(71, 85, 105)')
+  const placement = page.getByRole('region', { name: 'Placement overview' })
+  await expect(placement.getByRole('link')).toHaveCount(3)
+  await expect(placement.getByRole('link', { name: /Enrolled students/ })).toContainText('50')
+  const confirmed = placement.getByRole('link', { name: /Confirmed placements/ })
+  await expect(confirmed).toContainText('60% of enrolled')
+  await expect(confirmed.locator('.placement-progress > span')).toHaveAttribute('style', /width: 60%/)
+  await expect(placement.locator('.placement-progress')).toHaveCount(1)
 
-    for (const label of ['Total Students', 'Unplaced', 'Compliance']) {
-      await expect(main.getByText(label, { exact: true })).toHaveCSS('font-size', '14px')
-      await expect(main.getByText(label, { exact: true })).toHaveCSS('font-weight', '500')
+  const attention = page.getByRole('region', { name: 'Needs attention' })
+  await expect(attention.getByRole('link', { name: /3 Overdue logbooks/ })).toHaveAttribute('href', '/logbooks?status=Late')
+  await expect(attention.getByRole('link', { name: /1 Logbooks awaiting review/ })).toHaveAttribute('href', '/logbooks?review=awaiting')
+  await expect(attention.getByRole('link', { name: /1 Students missing required checklist items/ })).toHaveAttribute('href', '/students?checklist=missing')
+
+  const weekly = page.getByRole('region', { name: 'Weekly logbooks' })
+  await expect(weekly.getByRole('progressbar')).toHaveCount(0)
+  const trend = weekly.getByRole('figure')
+  await expect(trend.getByRole('link')).toHaveCount(6)
+  await expect(trend.getByRole('link', { name: 'Week ending 1 May 2026: 0 submitted, 2 overdue, 0 not yet due' }))
+    .toHaveAttribute('href', '/logbooks?week_end=2026-05-01')
+  await expect(trend.getByRole('link', { name: 'Current week, ending 15 May 2026: 1 submitted, 0 overdue, 1 not yet due' })).toBeVisible()
+})
+
+test('links placement follow-up to students without an accepted placement, including interviews', async ({ page }) => {
+  await page.route('**/api/students', route => route.fulfill({
+    json: { students: MOCK_STUDENTS.map((student, i) => i === 1 ? { ...student, placementStatus: 'Interview' } : student) }
+  }))
+  await page.goto('/')
+  await page.getByRole('link', { name: /Needs placement follow-up/ }).click()
+  await expect(page).toHaveURL(/\/students\?status=unplaced$/)
+  const table = page.getByRole('table')
+  await expect(table.getByText('Interview', { exact: true })).toBeVisible()
+  await expect(table.getByText('Accepted', { exact: true })).toHaveCount(0)
+})
+
+test('opens the filtered checklist and review queues', async ({ page }) => {
+  await page.route('**/api/students?checklist=missing', route => route.fulfill({ json: { students: [MOCK_STUDENTS[1]] } }))
+  await page.route('**/api/logbooks?review=awaiting', route => route.fulfill({ json: [MOCK_LOGBOOKS[0]] }))
+
+  await page.goto('/')
+  await page.getByRole('link', { name: /Students missing required checklist items/ }).click()
+  await expect(page.getByRole('checkbox', { name: 'Missing required checklist items' })).toBeChecked()
+  await expect(page.getByRole('table').getByText('Bob Smith')).toBeVisible()
+  await expect(page.getByRole('table').getByText('Alice Johnson')).toHaveCount(0)
+
+  await page.goBack()
+  await page.getByRole('link', { name: /Logbooks awaiting review/ }).click()
+  await expect(page.getByRole('combobox', { name: 'Filter by status' })).toHaveValue('awaiting')
+  await expect(page.getByRole('table').getByText('Alice Johnson')).toBeVisible()
+  await expect(page.getByRole('table').getByText('Bob Smith')).toHaveCount(0)
+})
+
+test('opens only the reporting week and allows returning to all weeks', async ({ page }) => {
+  await page.route('**/api/logbooks?week_end=2026-05-15', route => route.fulfill({ json: [MOCK_LOGBOOKS[0]] }))
+  await page.route('**/api/logbooks', route => route.fulfill({
+    json: [MOCK_LOGBOOKS[0], { ...MOCK_LOGBOOKS[1], weekEndDate: '2026-05-08', weekNumber: 5 }]
+  }))
+  await page.goto('/')
+  await page.getByRole('figure').getByRole('link', { name: /Current week, ending 15 May 2026/ }).click()
+  await expect(page).toHaveURL(/\/logbooks\?week_end=2026-05-15$/)
+  await expect(page.getByRole('table').getByText('Alice Johnson')).toBeVisible()
+  await expect(page.getByRole('table').getByText('Bob Smith')).toHaveCount(0)
+  await page.getByRole('button', { name: 'Show all weeks' }).click()
+  await expect(page.getByRole('table').getByText('Bob Smith')).toBeVisible()
+})
+
+test('keeps the overview and first follow-up visible at desktop sizes, without mobile overflow', async ({ page }) => {
+  await page.goto('/')
+  for (const width of [1366, 1469, 768, 430, 390, 320]) {
+    await page.setViewportSize({ width, height: width === 1366 ? 768 : 843 })
+    await expect(page.getByRole('heading', { name: 'Dashboard', exact: true })).toBeVisible()
+    await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
+    if (width >= 1366) {
+      await expect(page.getByRole('heading', { name: 'Placement overview' })).toBeInViewport({ ratio: 1 })
+      await expect(page.getByRole('link', { name: /Overdue logbooks from earlier weeks/ })).toBeInViewport({ ratio: 1 })
+      await expect(page.getByRole('heading', { name: 'Weekly logbooks' })).toBeInViewport({ ratio: 1 })
     }
-    for (const heading of ['Placement Status', 'Logbook Status Summary']) {
-      await expect(main.getByRole('heading', { name: heading })).toHaveCSS('font-size', '18px')
-      await expect(main.getByRole('heading', { name: heading })).toHaveCSS('font-weight', '600')
-      await expect(main.getByRole('heading', { name: heading })).toHaveCSS('letter-spacing', 'normal')
-    }
-    await expect(main.getByText('Semester Control', { exact: true })).toHaveCSS('color', 'rgb(203, 213, 225)')
-    for (const name of ['Refresh', 'Export Semester Report']) {
-      await expect(main.getByRole('button', { name, exact: true })).toHaveCSS('font-size', '14px')
-    }
+  }
+})
+
+test('simplifies the phone header, attention rows, and logbook chart', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 843 })
+  await page.goto('/')
+  const header = page.getByRole('main').locator('.dashboard-hero')
+  const semester = header.getByText('Jan-Jun 2026', { exact: true })
+  await expect(semester.locator('..')).toHaveCSS('flex-direction', 'column')
+  await expect(header.getByRole('button', { name: 'Refresh' })).toHaveCSS('min-height', '44px')
+
+  const followUp = page.getByRole('region', { name: 'Needs attention' }).getByRole('link', { name: /Overdue logbooks/ })
+  await expect(followUp).toHaveCSS('border-top-width', '0px')
+  await expect(followUp.getByText('3')).toHaveCSS('order', '1')
+
+  const chart = page.getByRole('figure')
+  await expect(chart.getByRole('list', { name: 'Logbook statuses' }).locator('..')).toHaveCSS('order', '9999')
+  const scroller = chart.locator('.chart-scroll')
+  await expect.poll(() => scroller.evaluate(el => el.scrollWidth > el.clientWidth)).toBe(true)
+  const lastWeek = chart.getByRole('link', { name: /Current week, ending/ })
+  await lastWeek.scrollIntoViewIfNeeded()
+  await expect(lastWeek).toBeInViewport()
+})
+
+test('matches card heights side by side but keeps the weekly card compact when stacked', async ({ page }) => {
+  await page.setViewportSize({ width: 1469, height: 843 })
+  await page.route('**/api/dashboard', route => route.fulfill({ json: { ...MOCK_DASHBOARD, logbookTrend: undefined } }))
+  await page.goto('/')
+  const weekly = page.getByRole('region', { name: 'Weekly logbooks' })
+  const attention = page.getByRole('region', { name: 'Needs attention' })
+  await expect(weekly.getByText(/9.*15 May 2026/)).toBeVisible()
+  await expect(weekly.getByText('1 / 2 submitted')).toBeVisible()
+  await expect(weekly.getByText('1 not yet due')).toBeVisible()
+  const progress = weekly.getByRole('progressbar', { name: 'Weekly logbooks submitted' })
+  await expect(progress).toHaveAttribute('aria-valuenow', '1')
+  await expect(progress).toHaveAttribute('aria-valuemax', '2')
+  await expect(weekly.getByRole('link', { name: 'View this week' })).toBeVisible()
+  await expect(weekly.getByRole('figure')).toHaveCount(0)
+  await expect.poll(async () => {
+    const logbooksBox = await weekly.boundingBox()
+    const attentionBox = await attention.boundingBox()
+    return !!(logbooksBox && attentionBox && Math.abs(logbooksBox.height - attentionBox.height) < 1)
+  }).toBe(true)
+
+  await page.setViewportSize({ width: 390, height: 843 })
+  await expect.poll(async () => {
+    const logbooksBox = await weekly.boundingBox()
+    const attentionBox = await attention.boundingBox()
+    return !!(logbooksBox && attentionBox && logbooksBox.height < attentionBox.height)
+  }).toBe(true)
+})
+
+test('handles loading, an empty reporting week, a failed refresh, and no active semester', async ({ page }) => {
+  let releaseResponse!: () => void
+  const responseReady = new Promise<void>(resolve => { releaseResponse = resolve })
+  await page.route('**/api/dashboard', async route => {
+    await responseReady
+    await route.fulfill({ json: {
+      ...MOCK_DASHBOARD, studentsMissingChecklists: 0, overdueLogbooks: 0, reviewQueue: undefined,
+      logbookSummary: { total: 0, submitted: 0, pending: 0, weekStart: null, weekEnd: null }, logbookTrend: []
+    } })
   })
+  await page.goto('/')
+  await expect(page.getByText('Loading dashboard data…')).toBeVisible()
+  releaseResponse()
+  await expect(page.getByText('No logbooks due this week.')).toBeVisible()
+  await expect(page.getByRole('region', { name: 'Weekly logbooks' }).getByRole('figure')).toHaveCount(0)
+  await expect(page.getByText('No follow-up items right now.')).toBeVisible()
+  await expect(page.getByText('Logbooks awaiting review')).toHaveCount(0)
 
-  test('readable typography fits desktop and mobile widths', async ({ page }) => {
-    for (const width of [1469, 390, 320]) {
-      await page.setViewportSize({ width, height: 843 })
-      const main = page.getByRole('main')
-      await expect(main.getByRole('button', { name: 'Export Semester Report', exact: true })).toBeVisible()
-      await expect(main.getByText('Compliance', { exact: true })).toHaveCSS('font-size', '14px')
-      await expect.poll(
-        () => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
-        { message: `Dashboard should fit a ${width}px viewport after layout transitions` }
-      ).toBe(true)
-    }
-  })
+  await page.route('**/api/dashboard', route => route.fulfill({ status: 500, json: { message: 'Unavailable' } }))
+  await page.getByRole('button', { name: 'Refresh' }).click()
+  await expect(page.getByRole('alert')).toContainText('Showing the last loaded dashboard')
+  await expect(page.getByRole('heading', { name: 'Placement overview' })).toBeVisible()
 
-  test('displays placement percentage', async ({ page }) => {
-    await expect(page.getByText('60%', { exact: true }).first()).toBeVisible()
-  })
-
-  test('fits all desktop dashboard content in one viewport', async ({ page }) => {
-    for (const viewport of [
-      { width: 1366, height: 768 },
-      { width: 1469, height: 843 },
-      { width: 1440, height: 900 },
-      { width: 1920, height: 1080 }
-    ]) {
-      await page.setViewportSize(viewport)
-      const sectionGap = viewport.height >= 850 ? '20px' : '16px'
-      await expect(page.locator('.dashboard-stats')).toHaveCSS('margin-top', sectionGap)
-      await expect(page.locator('.dashboard-overview')).toHaveCSS('margin-top', sectionGap)
-      await expect(page.locator('.dashboard-stat-content').first()).toHaveCSS('padding-left', '20px')
-      await expect(page.locator('.dashboard-logbooks')).toHaveCSS('padding-top', viewport.height >= 850 ? '20px' : '16px')
-      await expect(page.locator('.dashboard-stats')).toHaveCSS('flex-grow', '0')
-      await expect(page.locator('.dashboard > .p-card')).toHaveCSS('flex-grow', '0')
-      for (const collapsed of [false, true]) {
-        if (collapsed) await page.getByRole('button', { name: 'Collapse sidebar', exact: true }).click()
-
-        await expect.poll(() => page.evaluate(() => ({
-          vertical: document.documentElement.scrollHeight <= window.innerHeight,
-          horizontal: document.documentElement.scrollWidth <= window.innerWidth
-        }))).toEqual({ vertical: true, horizontal: true })
-
-        for (const heading of ['Dashboard', 'Placement Status', 'Logbook Status Summary']) {
-          await expect(page.getByRole('heading', { name: heading, exact: true })).toBeInViewport({ ratio: 1 })
-        }
-        await expect(page.getByText('Pending', { exact: true })).toBeInViewport({ ratio: 1 })
-        await expect(page.getByRole('link', { name: 'View semesters' })).toBeInViewport({ ratio: 1 })
-        await expect(page.getByRole('contentinfo')).toBeInViewport({ ratio: 1 })
-        const bottomGap = await page.evaluate(() => {
-          const card = document.querySelector('.dashboard > .p-card')!.getBoundingClientRect()
-          const footer = document.querySelector('footer')!.getBoundingClientRect()
-          return footer.top - card.bottom
-        })
-        expect(bottomGap).toBeLessThanOrEqual(24)
-      }
-      await page.getByRole('button', { name: 'Expand sidebar', exact: true }).click()
-    }
-  })
-
-  test('fits loading, empty, and error states on a laptop screen', async ({ page }) => {
-    await page.setViewportSize({ width: 1366, height: 768 })
-    let releaseResponse!: () => void
-    const responseReady = new Promise<void>(resolve => { releaseResponse = resolve })
-    await page.route('**/api/dashboard', async route => {
-      await responseReady
-      await route.fulfill({ json: { ...MOCK_DASHBOARD, logbookSummary: { total: 0, submitted: 0, late: 0, pending: 0 } } })
-    })
-    await page.reload()
-    await expect(page.getByText('Loading logbook summary…', { exact: true })).toBeVisible()
-    await expect.poll(() => page.evaluate(() => document.documentElement.scrollHeight <= window.innerHeight)).toBe(true)
-    releaseResponse()
-    await expect(page.getByText('No activity data available', { exact: true })).toBeInViewport({ ratio: 1 })
-    await expect.poll(() => page.evaluate(() => document.documentElement.scrollHeight <= window.innerHeight)).toBe(true)
-
-    await page.route('**/api/dashboard', route => route.fulfill({ status: 500, json: { message: 'Unavailable' } }))
-    await page.getByRole('button', { name: 'Refresh', exact: true }).click()
-    await expect(page.getByText('Unable to load logbook summary. Please refresh to try again.', { exact: true })).toBeInViewport({ ratio: 1 })
-    await expect.poll(() => page.evaluate(() => document.documentElement.scrollHeight <= window.innerHeight)).toBe(true)
-  })
-
-  test('shows semester name', async ({ page }) => {
-    await expect(page.locator('text=Jan-Jun 2026')).toBeVisible()
-  })
-
-  test('shows concise placement figures', async ({ page }) => {
-    const placement = page.locator('.dashboard-placement')
-    await expect(placement.getByRole('heading', { name: 'Placement Status' })).toBeVisible()
-    await expect(placement.getByText(`${MOCK_DASHBOARD.placedStudents} of ${MOCK_DASHBOARD.totalStudents} students placed`, { exact: true })).toBeVisible()
-    await expect(placement.getByText(`Needs follow-up: ${MOCK_DASHBOARD.unplacedStudents} unplaced`, { exact: true })).toBeVisible()
-  })
-
-  test('links unplaced students to the filtered directory', async ({ page }) => {
-    const link = page.getByRole('link', { name: 'View unplaced students' })
-    await expect(link).toBeVisible()
-    await expect(link).toHaveAttribute('href', '/students?status=unplaced')
-  })
-
-  test('keeps semester actions close to the active semester', async ({ page }) => {
-    await page.setViewportSize({ width: 1469, height: 843 })
-    const semester = page.locator('.dashboard-semester')
-    await expect(semester.getByRole('heading', { name: /Active:/ })).toBeVisible()
-    await expect(semester.getByRole('link', { name: 'View semesters' })).toHaveAttribute('href', '/semesters')
-    await expect(semester.getByRole('link', { name: 'View students' })).toHaveAttribute('href', '/students')
-  })
-
-  test('displays logbook compliance summary', async ({ page }) => {
-    await expect(page.getByRole('heading', { name: 'Logbook Status Summary' })).toBeVisible()
-    await expect(page.getByText('Compliance', { exact: true })).toBeVisible()
-    await expect(page.getByText('1 / 2 this week')).toBeVisible()
-  })
-
-  test('displays submission status breakdown', async ({ page }) => {
-    for (const [label, count] of [['Submitted', '1'], ['Pending', '1'], ['Overdue', '0']]) {
-      const tile = page.getByText(label, { exact: true }).locator('..')
-      await expect(tile).toBeVisible()
-      await expect(tile).toContainText(count)
-    }
-  })
-
-  test('navigates to students page via sidebar', async ({ page }) => {
-    await page.click('a[href="/students"]')
-    await expect(page).toHaveURL(/\/students$/)
-  })
+  await page.route('**/api/dashboard', route => route.fulfill({ json: { ...MOCK_DASHBOARD, semester: null } }))
+  await page.getByRole('button', { name: 'Refresh' }).click()
+  await expect(page.getByText('No active semester', { exact: true })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Placement overview' })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Export Semester Report' })).toBeDisabled()
 })

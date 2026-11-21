@@ -50,16 +50,29 @@ export const MOCK_STUDENTS = [
 
 export const MOCK_DASHBOARD = {
   semesterName: 'Jan-Jun 2026',
+  semester: { id: 1, startDate: '2026-01-15', endDate: '2026-06-30', registrationOpen: true },
   totalStudents: 50,
   placedStudents: 30,
   unplacedStudents: 20,
   placementPercentage: 60,
-  logbookSummary: { total: 2, submitted: 1, late: 0, pending: 1 },
+  studentsMissingChecklists: 1,
+  overdueLogbooks: 3,
+  reviewQueue: { count: 1 },
+  logbookSummary: { weekStart: '2026-05-09', weekEnd: '2026-05-15', total: 2, submitted: 1, pending: 1 },
+  logbookTrend: [
+    { weekEnd: '2026-04-10', submitted: 2, overdue: 0, pending: 0 },
+    { weekEnd: '2026-04-17', submitted: 1, overdue: 1, pending: 0 },
+    { weekEnd: '2026-04-24', submitted: 2, overdue: 0, pending: 0 },
+    { weekEnd: '2026-05-01', submitted: 0, overdue: 2, pending: 0 },
+    { weekEnd: '2026-05-08', submitted: 1, overdue: 0, pending: 0 },
+    { weekEnd: '2026-05-15', submitted: 1, overdue: 0, pending: 1 },
+  ],
 }
 
 export const MOCK_LOGBOOKS = [
   {
     id: 1,
+    studentId: 'student-1',
     studentName: 'Alice Johnson',
     studentMatric: 'MATRIC001',
     weekNumber: 6,
@@ -72,6 +85,7 @@ export const MOCK_LOGBOOKS = [
   },
   {
     id: 2,
+    studentId: 'student-2',
     studentName: 'Bob Smith',
     studentMatric: 'MATRIC002',
     weekNumber: 6,

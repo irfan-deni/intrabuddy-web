@@ -1,9 +1,42 @@
 <template>
   <section class="app-surface-ui space-y-6 md:space-y-8">
-    <header class="flex flex-col md:flex-row md:items-end justify-between gap-6">
-      <div>
+    <header class="flex flex-wrap items-center justify-between gap-4">
+      <div class="min-w-0">
         <h1 class="text-2xl md:text-4xl font-bold text-slate-800 tracking-tight">Logbooks</h1>
         <p class="mt-2 text-sm font-normal leading-relaxed text-text-muted">Monitor semester logbook compliance and send reminders.</p>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          :disabled="isRefreshing"
+          class="rounded-control inline-flex h-11 w-11 items-center justify-center text-sm font-semibold text-text-muted hover:bg-surface-hover hover:text-text-primary disabled:opacity-50"
+          title="Refresh"
+          aria-label="Refresh"
+          @click="loadLogbooks(true)"
+        >
+          <i aria-hidden="true" :class="['pi pi-refresh', { 'pi-spin': isRefreshing }]"></i>
+        </button>
+        <button
+          type="button"
+          :disabled="isLoading"
+          class="rounded-control inline-flex h-11 items-center justify-center gap-2 whitespace-nowrap border border-surface-control bg-surface px-3 text-sm font-semibold text-text-primary hover:bg-surface-hover disabled:opacity-50 sm:px-4"
+          @click="generatePDF"
+        >
+          <i aria-hidden="true" class="pi pi-file-pdf hidden sm:inline-block"></i>
+          Export PDF
+        </button>
+        <button
+          v-if="statusFilter !== 'awaiting'"
+          type="button"
+          :disabled="isLoading || isRemindingAll"
+          class="rounded-control inline-flex h-11 items-center justify-center gap-2 whitespace-nowrap bg-amber-400 px-3 text-sm font-semibold text-slate-900 hover:bg-amber-500 disabled:opacity-50 sm:px-4"
+          title="Remind students with unsubmitted logbooks in the active semester"
+          @click="remindAll"
+        >
+          <i aria-hidden="true" class="pi pi-bell hidden sm:inline-block"></i>
+          {{ isRemindingAll ? 'Sending reminders…' : 'Remind All' }}
+        </button>
       </div>
     </header>
 
@@ -11,73 +44,49 @@
       {{ errorMessage }}
     </p>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-6" aria-label="Semester logbook summary">
-      <div class="relative overflow-hidden rounded-card bg-emerald-50 border border-emerald-200 shadow-sm p-4 md:p-6 flex flex-col items-center justify-center">
-        <i aria-hidden="true" class="pi pi-check-circle pointer-events-none absolute right-3 top-3 text-3xl text-emerald-700/10"></i>
-        <span class="text-sm font-semibold text-emerald-700 mb-1">Submitted</span>
-        <span class="text-xl md:text-3xl font-black text-emerald-700 tabular-nums">{{ submittedCount }}</span>
-        <span class="mt-1 text-sm text-text-muted text-center">of {{ totalCount }} logbooks this semester</span>
+    <div role="group" aria-label="Logbook filters" class="flex flex-wrap items-center gap-3">
+      <div class="group relative min-w-0 basis-full sm:grow sm:basis-64">
+        <i aria-hidden="true" class="pi pi-search pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-text-muted group-focus-within:text-sky-700"></i>
+        <input
+          v-model="searchQuery"
+          type="search"
+          aria-label="Search by student name or matric number"
+          placeholder="Search by name or matric number..."
+          class="rounded-control h-11 w-full border border-surface-control bg-surface-muted pl-10 pr-3 text-sm text-text-primary placeholder:text-text-muted focus:border-sky-700 focus:ring-1 focus:ring-sky-700"
+        >
       </div>
-      <div class="relative overflow-hidden rounded-card bg-slate-50 border border-slate-200 shadow-sm p-4 md:p-6 flex flex-col items-center justify-center">
-        <i aria-hidden="true" class="pi pi-clock pointer-events-none absolute right-3 top-3 text-3xl text-slate-700/10"></i>
-        <span class="text-sm font-semibold text-slate-700 mb-1">Not submitted</span>
-        <span class="text-xl md:text-3xl font-black text-slate-800 tabular-nums">{{ outstandingCount }}</span>
-        <span class="mt-1 text-sm text-text-muted text-center"><span class="text-amber-800 font-semibold">{{ overdueCount }} overdue</span> · {{ notOverdueCount }} not overdue</span>
+      <div class="flex w-full min-w-0 items-center gap-3 sm:w-auto">
+        <select
+          v-model="statusFilter"
+          aria-label="Filter by status"
+          class="rounded-control h-11 min-w-0 flex-1 cursor-pointer border border-surface-control bg-surface-muted px-3 text-sm text-text-primary focus:border-sky-700 focus:ring-1 focus:ring-sky-700 sm:w-44 sm:flex-none"
+        >
+          <option value="all">All statuses</option>
+          <option value="Submitted">Submitted</option>
+          <option value="Not Submitted">Not submitted</option>
+          <option value="Late">Overdue</option>
+          <option v-if="isSuperCoordinator || statusFilter === 'awaiting'" value="awaiting">Awaiting review</option>
+        </select>
+        <button
+          v-if="!isLoading && !errorMessage && !weekEnding && statusFilter !== 'awaiting' && (overdueCount > 0 || statusFilter === 'Late')"
+          type="button"
+          :aria-pressed="statusFilter === 'Late'"
+          class="rounded-control min-h-11 shrink-0 whitespace-nowrap border border-amber-300 bg-amber-50 px-3 text-sm font-semibold tabular-nums text-amber-900 hover:bg-amber-100 aria-pressed:border-amber-600 aria-pressed:bg-amber-200"
+          @click="statusFilter = statusFilter === 'Late' ? 'all' : 'Late'"
+        >
+          {{ overdueCount }} overdue
+        </button>
       </div>
     </div>
 
     <article ref="logbookPanel" class="rounded-card overflow-hidden bg-surface border border-surface-border shadow-sm relative">
-        <div class="flex flex-col xl:flex-row xl:items-center justify-between gap-4 border-b border-surface-border bg-surface-muted p-4 md:p-6">
-          <h2 class="text-lg font-bold text-slate-800">Logbook Submissions</h2>
-
-          <div class="flex flex-wrap items-center gap-2 md:gap-4 w-full xl:w-auto">
-            <input
-              v-model="searchQuery"
-              type="search"
-              aria-label="Search by student name or matric number"
-              placeholder="Search name or matric number"
-              class="rounded-control w-full sm:w-64 text-sm font-medium border border-surface-control px-3 py-2 bg-surface outline-none focus:border-sky-700 focus:ring-1 focus:ring-sky-700 transition-all"
-            >
-            <select
-              v-model="statusFilter"
-              aria-label="Filter by status"
-              class="rounded-control flex-1 sm:flex-none text-sm font-medium border border-surface-control px-3 py-2 bg-surface-muted outline-none focus:border-sky-700 focus:ring-1 focus:ring-sky-700 transition-all cursor-pointer"
-            >
-              <option value="all">All Statuses</option>
-              <option value="Submitted">Submitted</option>
-              <option value="Not Submitted">Not Submitted</option>
-              <option value="Late">Overdue</option>
-            </select>
-
-            <button
-              class="rounded-control flex-1 sm:flex-none h-9 px-3 bg-amber-400 text-slate-900 text-sm font-semibold hover:brightness-110 transition-all disabled:opacity-30 flex items-center justify-center gap-1"
-              aria-label="Remind all students"
-              :disabled="isLoading || isRemindingAll"
-              @click="remindAll"
-            >
-              <i class="pi pi-bell"></i>
-              <span class="hidden xs:inline">{{ isRemindingAll ? 'Sending...' : 'Remind All' }}</span>
-            </button>
-
-            <button
-              class="rounded-control flex-1 sm:flex-none h-9 px-3 bg-sky-700 text-white text-sm font-semibold hover:bg-sky-800 transition-all flex items-center justify-center gap-1"
-              aria-label="Download logbook PDF"
-              :disabled="isLoading"
-              @click="generatePDF"
-            >
-              <i class="pi pi-file-pdf"></i>
-              <span class="hidden xs:inline">Download PDF</span>
-            </button>
-
-            <button
-              class="rounded-control flex-1 sm:flex-none h-9 px-3 bg-slate-600 text-white text-sm font-semibold hover:brightness-150 transition-all flex items-center justify-center"
-              :disabled="isRefreshing"
-              @click="loadLogbooks(true)"
-            >
-              Refresh
-            </button>
-          </div>
-        </div>
+      <h2 v-if="statusFilter === 'awaiting'" class="border-b border-surface-border bg-surface-muted px-4 py-3 text-base font-bold text-slate-800 md:px-6">
+        Logbooks awaiting review
+      </h2>
+      <div v-if="weekEnding" class="flex flex-wrap items-center gap-3 px-4 py-2 text-sm text-text-muted md:px-6">
+        <span>Week ending {{ weekEnding }}</span>
+        <button type="button" class="font-semibold text-sky-700 underline" @click="weekEnding = ''">Show all weeks</button>
+      </div>
 
       <div v-if="isLoading" class="py-12 md:py-16 text-center text-text-muted">
         <i class="pi pi-spin pi-spinner text-xl text-sky-600 mr-2" />
@@ -86,7 +95,7 @@
 
       <div v-else-if="filteredStudents.length === 0" class="py-12 md:py-16 text-center text-text-muted">
         <i class="pi pi-inbox mb-2 text-3xl block"></i>
-        <span class="text-sm font-medium">{{ searchQuery.trim() || statusFilter !== 'all' ? 'No logbook records match your filters.' : 'No logbook records found for the active semester.' }}</span>
+        <span class="text-sm font-medium">{{ searchQuery.trim() || weekEnding || statusFilter !== 'all' ? 'No logbook records match your filters.' : 'No logbook records found for the active semester.' }}</span>
       </div>
 
       <template v-else>
@@ -94,7 +103,8 @@
           <div v-for="student in paginatedStudents" :key="student.id" class="rounded-card bg-surface-muted border border-surface-border p-4">
             <div class="font-semibold text-slate-800 tracking-tight text-base">{{ student.name }}</div>
             <div class="text-xs font-medium text-text-muted mt-0.5">{{ student.matric || 'No ID' }}</div>
-            <div class="mt-3 flex justify-between gap-3 text-sm text-text-muted">
+            <div v-if="statusFilter === 'awaiting'" class="mt-3 text-sm text-text-muted">{{ student.entries.length }} awaiting review</div>
+            <div v-else class="mt-3 flex justify-between gap-3 text-sm text-text-muted">
               <span>Submitted: {{ student.submitted }} / {{ student.entries.length }}</span>
               <span>Not submitted: {{ student.outstanding }}</span>
             </div>
@@ -108,8 +118,8 @@
               <tr class="text-sm font-semibold text-text-muted bg-surface-muted border-b border-surface-border">
                 <th class="w-14 px-4 py-6 text-center">#</th>
                 <th class="px-8 py-6">Student</th>
-                <th class="px-8 py-6">Progress</th>
-                <th class="px-8 py-6">Not submitted</th>
+                <th class="px-8 py-6">{{ statusFilter === 'awaiting' ? 'Awaiting review' : 'Progress' }}</th>
+                <th v-if="statusFilter !== 'awaiting'" class="px-8 py-6">Not submitted</th>
                 <th class="px-8 py-6 text-right w-32">Actions</th>
               </tr>
             </thead>
@@ -120,8 +130,8 @@
                     <div class="font-semibold text-slate-800 tracking-tight text-sm">{{ student.name }}</div>
                     <div class="text-xs font-medium text-text-muted mt-1">{{ student.matric || 'No ID' }}</div>
                   </td>
-                <td class="px-8 py-6 font-medium text-slate-800 tabular-nums">{{ student.submitted }} / {{ student.entries.length }} submitted</td>
-                <td class="px-8 py-6 font-medium text-text-muted tabular-nums">{{ student.outstanding }}</td>
+                 <td class="px-8 py-6 font-medium text-slate-800 tabular-nums">{{ statusFilter === 'awaiting' ? student.entries.length : `${student.submitted} / ${student.entries.length} submitted` }}</td>
+                 <td v-if="statusFilter !== 'awaiting'" class="px-8 py-6 font-medium text-text-muted tabular-nums">{{ student.outstanding }}</td>
                 <td class="px-8 py-6 text-right">
                   <button type="button" class="rounded-control whitespace-nowrap h-9 px-3 bg-sky-700 text-white text-sm font-semibold hover:bg-sky-800 transition-all" @click="openStudent(student.id, $event)">View logbooks</button>
                 </td>
@@ -277,15 +287,23 @@ type LogbookEntry = {
 
 const { isSuperCoordinator } = useCoordinatorPrivileges()
 
+const route = useRoute()
+const statusFilter = ref(route.query.review === 'awaiting' ? 'awaiting' : route.query.status === 'Late' ? 'Late' : 'all')
+const weekEnding = ref(typeof route.query.week_end === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(route.query.week_end) ? route.query.week_end : '')
+const logbooksUrl = () => {
+  const params = new URLSearchParams()
+  if (statusFilter.value === 'awaiting') params.set('review', 'awaiting')
+  if (weekEnding.value) params.set('week_end', weekEnding.value)
+  return params.size ? `/api/logbooks?${params}` : '/api/logbooks'
+}
 const pageCache = usePageCache()
-const cachedLogbooks = pageCache.read<LogbookEntry[]>('/api/logbooks')
+const cachedLogbooks = pageCache.read<LogbookEntry[]>(logbooksUrl())
 const logbooks = ref<LogbookEntry[]>(cachedLogbooks || [])
 const isLoading = ref(!cachedLogbooks)
 const isRefreshing = ref(false)
 const isRemindingAll = ref(false)
 const errorMessage = ref('')
 
-const statusFilter = ref('all')
 const searchQuery = ref('')
 const pageSize = ref(15)
 const pageSizeOptions = [10, 15, 20, 50]
@@ -306,9 +324,10 @@ const openStudent = (id: string, event: MouseEvent) => {
   drawerVisible.value = true
 }
 
-watch([statusFilter, searchQuery], () => {
+watch([statusFilter, searchQuery, weekEnding], () => {
   currentPage.value = 1
 })
+watch(logbooksUrl, () => { void loadLogbooks(true) })
 
 watch(pageSize, () => {
   currentPage.value = 1
@@ -316,20 +335,22 @@ watch(pageSize, () => {
 
 const loadLogbooks = async (force = false) => {
   isRefreshing.value = true
-  const url = '/api/logbooks'
+  const url = logbooksUrl()
   const cached = pageCache.read<LogbookEntry[]>(url)
-  if (cached) logbooks.value = cached
+  logbooks.value = cached || []
   isLoading.value = !cached
   errorMessage.value = ''
 
   try {
     const data = await pageCache.fetch<LogbookEntry[]>(url, { force })
-    logbooks.value = data || []
+    if (logbooksUrl() === url) logbooks.value = data || []
   } catch (error: unknown) {
-    errorMessage.value = error instanceof Error ? error.message : 'Unable to load logbooks.'
+    if (logbooksUrl() === url) errorMessage.value = error instanceof Error ? error.message : 'Unable to load logbooks.'
   } finally {
-    isLoading.value = false
-    isRefreshing.value = false
+    if (logbooksUrl() === url) {
+      isLoading.value = false
+      isRefreshing.value = false
+    }
   }
 }
 
@@ -358,7 +379,7 @@ const markSubmitted = async (entry: LogbookEntry) => {
   entry.isSubmitting = true
   try {
     await $fetch(`/api/logbooks/${entry.id}/submit`, { method: 'POST' })
-    pageCache.invalidate('/api/logbooks')
+    pageCache.invalidate(['/api/logbooks', logbooksUrl(), '/api/dashboard'])
     entry.isSubmitted = true
     entry.submittedAt = new Date().toISOString()
     entry.statusLabel = 'Submitted'
@@ -383,28 +404,23 @@ const remindAll = async () => {
   }
 }
 
-const filteredLogbooks = computed(() => {
+const searchedLogbooks = computed(() => {
   const query = searchQuery.value.trim().toLowerCase()
-  return logbooks.value.filter(entry => {
-    const matchesStatus = statusFilter.value === 'all' || entry.statusLabel === statusFilter.value
-    const matchesSearch = !query || entry.studentName.toLowerCase().includes(query) || (entry.studentMatric || '').toLowerCase().includes(query)
-    return matchesStatus && matchesSearch
-  })
+  return !query ? logbooks.value : logbooks.value.filter(entry =>
+    entry.studentName.toLowerCase().includes(query) || (entry.studentMatric || '').toLowerCase().includes(query)
+  )
 })
 
-const totalCount = computed(() => logbooks.value.length)
+const filteredLogbooks = computed(() => searchedLogbooks.value.filter(entry => {
+  const matchesStatus = ['all', 'awaiting'].includes(statusFilter.value) || entry.statusLabel === statusFilter.value
+  return matchesStatus && (!weekEnding.value || entry.weekEndDate === weekEnding.value)
+}))
 
-const submittedCount = computed(() =>
-  logbooks.value.filter(e => e.statusLabel === 'Submitted').length
-)
-
-const overdueCount = computed(() => logbooks.value.filter(e => e.statusLabel === 'Late').length)
-const notOverdueCount = computed(() => logbooks.value.filter(e => e.statusLabel === 'Not Submitted').length)
-const outstandingCount = computed(() => overdueCount.value + notOverdueCount.value)
+const overdueCount = computed(() => searchedLogbooks.value.filter(entry => entry.statusLabel === 'Late').length)
 
 const students = computed(() => {
   const grouped = new Map<string, { id: string, name: string, matric: string, entries: LogbookEntry[], submitted: number, outstanding: number }>()
-  for (const entry of logbooks.value) {
+  for (const entry of weekEnding.value || statusFilter.value === 'Late' ? filteredLogbooks.value : logbooks.value) {
     let student = grouped.get(entry.studentId)
     if (!student) {
       student = { id: entry.studentId, name: entry.studentName, matric: entry.studentMatric, entries: [], submitted: 0, outstanding: 0 }

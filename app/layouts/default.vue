@@ -6,11 +6,9 @@
     >
       <div class="shrink-0 flex min-h-20 items-center gap-2 border-b border-white/10 px-4 py-4" :class="collapsed ? 'justify-center' : ''">
         <div v-show="!collapsed" class="sidebar-brand flex min-w-0 flex-1 items-center gap-3">
-          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white text-slate-900">
-            <i class="pi pi-graduation-cap text-lg"></i>
-          </div>
+          <img src="/icons/icon-128.png" alt="" width="40" height="40" class="h-10 w-10 shrink-0 rounded-lg">
           <div class="sidebar-copy flex flex-col">
-            <span class="text-sm font-bold tracking-wide text-white whitespace-nowrap">INTRA BUDDY</span>
+            <span class="text-sm font-bold tracking-wide text-white whitespace-nowrap">IntraBuddy</span>
             <span class="mt-0.5 text-xs font-medium text-slate-400 whitespace-nowrap">Coordinator portal</span>
           </div>
         </div>
@@ -79,11 +77,9 @@
     >
       <div class="flex min-h-20 shrink-0 items-center justify-between gap-2 border-b border-white/10 px-4 py-4">
         <div class="flex items-center gap-3">
-          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white text-slate-900">
-            <i class="pi pi-graduation-cap text-lg"></i>
-          </div>
+          <img src="/icons/icon-128.png" alt="" width="40" height="40" class="h-10 w-10 shrink-0 rounded-lg">
           <div class="flex flex-col">
-            <span class="text-sm font-bold tracking-wide text-white whitespace-nowrap">INTRA BUDDY</span>
+            <span class="text-sm font-bold tracking-wide text-white whitespace-nowrap">IntraBuddy</span>
             <span class="mt-0.5 text-xs font-medium text-slate-400">Coordinator portal</span>
           </div>
         </div>
@@ -205,9 +201,11 @@
         <slot />
       </main>
 
-      <footer class="p-4 lg:p-12 border-t border-surface-border flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-text-muted text-center sm:text-left">
-        <span>&copy; 2026 INTRA Buddy Management System</span>
-        <span>Version 2.4.0</span>
+      <footer class="border-t border-surface-border">
+        <div class="footer-content mx-auto w-full max-w-[1600px] px-4 py-4 lg:px-12 lg:py-3 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-text-muted text-center sm:text-left">
+          <span>&copy; 2026 INTRA Buddy Management System</span>
+          <span>Version 2.4.0</span>
+        </div>
       </footer>
     </div>
   </div>
@@ -375,14 +373,15 @@ const handleAccountMenuKeydown = (event: KeyboardEvent) => {
 
 <style>
 @media (min-width: 1024px) {
-  .dashboard-layout main {
-    padding: 1.25rem 1.5rem;
-    display: flex;
-    flex-direction: column;
+  .dashboard-layout main,
+  .dashboard-layout .footer-content {
+    padding-inline: 1.5rem;
   }
 
-  .dashboard-layout footer {
-    padding: 0.75rem 1.5rem;
+  .dashboard-layout main {
+    padding-block: 1.25rem;
+    display: flex;
+    flex-direction: column;
   }
 }
 

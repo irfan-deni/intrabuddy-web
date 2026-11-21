@@ -1,9 +1,24 @@
-import { serverSupabaseClient } from '~~/server/utils/supabase-server'
+import { serverSupabaseClient, serverSupabaseServiceRole } from '~~/server/utils/supabase-server'
+import { logbookReviewQueue } from '~~/server/utils/logbook-review-queue'
 import type { Database } from '~/types/supabase'
 
 export default defineEventHandler(async (event) => {
   try {
-    await requireCoordinator(event)
+    const query = getQuery(event)
+    const awaitingReview = query.review === 'awaiting'
+    if (awaitingReview) await requireSuperCoordinator(event)
+    else await requireCoordinator(event)
+
+    const weekEnd = query.week_end
+    if (weekEnd !== undefined) {
+      if (typeof weekEnd !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(weekEnd)) {
+        throw createError({ statusCode: 400, statusMessage: 'Invalid reporting week' })
+      }
+      const date = new Date(`${weekEnd}T00:00:00Z`)
+      if (!Number.isFinite(date.getTime()) || date.toISOString().slice(0, 10) !== weekEnd || weekEnd.startsWith('0000-')) {
+        throw createError({ statusCode: 400, statusMessage: 'Invalid reporting week' })
+      }
+    }
 
     const supabase = await serverSupabaseClient<Database>(event)
     
@@ -21,7 +36,9 @@ export default defineEventHandler(async (event) => {
 
     // 2. Fetch Weekly Logbook Tracking records
     // We join with the 'users' table to get student names
-    const { data: logbooks, error: logbooksError } = await supabase
+    const logbookQuery = awaitingReview
+      ? logbookReviewQueue(serverSupabaseServiceRole<Database>(event), activeSemester.id)
+      : supabase
       .from('weekly_logbook_tracking')
       .select(`
         id,
@@ -38,7 +55,10 @@ export default defineEventHandler(async (event) => {
       `)
       .eq('semester_id', activeSemester.id)
       .eq('users.role', 'student')
-      .order('week_end_date', { ascending: false })
+    // Filter before PostgREST applies its row limit, so earlier weeks do not
+    // disappear behind newer records when opened from the dashboard.
+    if (weekEnd) logbookQuery.eq('week_end_date', weekEnd)
+    const { data: logbooks, error: logbooksError } = await logbookQuery.order('week_end_date', { ascending: awaitingReview }).order('id')
 
     if (logbooksError) {
       console.error('[Logbooks API Error]:', logbooksError)
@@ -88,7 +108,6 @@ export default defineEventHandler(async (event) => {
       }
     })
 
-    const query = getQuery(event)
     const statusFilter = typeof query.status === 'string' ? query.status : 'all'
 
     if (statusFilter !== 'all') {

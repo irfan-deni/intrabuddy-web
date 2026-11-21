@@ -2,7 +2,6 @@ import { test, expect } from '@playwright/test'
 import { setupPage } from './helpers'
 
 const pages = [
-  { path: '/', title: 'Dashboard', subtitle: 'Real-time overview of the active semester.' },
   { path: '/students', title: 'Student Directory', subtitle: 'Manage student placements, milestones, and records.' },
   { path: '/logbooks', title: 'Logbooks', subtitle: 'Monitor semester logbook compliance and send reminders.' },
   { path: '/checklists', title: 'Checklists', subtitle: "Manage the requirement template and track every student's completion." },
@@ -23,7 +22,7 @@ test.describe('Consistent page headers', () => {
       const title = header.getByRole('heading', { level: 1, name: entry.title, exact: true })
       const subtitle = header.getByText(entry.subtitle, { exact: true })
 
-      await expect(title).toHaveCSS('font-size', entry.path === '/' ? '30px' : '36px')
+      await expect(title).toHaveCSS('font-size', '36px')
       await expect(title).toHaveCSS('font-weight', '700')
       await expect(title).toHaveCSS('text-transform', 'none')
       await expect(subtitle).toHaveCSS('font-size', '14px')
@@ -42,7 +41,7 @@ test.describe('Consistent page headers', () => {
 
       for (const width of [1469, 768, 390, 320]) {
         await page.setViewportSize({ width, height: 843 })
-        await expect(title).toHaveCSS('font-size', width >= 1024 && entry.path === '/' ? '30px' : width >= 768 ? '36px' : '24px')
+        await expect(title).toHaveCSS('font-size', width >= 768 ? '36px' : '24px')
         await expect.poll(() => header.evaluate(element => {
           const viewport = window.innerWidth
           return [element, ...element.querySelectorAll('h1, p, input, select, button')].flatMap(child => {

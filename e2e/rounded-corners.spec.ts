@@ -6,16 +6,14 @@ test.beforeEach(async ({ page }) => {
   await setupPage(page)
 })
 
-test('dashboard cards use shared radii without changing circular graphics', async ({ page }) => {
+test('dashboard banner, cards, and controls use shared radii', async ({ page }) => {
   await page.goto('/')
   await page.waitForLoadState('networkidle')
   const main = page.getByRole('main')
   const cards = main.locator('.rounded-card')
-  await expect(cards).toHaveCount(7)
+  await expect(cards).toHaveCount(6)
   for (const card of await cards.all()) await expect(card).toHaveCSS('border-radius', '12px')
   for (const button of await main.locator('header button').all()) await expect(button).toHaveCSS('border-radius', '8px')
-  await expect(main.locator('.dashboard-placement-chart svg circle')).toHaveCount(2)
-  await expect(main.locator('.rounded-full.h-4')).toHaveCSS('border-radius', '9999px')
   await expect(page.getByRole('complementary')).toHaveCSS('border-radius', '0px')
 })
 

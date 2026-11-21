@@ -3,10 +3,11 @@ import { createClient } from '@supabase/supabase-js'
 import { createError, type H3Event } from 'h3'
 import { positiveId } from '../server/utils/validation'
 
-const mocks = vi.hoisted(() => ({ client: vi.fn() }))
+const mocks = vi.hoisted(() => ({ client: vi.fn(), service: vi.fn(), user: vi.fn() }))
 vi.mock('../server/utils/supabase-server', () => ({
   serverSupabaseClient: mocks.client,
-  serverSupabaseUser: vi.fn().mockResolvedValue({ id: 'coordinator' })
+  serverSupabaseServiceRole: mocks.service,
+  serverSupabaseUser: mocks.user
 }))
 
 let query: Record<string, string>
@@ -28,11 +29,15 @@ beforeEach(() => {
     }
   })
   mocks.client.mockReturnValue(client)
+  mocks.service.mockReturnValue(client)
+  mocks.service.mockClear()
+  mocks.user.mockResolvedValue({ id: 'coordinator', email: 'ordinary@example.com' })
   vi.stubGlobal('defineEventHandler', (handler: unknown) => handler)
   vi.stubGlobal('requireCoordinator', vi.fn().mockResolvedValue({ id: 'coordinator' }))
   vi.stubGlobal('getQuery', () => query)
   vi.stubGlobal('positiveId', positiveId)
   vi.stubGlobal('createError', createError)
+  vi.stubGlobal('useRuntimeConfig', () => ({ superCoordinatorEmails: 'admin@example.com' }))
 })
 
 afterEach(() => vi.unstubAllGlobals())
@@ -44,10 +49,13 @@ describe('joined student directory', () => {
     if (semester) query.semester_id = semester
     respond = () => json([
       { id: 'one', full_name: 'Student One', student_id: 'S1', email: 'one@example.com', phone_number: null,
-        applications: [{ status: 'Rejected' }, { status: 'Interview' }, { status: 'Accepted' }],
+        enrollment: [{ semester_id: 7 }],
+        applications: [{ status: 'Rejected', semester_id: 7 }, { status: 'Interview', semester_id: 7 }, { status: 'Accepted', semester_id: 7 }],
         checklists: [{ is_completed: true }, { is_completed: false }], documents: [{ id: 1 }, { id: 2 }] },
       { id: 'two', full_name: 'Student Two', student_id: 'S2', email: 'two@example.com', phone_number: null,
-        applications: [{ status: 'Rejected' }, { status: 'Interview' }], checklists: [], documents: [] },
+        enrollment: [{ semester_id: 7 }],
+        applications: [{ status: 'Rejected', semester_id: 7 }, { status: 'Interview', semester_id: 7 },
+          ...(semester !== 'all' ? [{ status: 'Accepted', semester_id: 8 }] : [])], checklists: [], documents: [] },
       { id: 'three', full_name: 'Student Three', student_id: null, email: 'three@example.com', phone_number: null,
         applications: [], checklists: [], documents: [] }
     ])
@@ -73,23 +81,94 @@ describe('joined student directory', () => {
     expect(await handler({} as H3Event)).toEqual({ students: [], totalCount: 0 })
     expect(requests).toHaveLength(1)
   })
+
+  it('filters by missing required checklist items, including records never started', async () => {
+    query.checklist = 'missing'
+    respond = (url) => {
+      if (url.pathname.endsWith('/checklist_templates')) {
+        expect(url.searchParams.get('semester_id')).toBe('in.(7)')
+        expect(url.searchParams.get('required')).toBe('eq.true')
+        return json([{ id: 9, semester_id: 7 }])
+      }
+      return json([
+        { id: 'started', enrollment: [{ semester_id: 7 }], checklists: [{ checklist_item_id: 9, is_completed: false }] },
+        { id: 'not-started', enrollment: [{ semester_id: 7 }], checklists: [{ checklist_item_id: 8, is_completed: true }] },
+        { id: 'finished', enrollment: [{ semester_id: 7 }], checklists: [{ checklist_item_id: 9, is_completed: true }] }
+      ])
+    }
+    const { default: handler } = await import('../server/api/students.get')
+    const result = await handler({} as H3Event)
+    expect(result.students.map(student => student.id)).toEqual(['started', 'not-started'])
+  })
 })
 
 describe('combined dashboard aggregate', () => {
+  const summary = { semesterName: 'Active Semester', semester: { id: 7 }, totalStudents: 3, placedStudents: 2,
+    unplacedStudents: 1, placementPercentage: 67, studentsMissingChecklists: 1, overdueLogbooks: 3,
+    logbookSummary: { weekStart: '2026-05-09', weekEnd: '2026-05-15', total: 10, submitted: 4, pending: 6 } }
+
   it('loads placement statistics and logbook totals with one RPC', async () => {
-    const summary = { semesterName: 'Active Semester', totalStudents: 3, placedStudents: 2,
-      unplacedStudents: 1, placementPercentage: 67, logbookSummary: { total: 10, submitted: 4, late: 3, pending: 3 } }
     respond = () => json(summary)
     const { default: handler } = await import('../server/api/dashboard.get')
     expect(await handler({} as H3Event)).toEqual(summary)
     expect(requests).toHaveLength(1)
     expect(requests[0]!.url.pathname).toBe('/rest/v1/rpc/get_coordinator_dashboard')
+    expect(mocks.service).not.toHaveBeenCalled()
+  })
+
+  it('only adds review counts for a Super Coordinator and counts submitted records without a review', async () => {
+    mocks.user.mockResolvedValue({ id: 'coordinator', email: 'admin@example.com' })
+    respond = (url, init) => {
+      if (url.pathname.includes('/rpc/')) return json(summary)
+      expect(init?.method).toBe('HEAD')
+      expect(url.searchParams.get('semester_id')).toBe('eq.7')
+      expect(url.searchParams.get('is_submitted')).toBe('eq.true')
+      expect(url.searchParams.get('review')).toBe('is.null')
+      return new Response(null, { headers: { 'Content-Range': '*/2' } })
+    }
+    const { default: handler } = await import('../server/api/dashboard.get')
+    expect(await handler({} as H3Event)).toEqual({ ...summary, reviewQueue: { count: 2 } })
+  })
+
+  it('keeps the overview available when the review queue fails', async () => {
+    mocks.user.mockResolvedValue({ id: 'coordinator', email: 'admin@example.com' })
+    respond = (url) => url.pathname.includes('/rpc/') ? json(summary) : new Response(null, { status: 400 })
+    const { default: handler } = await import('../server/api/dashboard.get')
+    expect(await handler({} as H3Event)).toEqual({ ...summary, reviewQueue: { count: null } })
+  })
+
+  it('does not mistake an outdated dashboard RPC for an inactive semester', async () => {
+    respond = () => json({ semesterName: 'Active Semester', totalStudents: 3 })
+    const { default: handler } = await import('../server/api/dashboard.get')
+    await expect(handler({} as H3Event)).rejects.toMatchObject({ statusCode: 500 })
   })
 
   it('reports RPC failures instead of displaying fabricated statistics', async () => {
     respond = () => new Response(JSON.stringify({ message: 'Database unavailable' }), { status: 500 })
     const { default: handler } = await import('../server/api/dashboard.get')
     await expect(handler({} as H3Event)).rejects.toMatchObject({ statusCode: 500 })
+  })
+})
+
+describe('reporting week drill-down', () => {
+  it('filters by the requested deadline before loading tracking records', async () => {
+    query.week_end = '2026-05-15'
+    respond = (url) => {
+      if (url.pathname.endsWith('/semesters')) return json([{ id: 7 }])
+      expect(url.searchParams.get('week_end_date')).toBe('eq.2026-05-15')
+      expect(url.searchParams.get('semester_id')).toBe('eq.7')
+      return json([])
+    }
+    const { default: handler } = await import('../server/api/logbooks.get')
+    expect(await handler({} as H3Event)).toEqual([])
+    expect(requests).toHaveLength(2)
+  })
+
+  it('rejects invalid dates before querying tracking records', async () => {
+    query.week_end = '2026-02-31'
+    const { default: handler } = await import('../server/api/logbooks.get')
+    await expect(handler({} as H3Event)).rejects.toMatchObject({ statusCode: 400 })
+    expect(requests).toHaveLength(0)
   })
 })
 

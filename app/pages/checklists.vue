@@ -1,59 +1,33 @@
 <template>
   <div class="app-surface-ui space-y-6 md:space-y-8">
-    <header class="flex flex-col md:flex-row flex-wrap md:items-end justify-between gap-6">
+    <header class="flex flex-wrap items-center justify-between gap-4">
       <div>
         <h1 class="text-2xl md:text-4xl font-bold text-slate-800 tracking-tight">Checklists</h1>
         <p class="mt-2 text-sm font-normal leading-relaxed text-text-muted">Manage the requirement template and track every student's completion.</p>
       </div>
-      <div class="flex flex-wrap items-center gap-3">
+      <div class="grid w-full gap-1.5 sm:w-56">
+        <label for="checklist-semester" class="text-sm font-semibold text-text-muted">Semester</label>
         <select
+          id="checklist-semester"
           v-model.number="selectedSemesterId"
-          class="rounded-control bg-surface-muted border border-surface-control text-text-primary px-4 py-3 text-[10px] font-black uppercase tracking-widest outline-none focus:border-sky-700 focus:ring-1 focus:ring-sky-700 cursor-pointer shadow-sm min-w-0 sm:min-w-[190px] disabled:opacity-50"
+          class="rounded-control h-11 w-full min-w-0 cursor-pointer border border-surface-control bg-surface-muted px-3 text-sm font-normal text-text-primary focus:border-sky-700 focus:ring-1 focus:ring-sky-700 disabled:opacity-50"
           :disabled="!semesters.length || isLoading"
-          aria-label="Semester"
           @change="onSemesterChange"
         >
           <option v-for="semester in semesters" :key="semester.id" :value="semester.id">
             {{ semester.name }}{{ semester.is_active ? ' (Active)' : '' }}
           </option>
         </select>
-        <button
-          class="bg-sky-700 text-white px-4 py-3 rounded-control text-sm font-semibold whitespace-nowrap hover:bg-sky-800 transition-all flex items-center gap-2"
-          title="Export Non-Compliance Report"
-          aria-label="Export Non-Compliance Report"
-          @click="downloadNonComplianceReport"
-        >
-          <i class="pi pi-file-pdf"></i>
-          Export PDF
-        </button>
-        <button
-          v-if="isSuperCoordinator"
-          class="bg-surface-muted border border-surface-control text-text-muted px-4 py-3 rounded-control text-sm font-semibold whitespace-nowrap hover:bg-surface-hover transition-all flex items-center gap-2 disabled:opacity-50"
-          :disabled="isImporting || !selectedSemesterId"
-          @click="importTemplate"
-        >
-          <i class="pi pi-copy"></i>
-          {{ isImporting ? 'Importing...' : 'Import Template' }}
-        </button>
-        <button
-          v-if="isSuperCoordinator"
-          class="bg-sky-700 text-white px-4 py-3 rounded-control text-sm font-semibold whitespace-nowrap hover:bg-sky-800 transition-all flex items-center gap-2 disabled:opacity-50"
-          :disabled="!selectedSemesterId"
-          @click="openAddForm"
-        >
-          <i class="pi pi-plus"></i>
-          New Requirement
-        </button>
       </div>
     </header>
 
-    <div class="flex flex-wrap items-center justify-between gap-3">
-      <div class="inline-flex rounded-control border border-surface-border bg-surface p-1 shadow-sm" role="tablist" aria-label="Checklist view">
+    <div class="flex flex-wrap items-center justify-between gap-3 border-b border-surface-border pb-3">
+      <div class="rounded-control grid w-full grid-cols-2 gap-1 border border-surface-border bg-surface-muted p-1 sm:w-auto" role="tablist" aria-label="Checklist view">
         <button
           type="button"
           role="tab"
           :aria-selected="viewMode === 'templates'"
-          class="rounded-control px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-colors"
+          class="rounded-control min-h-11 px-3 text-sm font-semibold transition-colors sm:px-4"
           :class="viewMode === 'templates' ? 'bg-slate-900 text-white' : 'text-text-muted hover:text-slate-800'"
           @click="setView('templates')"
         >
@@ -63,16 +37,43 @@
           type="button"
           role="tab"
           :aria-selected="viewMode === 'students'"
-          class="rounded-control px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-colors"
+          class="rounded-control min-h-11 px-3 text-sm font-semibold transition-colors sm:px-4"
           :class="viewMode === 'students' ? 'bg-slate-900 text-white' : 'text-text-muted hover:text-slate-800'"
           @click="setView('students')"
         >
           Student Progress
         </button>
       </div>
-      <p v-if="selectedSemesterLabel" class="text-[10px] font-black uppercase tracking-widest text-text-muted">
-        Viewing: <span class="text-slate-800">{{ selectedSemesterLabel }}</span>
-      </p>
+      <div v-if="viewMode === 'templates' && isSuperCoordinator" class="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          class="rounded-control inline-flex h-11 items-center gap-2 whitespace-nowrap border border-surface-control bg-surface px-3 text-sm font-semibold text-text-primary hover:bg-surface-hover disabled:opacity-50 sm:px-4"
+          :disabled="isImporting || !selectedSemesterId"
+          @click="importTemplate"
+        >
+          <i aria-hidden="true" class="pi pi-copy hidden sm:inline-block"></i>
+          {{ isImporting ? 'Importing...' : 'Import Template' }}
+        </button>
+        <button
+          type="button"
+          class="rounded-control inline-flex h-11 items-center gap-2 whitespace-nowrap bg-sky-700 px-3 text-sm font-semibold text-white hover:bg-sky-800 disabled:opacity-50 sm:px-4"
+          :disabled="!selectedSemesterId"
+          @click="openAddForm"
+        >
+          <i aria-hidden="true" class="pi pi-plus hidden sm:inline-block"></i>
+          New Requirement
+        </button>
+      </div>
+      <button
+        v-if="viewMode === 'students'"
+        type="button"
+        class="rounded-control inline-flex min-h-11 items-center gap-2 border border-surface-control bg-surface px-3 text-sm font-semibold text-text-primary hover:bg-surface-hover disabled:opacity-50 sm:px-4"
+        :disabled="!selectedSemesterId"
+        @click="downloadNonComplianceReport"
+      >
+        <i aria-hidden="true" class="pi pi-file-pdf"></i>
+        Export Non-Compliance PDF
+      </button>
     </div>
 
     <div v-if="errorMessage" class="rounded-card p-4 bg-rose-50 border border-rose-100 text-rose-700 text-[10px] font-black uppercase tracking-widest flex items-center justify-between gap-4">
@@ -86,54 +87,61 @@
 
     <!-- Requirement templates -->
     <template v-if="viewMode === 'templates'">
-      <div class="flex flex-col lg:flex-row lg:items-center gap-3">
-        <div class="relative group flex-1 min-w-0">
-          <i class="pi pi-search absolute left-4 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-sky-700 transition-colors"></i>
+      <div role="group" aria-label="Requirement filters" class="flex flex-wrap items-center gap-3">
+        <div class="relative group min-w-0 basis-full md:grow md:basis-64">
+          <i aria-hidden="true" class="pi pi-search pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-text-muted group-focus-within:text-sky-700"></i>
           <input
             v-model="searchQuery"
-            type="text"
+            type="search"
+            aria-label="Search requirements"
             placeholder="Search requirements..."
-            class="w-full pl-12 pr-4 py-3 bg-surface-muted border border-surface-control text-text-primary placeholder:text-text-muted rounded-control outline-none focus:border-sky-700 focus:ring-1 focus:ring-sky-700 transition-all text-[10px] font-black uppercase tracking-widest shadow-sm"
+            class="rounded-control h-11 w-full border border-surface-control bg-surface-muted pl-10 pr-3 text-sm text-text-primary placeholder:text-text-muted focus:border-sky-700 focus:ring-1 focus:ring-sky-700"
           >
         </div>
-        <div class="inline-flex flex-wrap rounded-control border border-surface-border bg-surface-muted p-1 gap-1">
+        <div class="inline-flex flex-wrap gap-1">
           <button
             v-for="option in requiredFilterOptions"
             :key="option.value"
             type="button"
-            class="rounded-control px-3 py-1.5 text-[9px] font-black uppercase tracking-widest transition-colors"
-            :class="requiredFilter === option.value ? 'bg-slate-900 text-white' : 'text-text-muted hover:text-slate-800'"
+            class="rounded-control min-h-11 px-2.5 text-sm font-semibold transition-colors sm:px-3"
+            :class="requiredFilter === option.value ? 'bg-slate-900 text-white' : 'text-text-muted hover:bg-surface-hover hover:text-text-primary'"
+            :aria-pressed="requiredFilter === option.value"
             @click="requiredFilter = option.value"
           >
             {{ option.label }} ({{ filterCounts[option.value] }})
           </button>
         </div>
-        <div v-if="isSuperCoordinator" class="flex items-center gap-2">
+        <p v-if="filtersActive && isSuperCoordinator && templates.length" class="basis-full text-sm text-text-muted">
+          Clear the search and filter to reorder requirements.
+        </p>
+      </div>
+
+      <article class="rounded-card bg-surface border border-surface-border shadow-sm relative overflow-hidden">
+        <div
+          v-if="isSuperCoordinator && (filteredTemplates.length || selectedIds.length)"
+          role="group"
+          aria-label="Requirement selection"
+          class="flex flex-wrap items-center justify-end gap-2 border-b border-surface-border px-4 py-2"
+          :class="{ 'md:hidden': !selectedIds.length }"
+        >
           <button
             type="button"
-            class="rounded-control border border-surface-control px-3 py-2 text-[9px] font-black uppercase tracking-widest text-text-muted hover:text-slate-800 hover:bg-surface-hover transition-colors disabled:opacity-50"
+            class="rounded-control min-h-11 border border-surface-control px-3 text-sm font-semibold text-text-primary hover:bg-surface-hover disabled:opacity-50 md:hidden"
             :disabled="!filteredTemplates.length"
             @click="toggleSelectAll"
           >
-            {{ allFilteredSelected ? 'Clear' : 'Select all' }}
+            {{ allFilteredSelected ? (filtersActive ? 'Clear visible selection' : 'Clear selection') : (filtersActive ? 'Select all visible' : 'Select all') }}
           </button>
           <button
             v-if="selectedIds.length"
             type="button"
-            class="rounded-control bg-rose-700 text-white px-3 py-2 text-[9px] font-black uppercase tracking-widest hover:bg-rose-800 transition-colors disabled:opacity-50"
+            class="rounded-control min-h-11 bg-rose-700 px-3 text-sm font-semibold text-white hover:bg-rose-800 disabled:opacity-50"
             :disabled="isBulkDeleting"
             @click="deleteSelected"
           >
-            {{ isBulkDeleting ? 'Deleting...' : `Delete (${selectedIds.length})` }}
+            {{ isBulkDeleting ? 'Deleting...' : `Delete selected (${selectedIds.length})` }}
           </button>
         </div>
-      </div>
-
-      <p v-if="filtersActive && isSuperCoordinator" class="text-[9px] font-black uppercase tracking-widest text-text-muted">
-        Clear the search and filter to reorder requirements.
-      </p>
-
-      <article class="rounded-card bg-surface border border-surface-border shadow-sm relative overflow-hidden">
         <div v-if="isLoading" class="rounded-card absolute inset-0 bg-surface/70 z-10 flex items-center justify-center backdrop-blur-sm">
           <i class="pi pi-spin pi-spinner text-2xl text-sky-600"></i>
         </div>
@@ -631,11 +639,6 @@ const filteredTemplates = computed(() => {
 })
 
 const isDragDisabled = computed(() => !isSuperCoordinator.value || filtersActive.value)
-
-const selectedSemesterLabel = computed(() => {
-  const semester = semesters.value.find(item => item.id === selectedSemesterId.value)
-  return semester ? `${semester.name}${semester.is_active ? ' (Active)' : ''}` : ''
-})
 
 const filteredStudentOptions = computed(() => {
   const query = studentSearch.value.trim().toLowerCase()

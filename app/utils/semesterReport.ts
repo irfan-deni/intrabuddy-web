@@ -13,8 +13,7 @@ export type ReportLogbook = {
 }
 
 export function buildSemesterReport(students: ReportStudent[], logbooks: ReportLogbook[]) {
-  // Match the dashboard's definition, which includes interviews as placements.
-  const unplaced = students.filter(student => !['Accepted', 'Interview'].includes(student.placementStatus))
+  const unplaced = students.filter(student => student.placementStatus !== 'Accepted')
     .sort((a, b) => a.full_name.localeCompare(b.full_name))
   const records = [...logbooks].sort((a, b) =>
     a.studentName.localeCompare(b.studentName) || a.studentMatric.localeCompare(b.studentMatric) || a.weekNumber - b.weekNumber
@@ -28,7 +27,7 @@ export function buildSemesterReport(students: ReportStudent[], logbooks: ReportL
     unplaced, records, overdue,
     metrics: [
       ['Enrolled students', String(students.length)],
-      ['Placed or interviewing', String(placed)],
+      ['Confirmed placements', String(placed)],
       ['Unplaced', String(unplaced.length)],
       ['Placement rate', students.length ? `${Math.round(placed / students.length * 100)}%` : 'N/A'],
       ['Tracked logbooks', String(records.length)],

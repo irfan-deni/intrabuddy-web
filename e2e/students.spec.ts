@@ -10,7 +10,35 @@ test.describe('Students Directory', () => {
 
   test('renders student directory page', async ({ page }) => {
     await expect(page.locator('h1').first()).toContainText('Student Directory')
-    await expect(page.locator('input[placeholder*="Search by name"]')).toBeVisible()
+    await expect(page.getByRole('searchbox', { name: 'Search students' })).toBeVisible()
+  })
+
+  test('separates directory actions from filters and wraps filters on mobile', async ({ page }) => {
+    const header = page.getByRole('main').locator('header').first()
+    const filters = header.getByRole('group', { name: 'Student directory filters' })
+    const search = filters.getByRole('searchbox', { name: 'Search students' })
+    const semester = filters.getByRole('combobox', { name: 'Filter by semester' })
+    const status = filters.getByRole('combobox', { name: 'Filter by placement status' })
+    const checklist = filters.getByRole('checkbox', { name: 'Missing required checklist items' })
+    const refresh = header.getByRole('button', { name: 'Refresh', exact: true })
+
+    await page.setViewportSize({ width: 1469, height: 843 })
+    await expect(header.getByRole('button', { name: 'Export PDF' })).toBeVisible()
+    await expect.poll(async () => {
+      const [action, query, term, placement, missing] = await Promise.all(
+        [refresh, search, semester, status, checklist].map(control => control.boundingBox())
+      )
+      return !!(action && query && term && placement && missing &&
+        action.y + action.height < query.y && query.y === term.y && term.y === placement.y &&
+        missing.y >= query.y && missing.y + missing.height <= query.y + query.height &&
+        query.width > placement.width)
+    }).toBe(true)
+
+    await page.setViewportSize({ width: 390, height: 843 })
+    await expect.poll(async () => {
+      const [query, term] = await Promise.all([search.boundingBox(), semester.boundingBox()])
+      return !!(query && term && query.y + query.height < term.y && query.width === term.width)
+    }).toBe(true)
   })
 
   test('displays student list', async ({ page }) => {

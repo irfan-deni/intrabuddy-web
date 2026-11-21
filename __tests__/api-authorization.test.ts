@@ -16,6 +16,7 @@ beforeEach(() => {
   vi.resetAllMocks()
   vi.stubGlobal('defineEventHandler', (handler: unknown) => handler)
   vi.stubGlobal('createError', createError)
+  vi.stubGlobal('getQuery', () => ({}))
   vi.stubGlobal('requireCoordinator', requireCoordinator)
   vi.stubGlobal('requireSuperCoordinator', requireSuperCoordinator)
   vi.stubGlobal('useRuntimeConfig', () => ({ superCoordinatorEmails: 'admin@example.com' }))
@@ -41,6 +42,15 @@ const superEndpoints = [
 ]
 
 describe('API role enforcement before business operations', () => {
+  it('rejects an ordinary coordinator requesting the logbook review queue', async () => {
+    vi.stubGlobal('getQuery', () => ({ review: 'awaiting' }))
+    mocks.single.mockResolvedValue({ data: { role: 'coordinator' }, error: null })
+    const { default: handler } = await loadEndpoint('logbooks.get')
+    await expect(handler({} as H3Event)).rejects.toMatchObject({ statusCode: 403 })
+    expect(mocks.service).toHaveBeenCalledTimes(1) // Role lookup only.
+    expect(mocks.client).not.toHaveBeenCalled()
+  })
+
   it('rejects anonymous dashboard requests before querying the aggregate', async () => {
     mocks.user.mockResolvedValue(null)
     const { default: handler } = await loadEndpoint('dashboard.get')

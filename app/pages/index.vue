@@ -1,287 +1,216 @@
 <template>
-  <div class="dashboard app-surface-ui space-y-6 md:space-y-8">
-    <header class="dashboard-header flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 md:pb-8">
-      <div>
-        <h1 class="text-2xl md:text-4xl font-bold text-slate-800 tracking-tight">Dashboard</h1>
-        <p class="mt-2 text-sm font-normal leading-relaxed text-text-muted">Real-time overview of the active semester.</p>
+  <div class="dashboard app-surface-ui flex grow flex-col gap-4 md:gap-5">
+    <header class="dashboard-hero grid gap-x-5 gap-y-3 rounded-card px-4 py-4 text-white shadow-sm sm:px-6 md:grid-cols-[minmax(0,1fr)_auto] md:py-5">
+      <div class="dashboard-hero-copy min-w-0">
+        <p class="text-xs font-semibold text-teal-200">Internship coordination</p>
+        <h1 class="mt-1 text-2xl font-bold tracking-tight text-white md:text-3xl">Dashboard</h1>
+        <div class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-slate-100">
+          <p v-if="loading" role="status">Loading active semester…</p>
+          <p v-else-if="dashboard?.semester" class="flex w-full flex-col gap-y-0.5 sm:w-auto sm:flex-row sm:flex-wrap sm:items-baseline sm:gap-x-2">
+            <span class="font-semibold text-white">{{ dashboard.semesterName }}</span>
+            <span>{{ dateRange(dashboard.semester.startDate, dashboard.semester.endDate) }}</span>
+          </p>
+          <p v-else-if="!error">No active semester</p>
+          <span v-if="dashboard?.semester" class="rounded-full px-2.5 py-1 text-xs font-semibold" :class="dashboard.semester.registrationOpen ? 'bg-teal-100 text-teal-950' : 'bg-slate-200 text-slate-800'">
+            Registration {{ dashboard.semester.registrationOpen ? 'open' : 'closed' }}
+          </span>
+          <NuxtLink to="/semesters" class="dashboard-hero-link">Manage semester <i aria-hidden="true" class="pi pi-arrow-right text-xs" /></NuxtLink>
+        </div>
       </div>
-      <div class="flex flex-wrap items-center gap-3">
-        <button
-          :disabled="refreshing"
-          class="rounded-control min-h-11 px-3 py-2 bg-slate-600 text-white text-sm font-semibold hover:bg-slate-700 disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700 flex items-center gap-2"
-          @click="fetchData(true)"
-        >
+      <div aria-hidden="true" class="dashboard-hero-art pointer-events-none relative hidden self-stretch">
+        <DashboardSemesterArt class="absolute inset-0 h-full w-full" />
+      </div>
+      <div class="dashboard-hero-actions flex flex-wrap items-start gap-2 border-t border-white/15 pt-3 md:justify-end md:border-0 md:pt-0">
+        <button type="button" :disabled="refreshing" class="dashboard-button" @click="fetchData(true)">
           <i aria-hidden="true" :class="['pi pi-refresh', { 'pi-spin': refreshing }]"></i>
           Refresh
         </button>
-        <button
-          :disabled="isLoading || logbooksLoading || exporting"
-          class="rounded-control min-h-11 px-3 py-2 bg-sky-700 text-white text-sm font-semibold hover:bg-sky-800 disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700 transition-colors flex items-center justify-center gap-2"
-          @click="generatePDF"
-        >
+        <button type="button" :disabled="!dashboard?.semester || refreshing || exporting || error" class="dashboard-button" @click="generatePDF">
           <i aria-hidden="true" class="pi pi-file-pdf"></i>
           {{ exporting ? 'Generating report…' : 'Export Semester Report' }}
         </button>
       </div>
     </header>
 
-    <p v-if="logbooksError" role="alert" class="text-sm text-rose-700">Unable to refresh dashboard data. Please try Refresh again.</p>
+    <p v-if="error" role="alert" class="rounded-card border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
+      {{ dashboard ? 'Unable to refresh. Showing the last loaded dashboard.' : 'Unable to load the dashboard. Please try Refresh again.' }}
+    </p>
+    <p v-if="exportError" role="alert" class="text-sm text-rose-800">Unable to export the report. Please try again.</p>
 
-    <div class="dashboard-stats grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-      <div
-        v-for="stat in stats" :key="stat.label"
-        class="rounded-card relative overflow-hidden shadow-sm border"
-        :class="[stat.label === 'Unplaced' && !isLoading && !logbooksError && unplacedStudents > 0 ? 'border-amber-400 bg-amber-50 shadow-[inset_4px_0_0_0_#d97706]' : `${stat.borderClass} bg-surface`, stat.to ? 'cursor-pointer hover:shadow-md hover:-translate-y-1 transition-all' : '']"
-        @click="stat.to ? navigateTo(stat.to) : undefined"
-      >
-        <div aria-hidden="true" class="pointer-events-none absolute right-3 top-3 flex h-16 w-16 items-center justify-center rounded-full border-2 border-current opacity-[0.16]" :class="stat.iconClass">
-          <i :class="[stat.icon, 'text-2xl']"></i>
+    <div v-if="loading" class="rounded-card border border-surface-border bg-surface p-5 text-sm text-text-muted" role="status">Loading dashboard data…</div>
+    <div v-else-if="dashboard && !dashboard.semester" class="rounded-card border border-surface-border bg-surface p-5 text-sm text-text-muted">
+      Set an active semester to see placements, follow-up items, and logbook submissions.
+    </div>
+
+    <template v-else-if="dashboard?.semester">
+      <section aria-labelledby="placement-heading">
+        <h2 id="placement-heading" class="dashboard-section-heading mb-3">Placement overview</h2>
+        <div class="grid gap-3 sm:grid-cols-3">
+          <NuxtLink v-for="stat in placementStats" :key="stat.label" :to="stat.to"
+            class="dashboard-stat group flex items-center gap-3 rounded-card border bg-surface p-3 shadow-sm transition-colors hover:bg-surface-muted md:p-4"
+            :class="stat.border">
+            <span aria-hidden="true" class="grid h-10 w-10 shrink-0 place-items-center rounded-lg md:h-12 md:w-12" :class="stat.tint">
+              <i :class="['pi', stat.icon]" />
+            </span>
+            <span class="min-w-0 flex-1">
+              <span class="block text-sm font-medium text-text-muted">{{ stat.label }}</span>
+              <span class="mt-0.5 flex flex-wrap items-baseline gap-x-2">
+                <strong class="text-3xl font-bold tabular-nums leading-tight text-slate-800">{{ stat.value }}</strong>
+                <span v-if="stat.detail" class="text-xs font-medium text-text-muted sm:text-sm">{{ stat.detail }}</span>
+              </span>
+              <span v-if="stat.progress != null" aria-hidden="true" class="placement-progress mt-2 block h-1.5 overflow-hidden rounded-full bg-teal-100">
+                <span class="block h-full rounded-full bg-teal-600" :style="{ width: `${stat.progress}%` }" />
+              </span>
+            </span>
+            <i aria-hidden="true" class="pi pi-arrow-up-right hidden shrink-0 text-xs text-sky-700 group-hover:text-sky-900 lg:block" />
+          </NuxtLink>
         </div>
-        <div class="dashboard-stat-content relative p-4 pr-20 md:p-6 md:pr-20">
-          <div class="dashboard-stat-label flex items-center gap-3 mb-2 md:mb-4">
-            <div class="h-8 w-8 md:h-10 md:w-10 shrink-0 flex items-center justify-center rounded-lg" :class="stat.iconClass">
-              <i :class="[stat.icon, 'text-xs md:text-sm']"></i>
-            </div>
-            <span class="text-sm font-medium leading-relaxed text-text-muted">{{ stat.label }}</span>
+      </section>
+
+      <div class="grid items-start gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(16.5rem,1fr)] lg:items-stretch">
+        <section aria-labelledby="attention-heading" class="dashboard-panel dashboard-attention rounded-card lg:col-start-2 lg:row-start-1">
+          <div class="flex items-center gap-3">
+            <span aria-hidden="true" class="grid h-9 w-9 place-items-center rounded-lg bg-violet-100 text-violet-800"><i class="pi pi-inbox" /></span>
+            <h2 id="attention-heading" class="dashboard-section-heading">Needs attention</h2>
           </div>
-          <p class="dashboard-stat-value text-2xl md:text-4xl font-bold text-slate-800 tabular-nums tracking-tight">
-            {{ isLoading ? '...' : stat.value }}
-          </p>
-          <p v-if="stat.label === 'Unplaced' && !isLoading && !logbooksError && unplacedStudents > 0" class="mt-1 text-xs font-semibold text-amber-800">Needs follow-up</p>
-        </div>
+          <p class="mt-2 text-sm text-text-muted">Follow-up for the active semester.</p>
+          <ul v-if="attentionItems.length" class="mt-2 divide-y divide-surface-border sm:mt-3 sm:space-y-2 sm:divide-y-0">
+            <li v-for="item in attentionItems" :key="item.label">
+              <NuxtLink :to="item.to" class="dashboard-action group flex min-h-12 items-center gap-2 rounded-control px-1 py-2.5 text-sm hover:bg-white sm:border sm:border-slate-200 sm:bg-white/80 sm:px-2.5 sm:py-2 sm:hover:border-sky-300">
+                <span class="order-1 min-w-8 shrink-0 rounded-md px-1.5 py-1 text-center font-semibold tabular-nums sm:order-none" :class="item.tint">{{ item.count }}</span>
+                <span class="flex-1 font-medium text-slate-800 group-hover:underline">{{ item.label }}</span>
+                <i aria-hidden="true" class="pi pi-arrow-right order-2 shrink-0 text-xs text-sky-700 sm:order-none" />
+              </NuxtLink>
+            </li>
+          </ul>
+          <p v-else-if="dashboard.reviewQueue?.count !== null" class="mt-4 text-sm text-emerald-800">No follow-up items right now.</p>
+          <p v-if="dashboard.reviewQueue?.count === null" class="mt-3 text-sm text-rose-800">Logbook review count is unavailable.</p>
+        </section>
+
+        <section aria-labelledby="logbooks-heading" class="dashboard-panel rounded-card lg:col-start-1 lg:row-start-1">
+          <div class="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+            <div>
+              <h2 id="logbooks-heading" class="dashboard-section-heading">Weekly logbooks</h2>
+              <p v-if="!trend.length && weekly?.weekEnd" class="mt-0.5 text-sm text-text-muted">
+                {{ dateRange(weekly.weekStart, weekly.weekEnd) }}
+              </p>
+            </div>
+            <NuxtLink :to="weeklyLogbooksLink" class="dashboard-link">
+              {{ weekly?.weekEnd ? 'View this week' : 'View logbooks' }}
+              <i aria-hidden="true" class="pi pi-arrow-right text-xs" />
+            </NuxtLink>
+          </div>
+          <DashboardLogbookChart v-if="trend.length" class="mt-3 border-t border-surface-border pt-2" :weeks="trend" :current-week="weekly?.weekEnd ?? null" />
+          <div v-else-if="weekly?.weekEnd" class="mt-3 space-y-2">
+            <div class="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+              <p class="text-sm text-text-muted">
+                <span class="text-xl font-bold tabular-nums text-slate-800">{{ weekly.submitted }} / {{ weekly.total }}</span> submitted
+              </p>
+              <p v-if="weekly.pending > 0" class="rounded-full bg-sky-100 px-2 py-0.5 text-xs font-semibold tabular-nums text-sky-900">
+                {{ weekly.pending }} not yet due
+              </p>
+            </div>
+            <div role="progressbar" aria-label="Weekly logbooks submitted" :aria-valuemax="weekly.total"
+              :aria-valuenow="weekly.submitted" :aria-valuetext="`${weekly.submitted} of ${weekly.total} submitted`"
+              class="h-2.5 overflow-hidden rounded-full bg-sky-100">
+              <div class="h-full rounded-full bg-teal-600" :style="{ width: `${weeklySubmissionPercent}%` }" />
+            </div>
+          </div>
+          <div v-else class="mt-3 flex items-center gap-2.5 text-sm text-text-muted">
+            <span aria-hidden="true" class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-slate-100 text-slate-600">
+              <i class="pi pi-calendar" />
+            </span>
+            <p>No logbooks due this week.</p>
+          </div>
+        </section>
       </div>
-    </div>
-
-    <div class="dashboard-overview grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <Card class="rounded-card bg-surface shadow-sm border border-surface-border">
-        <template #content>
-          <div class="dashboard-placement relative overflow-hidden p-4 md:p-8 flex flex-col md:flex-row items-center gap-6 md:gap-8">
-            <svg aria-hidden="true" viewBox="0 0 240 150" class="pointer-events-none absolute bottom-0 right-0 hidden h-36 w-60 text-emerald-700 opacity-[0.12] xl:block" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M8 139h224M147 139V41l40-22 40 22v98M158 139V54h58v85M179 139v-25h18v25" />
-              <path d="M169 65h8v9h-8zM197 65h8v9h-8zM169 86h8v9h-8zM197 86h8v9h-8zM28 139v-23l22-12 22 12v23" />
-              <circle cx="105" cy="92" r="9" />
-              <path d="M96 139v-26c0-6 4-11 9-11s9 5 9 11v26M96 115l-10 12M114 115l10 10M116 128h16v11h-16zM122 128v-4h5v4M74 72h40m-8-7 8 7-8 7" />
-            </svg>
-            <div v-if="!isLoading && !logbooksError && totalStudents > 0" class="dashboard-placement-chart relative order-last w-36 h-36 md:w-48 md:h-48 flex-shrink-0">
-              <div aria-hidden="true" class="pointer-events-none absolute -inset-3 rounded-full bg-emerald-50/70 ring-1 ring-emerald-100"></div>
-              <div aria-hidden="true" class="pointer-events-none absolute inset-2 rounded-full ring-1 ring-emerald-100/80"></div>
-              <svg aria-hidden="true" viewBox="0 0 36 36" class="relative w-full h-full transform -rotate-90">
-                <circle cx="18" cy="18" r="16" fill="none" class="stroke-surface-border" stroke-width="3"></circle>
-                <circle cx="18" cy="18" r="16" fill="none" class="stroke-emerald-600" stroke-width="3" stroke-dasharray="100" :stroke-dashoffset="100 - (placementPercentage || 0)" stroke-linecap="round"></circle>
-              </svg>
-              <div class="absolute inset-0 flex flex-col items-center justify-center">
-                <span class="text-3xl font-bold text-slate-800 tabular-nums">{{ placementPercentage }}%</span>
-                <span class="text-sm font-medium leading-relaxed text-text-muted">Placed</span>
-              </div>
-            </div>
-            <div class="dashboard-placement-details relative w-full min-w-0 flex-1 space-y-6">
-              <h2 class="dashboard-section-heading text-lg font-semibold text-slate-800">Placement Status</h2>
-              <p v-if="isLoading" role="status" class="text-sm text-text-muted">Loading placement data…</p>
-              <p v-else-if="logbooksError" class="text-sm text-text-muted">Placement data is unavailable. Please refresh to try again.</p>
-              <p v-else-if="totalStudents === 0" class="text-sm text-text-muted">No students in the active semester yet.</p>
-              <div v-else class="space-y-3">
-                <p class="text-base font-semibold text-slate-800 tabular-nums">{{ placedStudents }} of {{ totalStudents }} students placed</p>
-                <p v-if="unplacedStudents > 0" class="text-sm font-medium text-amber-800 tabular-nums">Needs follow-up: {{ unplacedStudents }} unplaced</p>
-                <p v-else class="text-sm font-medium text-emerald-700">All students are placed</p>
-              </div>
-              <NuxtLink :to="!isLoading && !logbooksError && unplacedStudents > 0 ? '/students?status=unplaced' : '/students'" class="inline-flex items-center gap-2 text-sm font-semibold text-sky-700 hover:text-sky-800 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700">
-                {{ !isLoading && !logbooksError && unplacedStudents > 0 ? 'View unplaced students' : 'View students' }} <i aria-hidden="true" class="pi pi-arrow-right text-xs"></i>
-              </NuxtLink>
-            </div>
-          </div>
-        </template>
-      </Card>
-
-      <Card class="rounded-card bg-slate-800 text-white shadow-sm border border-slate-800">
-        <template #content>
-          <div class="dashboard-semester p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 h-full min-h-[180px] md:min-h-[200px]">
-            <div class="min-w-0">
-              <p class="text-sm font-medium leading-relaxed text-slate-300 mb-4">Semester Control</p>
-              <h3 class="text-2xl font-bold leading-tight">
-                Active:<br>{{ semesterName || 'Scanning...' }}
-              </h3>
-              <div v-if="activeSemester" class="mt-3 space-y-1 text-sm text-slate-300">
-                <p>{{ semesterPeriod(activeSemester.start_date, activeSemester.end_date) }}</p>
-                <p>Registration: <span class="font-semibold text-white">{{ activeSemester.registration_open ? 'Open' : 'Closed' }}</span></p>
-              </div>
-              <p v-else-if="semesterDetailsError" class="mt-3 text-sm text-slate-300">Semester details unavailable.</p>
-            </div>
-            <div class="flex shrink-0 flex-col items-start gap-3 sm:items-end">
-              <NuxtLink to="/semesters" class="inline-flex items-center gap-2 text-sky-300 hover:text-white hover:underline transition-colors text-sm font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-300">
-                View semesters <i aria-hidden="true" class="pi pi-arrow-right text-xs"></i>
-              </NuxtLink>
-              <NuxtLink to="/students" class="inline-flex items-center gap-2 text-sky-300 hover:text-white hover:underline transition-colors text-sm font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-300">
-                View students <i aria-hidden="true" class="pi pi-arrow-right text-xs"></i>
-              </NuxtLink>
-            </div>
-          </div>
-        </template>
-      </Card>
-    </div>
-
-      <Card class="rounded-card bg-surface shadow-sm border border-surface-border">
-      <template #content>
-        <div class="dashboard-logbooks p-4 md:p-8">
-          <h2 class="dashboard-section-heading text-lg font-semibold text-slate-800 mb-6 md:mb-8">Logbook Status Summary</h2>
-
-          <div v-if="logbooksLoading" role="status" class="animate-pulse py-12 md:py-16 text-center text-sm leading-relaxed text-text-muted">Loading logbook summary…</div>
-          <div v-else-if="logbooksError" role="alert" class="py-12 text-center text-sm text-rose-700">Unable to load logbook summary. Please refresh to try again.</div>
-          <div v-else-if="totalExpected === 0" class="text-center py-12 md:py-16 text-sm leading-relaxed text-text-muted">No activity data available</div>
-
-          <template v-else>
-            <div class="flex items-end justify-between gap-4 mb-2">
-              <div>
-                <span class="text-sm font-medium leading-relaxed text-text-muted">Compliance</span>
-                <p class="text-xs text-text-muted">{{ totalSubmitted }} / {{ totalExpected }} this week</p>
-              </div>
-              <span class="text-3xl font-bold text-slate-800 tabular-nums">{{ complianceRate }}%</span>
-            </div>
-
-            <div class="dashboard-compliance-bar w-full bg-surface-border rounded-full h-4 mt-4 mb-4 overflow-hidden flex">
-              <div class="h-full bg-emerald-500 transition-all duration-1000" :style="{ width: submittedPercent + '%' }"></div>
-              <div class="h-full bg-amber-600 transition-all duration-1000" :style="{ width: latePercent + '%' }"></div>
-              <div class="h-full bg-surface-border transition-all duration-1000" :style="{ width: pendingPercent + '%' }"></div>
-            </div>
-
-            <div class="grid grid-cols-3 gap-2 mt-3">
-              <div class="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 rounded-lg bg-emerald-50 px-3 py-2">
-                <p class="flex items-center gap-1.5 text-xs font-medium text-emerald-800"><span aria-hidden="true" class="h-2 w-2 shrink-0 rounded-full bg-emerald-500"></span>Submitted</p>
-                <p class="text-xl font-bold leading-none tabular-nums text-slate-800">{{ totalSubmitted }}</p>
-              </div>
-              <div class="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 rounded-lg bg-slate-100 px-3 py-2">
-                <p class="flex items-center gap-1.5 text-xs font-medium text-amber-800"><span aria-hidden="true" class="h-2 w-2 shrink-0 rounded-full bg-amber-600"></span>Overdue</p>
-                <p class="text-xl font-bold leading-none tabular-nums text-slate-800">{{ totalLate }}</p>
-              </div>
-              <div class="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 rounded-lg bg-slate-100 px-3 py-2">
-                <p class="flex items-center gap-1.5 text-xs font-medium text-slate-600"><span aria-hidden="true" class="h-2 w-2 shrink-0 rounded-full bg-slate-400"></span>Pending</p>
-                <p class="text-xl font-bold leading-none tabular-nums text-slate-800">{{ totalPending }}</p>
-              </div>
-            </div>
-          </template>
-        </div>
-      </template>
-    </Card>
+    </template>
   </div>
 </template>
 
 <script setup lang="ts">
-import Card from 'primevue/card'
-import { generateSemesterReport } from '~/utils/semesterReport'
-import type { ReportLogbook, ReportStudent } from '~/utils/semesterReport'
-import type { DashboardResponse, LogbookSummary } from '~/types/dashboard'
+import { generateSemesterReport, type ReportLogbook, type ReportStudent } from '~/utils/semesterReport'
+import type { DashboardResponse } from '~/types/dashboard'
 
-definePageMeta({
-  requiredRole: 'coordinator'
-})
+definePageMeta({ requiredRole: 'coordinator' })
 
 const pageCache = usePageCache()
-const cachedDashboard = pageCache.read<DashboardResponse>('/api/dashboard')
-const cachedLogbooks = cachedDashboard?.logbookSummary
-const semesterName = ref(cachedDashboard?.semesterName || '')
-const totalStudents = ref(cachedDashboard?.totalStudents || 0)
-const placedStudents = ref(cachedDashboard?.placedStudents || 0)
-const unplacedStudents = ref(cachedDashboard?.unplacedStudents || 0)
-const placementPercentage = ref(cachedDashboard?.placementPercentage || 0)
-const isLoading = ref(!cachedDashboard)
-const logbooksLoading = ref(!cachedLogbooks)
-const logbooksError = ref(false)
-const exporting = ref(false)
+const url = '/api/dashboard'
+const dashboard = ref(pageCache.read<DashboardResponse>(url))
+const loading = ref(!dashboard.value)
 const refreshing = ref(false)
-type ActiveSemester = { is_active: boolean; start_date: string | null; end_date: string | null; registration_open: boolean }
-const activeSemester = ref<ActiveSemester | null>(null)
-const semesterDetailsError = ref(false)
+const exporting = ref(false)
+const error = ref(false)
+const exportError = ref(false)
 
-const semesterPeriod = (start: string | null, end: string | null) => {
-  const format = (date: string) => new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }).format(new Date(date))
-  if (!start && !end) return 'Dates not set'
-  if (!start) return `Until ${format(end!)}`
-  if (!end) return `From ${format(start)}`
-  return `${format(start)} – ${format(end)}`
+const dateFormat = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' })
+const dateRange = (start: string | null, end: string | null) => {
+  if (start && end) return dateFormat.formatRange(new Date(start), new Date(end))
+  if (start) return `From ${dateFormat.format(new Date(start))}`
+  if (end) return `Until ${dateFormat.format(new Date(end))}`
+  return 'Dates not set'
 }
 
-const fetchSemesterDetails = async () => {
-  try {
-    const data = await $fetch<{ semesters: ActiveSemester[] }>('/api/semesters')
-    activeSemester.value = data.semesters.find(semester => semester.is_active) || null
-    semesterDetailsError.value = false
-  } catch {
-    activeSemester.value = null
-    semesterDetailsError.value = true
-  }
-}
+const placementStats = computed(() => {
+  const data = dashboard.value
+  if (!data) return []
+  return [
+    { label: 'Enrolled students', value: data.totalStudents, to: '/students', icon: 'pi-users', tint: 'bg-sky-100 text-sky-800', border: 'border-sky-200' },
+    { label: 'Confirmed placements', value: data.placedStudents, to: '/students?status=Accepted', icon: 'pi-check-circle', tint: 'bg-teal-100 text-teal-800', border: 'border-teal-200',
+      progress: data.placementPercentage,
+      detail: data.placementPercentage === null ? '' : `${data.placementPercentage}% of enrolled` },
+    { label: 'Needs placement follow-up', value: data.unplacedStudents, to: '/students?status=unplaced', icon: 'pi-search',
+      tint: data.unplacedStudents > 0 ? 'bg-amber-100 text-amber-900' : 'bg-slate-100 text-slate-700',
+      detail: data.unplacedStudents > 0 ? 'No accepted placement' : '',
+      border: data.unplacedStudents > 0 ? 'border-amber-400' : 'border-surface-border' }
+  ]
+})
 
-const logbookSummary = ref<LogbookSummary>(cachedLogbooks || { total: 0, submitted: 0, late: 0, pending: 0 })
+const attentionItems = computed(() => {
+  const data = dashboard.value
+  if (!data) return []
+  return [
+    { label: 'Overdue logbooks from earlier weeks', count: data.overdueLogbooks, to: '/logbooks?status=Late', tint: 'bg-amber-100 text-amber-900' },
+    { label: 'Logbooks awaiting review', count: data.reviewQueue?.count ?? 0, to: '/logbooks?review=awaiting', tint: 'bg-violet-100 text-violet-800' },
+    { label: 'Students missing required checklist items', count: data.studentsMissingChecklists, to: '/students?checklist=missing', tint: 'bg-sky-100 text-sky-900' }
+  ].filter(item => item.count > 0)
+})
 
-const totalExpected = computed(() => logbookSummary.value.total)
-
-const totalSubmitted = computed(() =>
-  logbookSummary.value.submitted
-)
-
-const totalLate = computed(() =>
-  logbookSummary.value.late
-)
-
-const totalPending = computed(() =>
-  logbookSummary.value.pending
-)
-
-const complianceRate = computed(() =>
-  totalExpected.value > 0 ? Math.round((totalSubmitted.value / totalExpected.value) * 100) : 0
-)
-
-const submittedPercent = computed(() =>
-  totalExpected.value > 0 ? Math.round((totalSubmitted.value / totalExpected.value) * 100) : 0
-)
-
-const latePercent = computed(() =>
-  totalExpected.value > 0 ? Math.round((totalLate.value / totalExpected.value) * 100) : 0
-)
-
-const pendingPercent = computed(() =>
-  totalExpected.value > 0 ? Math.round((totalPending.value / totalExpected.value) * 100) : 0
-)
-
-const stats = computed(() => [
-  { label: 'Total Students', value: totalStudents.value, icon: 'pi pi-users', to: '/students', borderClass: 'border-sky-200', iconClass: 'bg-sky-100 text-sky-800' },
-  { label: 'Placed', value: placedStudents.value, icon: 'pi pi-check-circle', to: '/students?status=Accepted', borderClass: 'border-emerald-200', iconClass: 'bg-emerald-100 text-emerald-800' },
-  { label: 'Unplaced', value: unplacedStudents.value, icon: 'pi pi-search', to: '/students?status=unplaced', borderClass: 'border-amber-200', iconClass: 'bg-amber-100 text-amber-800' },
-  { label: 'Placement Rate', value: placementPercentage.value + '%', icon: 'pi pi-chart-line', borderClass: 'border-violet-200', iconClass: 'bg-violet-100 text-violet-800' }
-])
+const weekly = computed(() => dashboard.value?.logbookSummary)
+const weeklySubmissionPercent = computed(() => {
+  const summary = weekly.value
+  return summary?.total ? (summary.submitted / summary.total) * 100 : 0
+})
+const trend = computed(() => dashboard.value?.logbookTrend ?? [])
+const weeklyLogbooksLink = computed(() => weekly.value?.weekEnd
+  ? { path: '/logbooks', query: { week_end: weekly.value.weekEnd } }
+  : '/logbooks')
 
 const fetchData = async (force = false) => {
   refreshing.value = true
-  logbooksError.value = false
-  void fetchSemesterDetails()
+  error.value = false
   try {
-    const dash = await pageCache.fetch<DashboardResponse>('/api/dashboard', { force })
-    semesterName.value = dash.semesterName
-    totalStudents.value = dash.totalStudents
-    placedStudents.value = dash.placedStudents
-    unplacedStudents.value = dash.unplacedStudents
-    placementPercentage.value = dash.placementPercentage
-    logbookSummary.value = dash.logbookSummary
+    dashboard.value = await pageCache.fetch<DashboardResponse>(url, { force })
   } catch {
-    logbooksError.value = true
+    error.value = true
   } finally {
-    isLoading.value = false
-    logbooksLoading.value = false
+    loading.value = false
     refreshing.value = false
   }
 }
 
 const generatePDF = async () => {
   exporting.value = true
+  exportError.value = false
   try {
-    // Fetch fresh records rather than mixing cached dashboard totals with export details.
-    const [dashboard, directory, logbooks] = await Promise.all([
-      $fetch<DashboardResponse>('/api/dashboard'),
+    const [summary, directory, logbooks] = await Promise.all([
+      $fetch<DashboardResponse>(url),
       $fetch<{ students: ReportStudent[] }>('/api/students'),
       $fetch<ReportLogbook[]>('/api/logbooks')
     ])
-    await generateSemesterReport(dashboard.semesterName || 'N/A', directory.students, logbooks)
+    await generateSemesterReport(summary.semesterName, directory.students, logbooks)
   } catch {
-    alert('Unable to export the report. Please try again.')
+    exportError.value = true
   } finally {
     exporting.value = false
   }
@@ -291,131 +220,64 @@ onMounted(() => fetchData())
 </script>
 
 <style scoped>
-/* Keep dashboard headings readable without changing the global heading rules. */
+.dashboard-hero {
+  background: #102846;
+  container-type: inline-size;
+}
+
+/* Switch to the illustrated layout based on the available banner width. */
+.dashboard-hero-art {
+  background: radial-gradient(ellipse at 67% 58%, #105554, transparent 75%);
+}
+
+@container (min-width: 55rem) {
+  .dashboard-hero-art {
+    display: block;
+    width: clamp(10rem, 23cqw, 17rem);
+  }
+  .dashboard-hero-actions {
+    grid-column: 3;
+  }
+  .dashboard-hero-copy {
+    grid-column: 1;
+  }
+  .dashboard-hero-art,
+  .dashboard-hero-actions,
+  .dashboard-hero-copy {
+    grid-row: 1;
+  }
+}
+
+.dashboard-hero-link {
+  @apply inline-flex items-center gap-1.5 font-semibold text-teal-100 hover:underline focus-visible:outline-white;
+}
+
+.dashboard-attention {
+  background: linear-gradient(155deg, #f3f4ff, #f8fafc 70%);
+}
+
 .dashboard-section-heading {
+  @apply text-lg text-slate-800;
   font-weight: 600 !important;
   letter-spacing: normal !important;
 }
 
-/* Fit the desktop overview without hiding content or shrinking readable labels. */
-@media (min-width: 1024px) {
-  .dashboard {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .dashboard > :not([hidden]) ~ :not([hidden]) {
-    margin-top: 1rem;
-  }
-
-  .dashboard-header {
-    padding-bottom: 0;
-    gap: 1rem;
-  }
-
-  .dashboard-header h1 {
-    font-size: 1.875rem;
-    line-height: 2.25rem;
-  }
-
-  .dashboard-stats,
-  .dashboard-overview {
-    gap: 1rem;
-  }
-
-  .dashboard-overview {
-    flex-grow: 1;
-  }
-
-  .dashboard-stat-content,
-  .dashboard-placement,
-  .dashboard-semester,
-  .dashboard-logbooks {
-    padding: 1rem 1.25rem;
-  }
-
-  .dashboard-stat-label {
-    margin-bottom: 0.5rem;
-  }
-
-  .dashboard-stat-label > div {
-    width: 2rem;
-    height: 2rem;
-  }
-
-  .dashboard-stat-value {
-    font-size: 1.875rem;
-    line-height: 2.25rem;
-  }
-
-  .dashboard-placement {
-    gap: 1.5rem;
-    height: 100%;
-  }
-
-  .dashboard-overview :deep(.p-card-body),
-  .dashboard-overview :deep(.p-card-content),
-  .dashboard > .p-card :deep(.p-card-body),
-  .dashboard > .p-card :deep(.p-card-content) {
-    height: 100%;
-  }
-
-  .dashboard-placement-chart {
-    width: 8rem;
-    height: 8rem;
-  }
-
-  .dashboard-placement-details > :not([hidden]) ~ :not([hidden]) {
-    margin-top: 1rem;
-  }
-
-  .dashboard-semester {
-    min-height: 10rem;
-  }
-
-  .dashboard-logbooks h2 {
-    margin-bottom: 0.75rem;
-  }
-
-  .dashboard-compliance-bar {
-    margin-top: 0.5rem;
-    margin-bottom: 0.5rem;
-  }
-
-  .dashboard-logbooks > [role='status'],
-  .dashboard-logbooks > [role='alert'],
-  .dashboard-logbooks > .text-center {
-    padding-top: 1.5rem;
-    padding-bottom: 1.5rem;
-  }
+.dashboard-panel {
+  @apply min-w-0 border border-surface-border bg-surface p-4 shadow-sm md:p-5;
 }
 
-/* Use the extra vertical room on taller desktops instead of staying compressed. */
-@media (min-width: 1024px) and (min-height: 850px) {
-  .dashboard > :not([hidden]) ~ :not([hidden]) {
-    margin-top: 1.25rem;
-  }
+.dashboard-link {
+  @apply inline-flex items-center gap-1.5 text-sm font-semibold text-sky-700 hover:underline;
+}
 
-  .dashboard-stats,
-  .dashboard-overview {
-    gap: 1.25rem;
-  }
+.dashboard-button {
+  @apply inline-flex min-h-11 items-center gap-2 rounded-control border border-slate-500 bg-[#19385a] px-3 py-2 text-sm font-semibold text-white hover:bg-[#24496f] disabled:opacity-50 md:min-h-10;
+}
 
-  .dashboard-stat-content,
-  .dashboard-placement,
-  .dashboard-semester,
-  .dashboard-logbooks {
-    padding: 1.25rem;
-  }
-
-  .dashboard-logbooks h2 {
-    margin-bottom: 1rem;
-  }
-
-  .dashboard-compliance-bar {
-    margin-top: 0.75rem;
-    margin-bottom: 0.75rem;
-  }
+.dashboard-link, .dashboard-action, .dashboard-stat {
+  @apply focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700;
+}
+.dashboard-button {
+  @apply focus-visible:outline-white;
 }
 </style>

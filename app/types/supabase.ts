@@ -25,7 +25,13 @@ export type Database = {
         Row: { logbook_id: number; status: string; feedback: string; reviewer_id: string; reviewed_at: string }
         Insert: { logbook_id: number; status: string; feedback: string; reviewer_id: string }
         Update: { status?: string; feedback?: string; reviewer_id?: string; reviewed_at?: string }
-        Relationships: []
+        Relationships: [{
+          foreignKeyName: "logbook_reviews_logbook_id_fkey"
+          columns: ["logbook_id"]
+          isOneToOne: true
+          referencedRelation: "weekly_logbook_tracking"
+          referencedColumns: ["id"]
+        }]
       }
       users: {
         Row: {

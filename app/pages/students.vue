@@ -1,61 +1,75 @@
 <template>
   <div class="app-surface-ui relative min-h-screen">
     <div class="space-y-6 md:space-y-8 pb-24">
-      <!-- Header with Search & Add -->
-      <header class="flex flex-col md:flex-row flex-wrap md:items-end justify-between gap-6">
-        <div class="w-full xl:flex-1 xl:min-w-[280px] max-w-xl">
-          <h1 class="text-2xl md:text-4xl font-bold text-slate-800 tracking-tight">Student Directory</h1>
-          <p class="mt-2 text-sm font-normal leading-relaxed text-text-muted xl:whitespace-nowrap">Manage student placements, milestones, and records.</p>
-          <div class="relative group mt-4">
-            <i class="pi pi-search absolute left-5 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-sky-700 transition-colors"></i>
-            <input 
-              v-model="searchQuery" 
-              type="text" 
-              placeholder="Search by name or matric number..."
-              class="w-full pl-14 pr-6 py-4 bg-surface-muted border border-surface-control text-text-primary placeholder:text-text-muted rounded-control outline-none focus:border-sky-700 focus:ring-1 focus:ring-sky-700 transition-all text-[10px] font-black uppercase tracking-widest shadow-sm"
+      <header class="space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <div class="min-w-0">
+            <h1 class="text-2xl md:text-4xl font-bold text-slate-800 tracking-tight">Student Directory</h1>
+            <p class="mt-2 text-sm font-normal leading-relaxed text-text-muted">Manage student placements, milestones, and records.</p>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              :disabled="isRefreshing"
+              class="rounded-control inline-flex h-11 w-11 items-center justify-center text-sm font-semibold text-text-muted hover:bg-surface-hover hover:text-text-primary disabled:opacity-50"
+              title="Refresh"
+              aria-label="Refresh"
+              @click="fetchStudents(true)"
             >
+              <i aria-hidden="true" :class="['pi pi-refresh', { 'pi-spin': isRefreshing }]"></i>
+            </button>
+            <button
+              type="button"
+              class="rounded-control inline-flex h-11 items-center justify-center gap-2 whitespace-nowrap border border-surface-control bg-surface px-3 sm:px-4 text-sm font-semibold text-text-primary hover:bg-surface-hover"
+              title="Export Student Directory"
+              @click="generatePDF"
+            >
+              <i aria-hidden="true" class="pi pi-file-pdf hidden sm:inline-block"></i>
+              Export PDF
+            </button>
+            <button
+              v-if="isSuperCoordinator"
+              type="button"
+              class="rounded-control inline-flex h-11 items-center justify-center gap-2 whitespace-nowrap bg-sky-700 px-3 sm:px-4 text-sm font-semibold text-white hover:bg-sky-800"
+              @click="openAddModal"
+            >
+              <i aria-hidden="true" class="pi pi-user-plus hidden sm:inline-block"></i>
+              Enroll Student
+            </button>
           </div>
         </div>
-        
-        <div class="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3 w-full xl:w-auto">
-          <select v-model="semesterFilter" @change="fetchStudents()" class="rounded-control bg-surface-muted border border-surface-control text-text-primary px-4 md:px-5 py-3 md:py-4 text-[10px] font-black uppercase tracking-widest outline-none focus:border-sky-700 focus:ring-1 focus:ring-sky-700 cursor-pointer shadow-sm min-w-0 sm:min-w-[180px]">
-            <option value="">Active Semester</option>
-            <option v-for="c in semesters" :key="c.id" :value="c.id">{{ c.name }}</option>
-            <option value="all">All Semesters</option>
-          </select>
-          <select v-model="statusFilter" class="rounded-control bg-surface-muted border border-surface-control text-text-primary px-4 md:px-5 py-3 md:py-4 text-[10px] font-black uppercase tracking-widest outline-none focus:border-sky-700 focus:ring-1 focus:ring-sky-700 cursor-pointer shadow-sm">
-            <option value="all">Status: All</option>
-            <option value="unplaced">Status: Unplaced</option>
-            <option value="Accepted">Status: Placed</option>
-            <option value="Searching">Status: Searching</option>
-            <option value="Pending">Status: Pending</option>
-          </select>
-          
-          <button
-            :disabled="isRefreshing"
-            class="rounded-control bg-slate-600 text-white px-4 py-3 text-sm font-semibold hover:bg-slate-700 disabled:opacity-50 flex items-center justify-center gap-2"
-            @click="fetchStudents(true)"
-          >
-            <i aria-hidden="true" :class="['pi pi-refresh', { 'pi-spin': isRefreshing }]"></i>
-            Refresh
-          </button>
-          <button
-            class="rounded-control bg-sky-700 text-white px-4 py-3 text-sm font-semibold whitespace-nowrap hover:bg-sky-800 transition-all flex items-center justify-center gap-2"
-            title="Export Student Directory"
-            aria-label="Export Student Directory"
-            @click="generatePDF"
-          >
-            <i class="pi pi-file-pdf"></i>
-            Export PDF
-          </button>
-          <button 
-            v-if="isSuperCoordinator"
-            class="rounded-control bg-sky-700 text-white px-4 py-3 text-sm font-semibold whitespace-nowrap hover:bg-sky-800 transition-all flex items-center justify-center gap-2"
-            @click="openAddModal"
-          >
-            <i class="pi pi-user-plus"></i>
-            Enroll Student
-          </button>
+
+        <div role="group" aria-label="Student directory filters" class="flex flex-wrap items-center gap-3">
+          <div class="relative group min-w-0 basis-full xl:grow xl:basis-72">
+            <i aria-hidden="true" class="pi pi-search pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-text-muted group-focus-within:text-sky-700"></i>
+            <input
+              v-model="searchQuery"
+              type="search"
+              aria-label="Search students"
+              placeholder="Search by name or matric number..."
+              class="rounded-control h-11 w-full border border-surface-control bg-surface-muted pl-10 pr-3 text-sm text-text-primary placeholder:text-text-muted focus:border-sky-700 focus:ring-1 focus:ring-sky-700"
+            >
+          </div>
+          <div class="grid w-full min-w-0 gap-3 sm:w-auto sm:grid-cols-[minmax(0,11rem)_minmax(0,14rem)]">
+            <select v-model="semesterFilter" aria-label="Filter by semester" class="rounded-control h-11 w-full min-w-0 cursor-pointer border border-surface-control bg-surface-muted px-3 text-sm text-text-primary focus:border-sky-700 focus:ring-1 focus:ring-sky-700" @change="changeSemester">
+              <option value="">Active semester</option>
+              <option v-for="c in semesters" :key="c.id" :value="c.id">{{ c.name }}</option>
+              <option value="all">All semesters</option>
+            </select>
+            <select v-model="statusFilter" aria-label="Filter by placement status" class="rounded-control h-11 w-full min-w-0 cursor-pointer border border-surface-control bg-surface-muted px-3 text-sm text-text-primary focus:border-sky-700 focus:ring-1 focus:ring-sky-700">
+              <option value="all">All statuses</option>
+              <option value="unplaced">No confirmed placement</option>
+              <option value="Accepted">Confirmed placement</option>
+              <option value="Interview">Interview</option>
+              <option value="Searching">Searching</option>
+              <option value="Pending">Pending</option>
+            </select>
+          </div>
+          <label v-if="semesterFilter !== 'all'" class="inline-flex min-h-11 cursor-pointer items-center gap-2 text-sm text-text-muted">
+            <input v-model="missingChecklist" type="checkbox" class="h-4 w-4 shrink-0 accent-sky-700" @change="fetchStudents()">
+            Missing required checklist items
+          </label>
         </div>
       </header>
 
@@ -232,14 +246,15 @@ const { isSuperCoordinator } = useCoordinatorPrivileges()
 const supabase = useSupabaseClient<Database>()
 const route = useRoute()
 const pageCache = usePageCache()
-const cachedStudents = pageCache.read<{ students: Array<Record<string, any>> }>('/api/students')
+const missingChecklist = ref(route.query.checklist === 'missing')
+const cachedStudents = pageCache.read<{ students: Array<Record<string, any>> }>(missingChecklist.value ? '/api/students?checklist=missing' : '/api/students')
 const students = ref<Array<Record<string, any>>>(cachedStudents?.students || [])
 const semesters = ref<Database['public']['Tables']['semesters']['Row'][]>([])
 const isLoading = ref(!cachedStudents)
 const isRefreshing = ref(false)
 const isSaving = ref(false)
 const searchQuery = ref('')
-const statusFilter = ref(['unplaced', 'Accepted', 'Searching', 'Pending'].includes(String(route.query.status)) ? String(route.query.status) : 'all')
+const statusFilter = ref(['unplaced', 'Accepted', 'Interview', 'Searching', 'Pending'].includes(String(route.query.status)) ? String(route.query.status) : 'all')
 const semesterFilter = ref<number | string>('')
 const editReason = ref('')
 
@@ -249,7 +264,7 @@ const form = ref({ full_name: '', student_id: '', email: '', phone_number: '' })
 
 const filteredStudents = computed(() => {
   let list = students.value
-  if (statusFilter.value === 'unplaced') list = list.filter(s => !['Accepted', 'Interview'].includes(s.placementStatus))
+  if (statusFilter.value === 'unplaced') list = list.filter(s => s.placementStatus !== 'Accepted')
   else if (statusFilter.value !== 'all') list = list.filter(s => s.placementStatus === statusFilter.value)
   if (searchQuery.value) {
     const q = searchQuery.value.toLowerCase()
@@ -258,23 +273,35 @@ const filteredStudents = computed(() => {
   return list
 })
 
-const fetchStudents = async (force = false) => {
-  isRefreshing.value = true
+const studentsUrl = () => {
   const params = new URLSearchParams()
   if (semesterFilter.value) params.set('semester_id', String(semesterFilter.value))
+  if (missingChecklist.value) params.set('checklist', 'missing')
   const qs = params.toString()
-  const url = `/api/students${qs ? `?${qs}` : ''}`
+  return `/api/students${qs ? `?${qs}` : ''}`
+}
+
+const changeSemester = () => {
+  if (semesterFilter.value === 'all') missingChecklist.value = false
+  return fetchStudents()
+}
+
+const fetchStudents = async (force = false) => {
+  isRefreshing.value = true
+  const url = studentsUrl()
   const cached = pageCache.read<{ students: any[] }>(url)
   if (cached) students.value = cached.students || []
   isLoading.value = !cached
   try {
     const { students: data } = await pageCache.fetch<{ students: any[] }>(url, { force })
-    if (String(semesterFilter.value || '') === (params.get('semester_id') || '')) students.value = data || []
+    if (studentsUrl() === url) students.value = data || []
   } catch (error) {
     console.error('Fetch failed')
   } finally {
-    isLoading.value = false
-    isRefreshing.value = false
+    if (studentsUrl() === url) {
+      isLoading.value = false
+      isRefreshing.value = false
+    }
   }
 }
 

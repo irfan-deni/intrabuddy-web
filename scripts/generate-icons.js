@@ -2,14 +2,15 @@ import sharp from 'sharp'
 import fs from 'fs'
 import path from 'path'
 
-const src = path.join(process.cwd(), 'public', 'icons', 'logo.png')
+const sourcePath = 'public/intra_buddy_icons/intra_buddy_icon.png'
+const src = path.join(process.cwd(), sourcePath)
 const outDir = path.join(process.cwd(), 'public', 'icons')
 
 const sizes = [16, 32, 48, 72, 96, 128, 180, 192, 256, 512]
 
 if (!fs.existsSync(src)) {
   console.error('Source logo not found at', src)
-  console.error('Place your source PNG at public/icons/logo.png and re-run `npm run generate:icons`')
+  console.error(`Place your source PNG at ${sourcePath} and re-run \`npm run generate:icons\``)
   process.exit(1)
 }
 
@@ -26,7 +27,7 @@ async function gen() {
     // ICO files can contain PNG images for each supported size.
     const faviconSizes = [16, 32, 48]
     const faviconBuffers = await Promise.all(
-      faviconSizes.map((s) => sharp(src).resize(s, s).png().toBuffer())
+      faviconSizes.map((s) => sharp(src).resize(s, s).ensureAlpha().png().toBuffer())
     )
 
     const faviconOut = path.join(process.cwd(), 'public', 'favicon.ico')
@@ -47,7 +48,7 @@ async function gen() {
     fs.writeFileSync(faviconOut, Buffer.concat([header, ...faviconBuffers]))
     console.log('Written', faviconOut)
 
-    console.log('Icon generation complete. Place the source at public/icons/logo.png to regenerate.')
+    console.log('Icon generation complete.')
   } catch (err) {
     console.error('Error generating icons:', err)
     process.exit(1)

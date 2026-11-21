@@ -169,8 +169,8 @@ test.describe('Layout & Navigation', () => {
     await expect(page.locator('text=Version 2.4.0')).toBeVisible()
   })
 
-  test('subtitle shows on dashboard page', async ({ page }) => {
-    await expect(page.getByRole('main').getByText('Real-time overview of the active semester.', { exact: true })).toBeVisible()
+  test('active semester shows in the dashboard header', async ({ page }) => {
+    await expect(page.getByRole('main').locator('header').getByText('Jan-Jun 2026', { exact: true })).toBeVisible()
   })
 
   test('sign out is available only through the account menu', async ({ page }) => {

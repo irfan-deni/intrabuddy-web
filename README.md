@@ -82,10 +82,13 @@ NUXT_SUPER_COORDINATOR_EMAILS=your-email@example.com
 4.  *(Important)*: To login locally, ensure the Auth user `coordinator@intrabuddy.my` exists in **Supabase Auth**. After creating it, run the `core-database-setup.sql` again to sync the profile.
 
 ### 5. Start Development
-Apply `supabase/migrations/20261022132151_coordinator_dashboard_summary.sql` to
-the existing INTRA Buddy schema before starting this version. It adds the
-coordinator-only `get_coordinator_dashboard()` RPC used by `/api/dashboard`.
-The function uses invoker permissions and preserves table RLS policies.
+Apply the Supabase migrations in order before starting this version. The dashboard
+requires `supabase/migrations/20261121043731_coordinator_dashboard_overview.sql`,
+which updates the coordinator-only `get_coordinator_dashboard()` RPC with active
+semester details, confirmed placements, checklist follow-up, and reporting-week
+totals. The function uses invoker permissions and preserves table RLS policies.
+Apply `supabase/migrations/20261121051944_dashboard_logbook_trend.sql` to enable
+the dashboard's six-week logbook chart.
 
 Also apply `supabase/migrations/20261104090000_checklist_phase_due_date.sql`
 so the Submission Requirements editor can persist each template's `phase` and
@@ -211,7 +214,7 @@ For detailed system architecture, database schema, and functional requirements, 
 
 ## 🎨 Branding Assets
 
-Place the provided logo PNG at `public/icons/logo.png` (source PNG). To generate the common icon sizes and a favicon, run:
+The source icon is `public/intra_buddy_icons/intra_buddy_icon.png`. To regenerate the web icon sizes and favicon from it, run:
 
 ```bash
 # install dev deps if needed
