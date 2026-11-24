@@ -28,6 +28,30 @@
     opacity: 1;
   }
 
+  .app-table-header {
+    @apply border-b border-surface-border bg-surface-muted text-sm text-text-muted;
+  }
+
+  .app-table-header > th {
+    @apply py-6 font-semibold;
+  }
+
+  .portal-composer {
+    @apply max-w-3xl space-y-5 border border-surface-border p-4 shadow-sm sm:p-6;
+  }
+
+  .portal-field-label {
+    @apply text-sm font-semibold text-text-muted;
+  }
+
+  .portal-field {
+    @apply w-full rounded-control border border-surface-control bg-surface-muted px-4 py-3 text-sm text-text-primary focus:border-sky-700 focus:ring-1 focus:ring-sky-700;
+  }
+
+  .portal-primary-action {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-control bg-sky-700 px-4 py-2 text-sm font-semibold text-white transition-colors enabled:hover:bg-sky-800 disabled:opacity-50;
+  }
+
   .readable-ui :is(input, textarea, select) {
     font-size: 0.875rem !important;
     font-weight: 500 !important;

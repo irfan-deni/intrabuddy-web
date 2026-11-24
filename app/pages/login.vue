@@ -14,11 +14,15 @@
         <circle cx="391" cy="166" r="4" fill="currentColor"/>
       </svg>
       <div class="max-w-lg">
-        <img src="/icons/icon-128.png" alt="" width="64" height="64" class="mb-10 h-16 w-16 rounded-xl">
-        <h1 class="text-4xl lg:text-5xl font-black tracking-tight leading-tight">IntraBuddy</h1>
-        <p class="text-white/60 mt-4 text-base font-medium leading-relaxed max-w-md">
-          Coordinator Administration Portal
-        </p>
+        <div class="flex items-center gap-4">
+          <img src="/icons/icon-128.png" alt="" width="64" height="64" class="h-16 w-16 shrink-0 rounded-xl">
+          <div>
+            <h1 class="text-4xl lg:text-5xl font-black tracking-tight leading-tight">INTRA Buddy</h1>
+            <p class="text-white/60 mt-1 text-base font-medium leading-relaxed">
+              Coordinator Administration Portal
+            </p>
+          </div>
+        </div>
         <div class="flex items-center gap-6 mt-14 text-slate-300 text-sm font-bold uppercase tracking-widest">
           <span>Placement</span>
           <span class="h-px w-6 bg-white/10"></span>
@@ -49,10 +53,12 @@
         <circle cx="174" cy="171" r="2" fill="currentColor"/>
       </svg>
       <div class="w-full max-w-md mx-auto">
-        <div class="md:hidden text-center mb-10">
-          <img src="/icons/icon-128.png" alt="" width="48" height="48" class="mx-auto mb-4 h-12 w-12 rounded-lg">
-          <h2 class="text-2xl font-bold tracking-tight text-slate-800">IntraBuddy</h2>
-          <p class="text-text-muted mt-1 text-sm font-medium">Coordinator portal</p>
+        <div class="mb-10 flex items-center justify-center gap-3 md:hidden">
+          <img src="/icons/icon-128.png" alt="" width="48" height="48" class="h-12 w-12 shrink-0 rounded-lg">
+          <div>
+            <h2 class="text-2xl font-bold tracking-tight text-slate-800">INTRA Buddy</h2>
+            <p class="text-text-muted mt-1 text-sm font-medium">Coordinator portal</p>
+          </div>
         </div>
 
         <div class="bg-white border border-surface-border shadow-sm rounded-card p-8">
@@ -118,7 +124,7 @@
         </div>
 
         <p class="mt-10 text-center text-sm font-medium text-text-muted">
-          &copy; 2026 IntraBuddy. Professional placement management.
+          &copy; 2026 INTRA Buddy. Professional placement management.
         </p>
       </div>
     </div>

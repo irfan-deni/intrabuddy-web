@@ -1,20 +1,17 @@
 <template>
   <div class="app-surface-ui space-y-6 md:space-y-8">
-    <header class="flex flex-col md:flex-row md:flex-nowrap md:items-end justify-between gap-6 border-b border-surface-border pb-6 md:pb-8">
-      <div class="flex min-w-0 flex-1 items-start gap-4">
-        <NuxtLink to="/students" aria-label="Back to students" class="rounded-control shrink-0 mt-1 h-10 w-10 border border-surface-control flex items-center justify-center hover:bg-slate-900 hover:text-white transition-all text-text-muted">
+    <PortalPageHeader
+      :title="studentName && studentName !== 'Unknown Student' ? studentName : 'Student Profile'"
+      :eyebrow="studentName && studentName !== 'Unknown Student' ? 'Student Profile' : undefined"
+      :description="studentName && studentName !== 'Unknown Student' && studentNumber ? `ID ${studentNumber}` : undefined"
+    >
+      <template #leading>
+        <NuxtLink to="/students" aria-label="Back to students" class="grid h-11 w-11 shrink-0 place-items-center rounded-control bg-sky-100 text-sky-800 transition-colors hover:bg-sky-200">
           <i aria-hidden="true" class="pi pi-arrow-left text-sm"></i>
         </NuxtLink>
-        <div>
-          <h1 class="text-2xl md:text-4xl font-black text-slate-800 tracking-tight uppercase">Student Profile</h1>
-          <p v-if="studentName && studentName !== 'Unknown Student'" class="mt-2 flex flex-wrap items-baseline gap-x-2 gap-y-1 text-base md:text-lg font-semibold text-slate-800">
-            <span>{{ studentName }}</span>
-            <span v-if="studentNumber" class="text-sm font-medium text-text-muted tabular-nums">· ID {{ studentNumber }}</span>
-          </p>
-        </div>
-      </div>
-      <div v-if="studentId" class="flex shrink-0 flex-wrap items-center gap-2 md:justify-end">
-        <div v-if="management?.semesters.length" class="relative mr-1">
+      </template>
+      <template v-if="studentId" #actions>
+        <div v-if="management?.semesters.length" class="relative mr-1 min-w-0 max-w-full sm:max-w-52">
           <label for="student-semester" class="sr-only">Semester</label>
           <i aria-hidden="true" class="pi pi-calendar pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 text-sm text-sky-700"></i>
           <select id="student-semester" v-model.number="selectedSemesterId" class="rounded-control h-10 md:h-11 max-w-full appearance-none cursor-pointer border border-surface-control bg-surface pl-9 pr-9 text-xs font-semibold text-slate-800 shadow-sm transition-colors hover:border-sky-700 hover:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-700 focus-visible:ring-offset-2" @change="changeSemester">
@@ -24,19 +21,19 @@
         </div>
         <button
           :disabled="isLoading || !!errorMessage || !management"
-          class="rounded-control h-10 md:h-11 px-4 bg-sky-700 hover:bg-sky-800 text-white text-[10px] md:text-[11px] font-bold uppercase tracking-wider transition-colors whitespace-nowrap disabled:cursor-not-allowed disabled:opacity-50"
+          class="portal-primary-action whitespace-nowrap"
           @click="downloadStudentProfile"
         >
-          <i class="pi pi-file-pdf mr-1.5 md:mr-2"></i> Download PDF
+          <i aria-hidden="true" class="pi pi-file-pdf"></i> Download PDF
         </button>
         <button
-          class="rounded-control h-10 md:h-11 px-4 border border-surface-control hover:bg-surface-hover text-slate-800 text-[10px] md:text-[11px] font-bold uppercase tracking-wider transition-colors whitespace-nowrap"
+          class="rounded-control inline-flex min-h-11 items-center gap-2 whitespace-nowrap border border-surface-control bg-surface px-4 text-sm font-semibold text-slate-800 transition-colors hover:bg-surface-hover"
           @click="openAlertModal"
         >
-          <i class="pi pi-bell mr-1.5 md:mr-2"></i> Send Alert
+          <i aria-hidden="true" class="pi pi-bell"></i> Send Alert
         </button>
-      </div>
-    </header>
+      </template>
+    </PortalPageHeader>
 
     <div v-if="errorMessage" class="rounded-card p-4 bg-rose-50 border border-rose-100 text-rose-700 text-[10px] font-black uppercase tracking-widest">
       {{ errorMessage }}
@@ -51,15 +48,11 @@
       <!-- Sidebar Info -->
       <div class="lg:col-span-4 space-y-6 lg:space-y-8">
         <article class="rounded-card bg-surface p-4 md:p-6 lg:p-8 border border-surface-border shadow-sm relative">
-          <div class="absolute top-0 right-0 p-6 opacity-5 pointer-events-none">
-            <i class="pi pi-check-square text-6xl text-sky-600"></i>
-          </div>
-          
-          <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider mb-6">Readiness Checklist</h2>
+          <PortalSectionHeading title="Readiness Checklist" icon="pi-check-square" tone="teal" class="mb-5" />
           
           <div class="space-y-6">
             <div>
-              <div class="flex justify-between text-xs font-bold uppercase tracking-wider mb-2">
+              <div class="mb-2 flex justify-between text-sm font-semibold text-text-muted">
                 <span>Completion</span>
                 <span>{{ checklistCompletion }}%</span>
               </div>
@@ -87,7 +80,7 @@
         </article>
 
         <article class="rounded-card bg-surface p-4 md:p-6 lg:p-8 border border-surface-border shadow-sm">
-          <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider mb-6">Student Documents</h2>
+          <PortalSectionHeading title="Student Documents" icon="pi-folder" class="mb-5" />
           
           <div v-if="isLoading" class="py-8 text-center text-text-muted">
             <i class="pi pi-spin pi-spinner text-xl text-sky-600"></i>
@@ -117,7 +110,7 @@
       <!-- Main Activity -->
       <div class="lg:col-span-8 space-y-6 lg:space-y-8">
         <article class="rounded-card bg-surface p-4 md:p-6 lg:p-8 border border-surface-border shadow-sm">
-          <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider mb-6 lg:mb-8">Placement Applications</h2>
+          <PortalSectionHeading title="Placement Applications" icon="pi-briefcase" tone="violet" class="mb-5" />
           
           <div v-if="isLoading" class="py-12 text-center text-text-muted">
             <i class="pi pi-spin pi-spinner text-2xl text-sky-600"></i>

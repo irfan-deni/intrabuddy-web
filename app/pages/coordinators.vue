@@ -1,41 +1,29 @@
 <template>
-  <div class="app-surface-ui min-h-screen">
-    <div class="space-y-12 pb-24">
-      <header class="flex flex-col md:flex-row flex-wrap md:items-end justify-between gap-6">
-        <div class="flex-1">
-          <h1 class="text-2xl md:text-4xl font-black text-slate-800 tracking-tight uppercase">Coordinator Management</h1>
-          <p class="mt-2 text-sm font-normal leading-relaxed text-text-muted">Manage intra coordinator accounts.</p>
-          <div class="mt-6 relative group">
-            <i class="pi pi-search absolute left-5 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-sky-700 transition-colors"></i>
-            <input
-              v-model="searchQuery"
-              type="text"
-              placeholder="Search by name or email..."
-              class="w-full sm:w-80 pl-14 pr-6 py-4 bg-surface-muted border border-surface-control rounded-control outline-none focus:border-sky-700 focus:ring-1 focus:ring-sky-700 transition-all text-sm font-medium tracking-normal shadow-sm"
-            >
-          </div>
-        </div>
-
-        <div v-if="isSuperCoordinator" class="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center md:self-end">
-          <button
-            class="flex items-center justify-center gap-3 whitespace-nowrap rounded-control border border-transparent bg-sky-700 px-6 py-4 text-sm font-semibold text-white transition-all hover:bg-sky-800"
-            @click="openAddModal"
-          >
-            <i class="pi pi-plus"></i>
+  <div class="app-surface-ui">
+    <div class="space-y-5 md:space-y-6">
+      <PortalPageHeader title="Coordinator Management" icon="pi-user-plus" description="Manage intra coordinator accounts.">
+        <template v-if="isSuperCoordinator" #actions>
+          <button type="button" class="portal-primary-action" @click="openAddModal">
+            <i aria-hidden="true" class="pi pi-plus"></i>
             Add Coordinator
           </button>
-        </div>
-      </header>
+        </template>
+      </PortalPageHeader>
+
+      <div class="group relative w-full sm:max-w-sm">
+        <i aria-hidden="true" class="pi pi-search pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-text-muted group-focus-within:text-sky-700"></i>
+        <input v-model="searchQuery" type="search" aria-label="Search coordinators" placeholder="Search by name or email..." class="portal-field h-11 pl-10">
+      </div>
 
       <div class="block md:hidden space-y-3">
         <div v-if="isLoading" class="py-12 text-center">
           <i class="pi pi-spin pi-spinner text-2xl text-sky-600"></i>
         </div>
-        <div v-else-if="coordinators.length === 0" class="py-12 text-center text-sm font-medium text-text-muted">No coordinators found</div>
-        <div v-for="coordinator in coordinators" :key="coordinator.id" class="rounded-card bg-surface border border-surface-border p-4">
+        <div v-else-if="filteredCoordinators.length === 0" class="rounded-card border border-surface-border bg-surface py-12 text-center text-sm font-medium text-text-muted">No coordinators found</div>
+        <div v-for="coordinator in filteredCoordinators" :key="coordinator.id" class="rounded-card bg-surface border border-surface-border p-4">
           <div class="flex items-start justify-between">
             <div class="flex items-center gap-3 min-w-0 flex-1">
-              <div class="rounded-control h-10 w-10 bg-surface-muted border border-surface-border flex items-center justify-center font-black text-text-muted text-xs flex-shrink-0">
+              <div class="grid h-10 w-10 shrink-0 place-items-center rounded-control bg-sky-100 text-sm font-semibold text-sky-800">
                 {{ coordinator.full_name.charAt(0) }}
               </div>
               <div class="min-w-0">
@@ -57,32 +45,32 @@
 
         <div class="overflow-x-auto">
           <table class="w-full text-left">
-            <thead>
-              <tr class="text-xs font-semibold text-text-muted uppercase tracking-wide bg-surface-muted border-b border-surface-border">
-                <th class="px-10 py-6">Coordinator</th>
-                <th class="px-10 py-6">Email</th>
-                <th class="px-10 py-6">Role</th>
-                <th class="px-10 py-6">Created</th>
-                <th class="px-10 py-6 text-right">Actions</th>
+            <thead class="[&_th]:px-4 lg:[&_th]:px-6">
+              <tr class="app-table-header">
+                <th>Coordinator</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Created</th>
+                <th class="text-right">Actions</th>
               </tr>
             </thead>
             <tbody class="text-sm divide-y divide-surface-border">
               <tr v-if="filteredCoordinators.length === 0 && !isLoading" class="text-center">
                 <td colspan="5" class="px-10 py-24 text-sm font-medium text-text-muted">No coordinators found</td>
               </tr>
-              <tr v-for="coordinator in filteredCoordinators" :key="coordinator.id" class="group hover:bg-surface-hover transition-all">
-                <td class="px-10 py-8">
+              <tr v-for="coordinator in filteredCoordinators" :key="coordinator.id" class="group transition-colors hover:bg-surface-hover [&>td]:px-4 [&>td]:py-3 lg:[&>td]:px-6">
+                <td>
                   <div class="flex items-center gap-4">
-                    <div class="rounded-control h-10 w-10 bg-surface-muted border border-surface-border flex items-center justify-center font-black text-text-muted group-hover:bg-slate-900 group-hover:text-white transition-all text-xs">
+                    <div class="grid h-10 w-10 shrink-0 place-items-center rounded-control bg-sky-100 text-sm font-semibold text-sky-800">
                       {{ coordinator.full_name.charAt(0) }}
                     </div>
                     <span class="font-semibold text-slate-800 text-sm">{{ coordinator.full_name }}</span>
                   </div>
                 </td>
-                <td class="px-10 py-8">
+                <td>
                   <span class="text-text-muted font-medium text-sm">{{ coordinator.email }}</span>
                 </td>
-                <td class="px-10 py-8">
+                <td>
                   <span
                     v-if="isSuperCoordinatorByEmail(coordinator.email)"
                     class="bg-amber-100 text-amber-900 text-xs font-semibold px-2 py-0.5 rounded-badge"
@@ -92,10 +80,10 @@
                     class="bg-surface-muted text-text-muted text-xs font-semibold px-2 py-0.5 rounded-badge"
                   >Standard</span>
                 </td>
-                <td class="px-10 py-8">
+                <td>
                   <span class="text-text-muted font-medium text-sm tabular-nums">{{ formatDate(coordinator.created_at) }}</span>
                 </td>
-                <td class="px-10 py-8 text-right">
+                <td class="text-right">
                   <div class="flex items-center justify-end gap-2">
                     <button class="rounded-control h-8 w-8 bg-slate-900 text-white hover:brightness-150 transition-all flex items-center justify-center">
                       <i class="pi pi-pencil text-[10px]"></i>

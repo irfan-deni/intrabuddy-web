@@ -1,6 +1,7 @@
 import { serverSupabaseClient, serverSupabaseServiceRole, serverSupabaseUser } from '~~/server/utils/supabase-server'
 import { isSuperCoordinator } from '~~/server/utils/auth-role'
 import { logbookReviewQueue } from '~~/server/utils/logbook-review-queue'
+import { registrationBlockReason } from '~~/shared/utils/semester-registration'
 import type { Database } from '~/types/supabase'
 import type { DashboardResponse } from '~/types/dashboard'
 
@@ -20,6 +21,9 @@ export default defineEventHandler(async (event) => {
     if (!data) throw new Error('Missing dashboard summary')
     const dashboard = data as unknown as DashboardResponse
     if (dashboard.semester === undefined) throw new Error('Dashboard overview migration is not applied')
+    if (dashboard.semester && registrationBlockReason(dashboard.semester.endDate)) {
+      dashboard.semester.registrationOpen = false
+    }
     // The RPC has already verified the user's live coordinator role. Review
     // data is queried separately so its student-only RLS policy stays intact.
     if (dashboard.semester && isSuperCoordinator(event, { ...user, role: 'coordinator' })) {

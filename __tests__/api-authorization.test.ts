@@ -42,6 +42,38 @@ const superEndpoints = [
 ]
 
 describe('API role enforcement before business operations', () => {
+  it('rejects anonymous session context requests before reading a profile', async () => {
+    mocks.user.mockResolvedValue(null)
+    const { default: handler } = await loadEndpoint('auth/session-context.get')
+    const setHeader = vi.fn()
+    await expect(handler({ node: { res: { setHeader } } } as unknown as H3Event)).rejects.toMatchObject({ statusCode: 401 })
+    expect(setHeader).toHaveBeenCalledWith('Cache-Control', 'no-store')
+    expect(mocks.client).not.toHaveBeenCalled()
+  })
+
+  it.each([
+    ['coordinator', 'admin@example.com', true],
+    ['coordinator', 'other@example.com', false],
+    ['student', 'admin@example.com', false]
+  ])('loads session context for %s %s using the verified identity and live role', async (role, email, isSuperCoordinator) => {
+    mocks.user.mockResolvedValue({ id: 'actor', email })
+    const profile = { id: 'actor', role, email: 'admin@example.com' }
+    const query = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      maybeSingle: vi.fn().mockResolvedValue({ data: profile, error: null })
+    }
+    const from = vi.fn(() => query)
+    mocks.client.mockReturnValue({ from })
+    const { default: handler } = await loadEndpoint('auth/session-context.get')
+    await expect(handler({ node: { res: { setHeader: vi.fn() } } } as unknown as H3Event))
+      .resolves.toEqual({ profile, isSuperCoordinator })
+    expect(from).toHaveBeenCalledTimes(1)
+    expect(from).toHaveBeenCalledWith('users')
+    expect(query.eq).toHaveBeenCalledWith('id', 'actor')
+    expect(mocks.service).not.toHaveBeenCalled()
+  })
+
   it('rejects an ordinary coordinator requesting the logbook review queue', async () => {
     vi.stubGlobal('getQuery', () => ({ review: 'awaiting' }))
     mocks.single.mockResolvedValue({ data: { role: 'coordinator' }, error: null })

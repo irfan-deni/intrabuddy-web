@@ -1,47 +1,43 @@
 <template>
-  <div class="app-surface-ui min-h-screen bg-surface-canvas">
-    <div class="max-w-3xl mx-auto py-8 md:py-12 px-4 sm:px-6 lg:px-8 space-y-8">
-      <header>
-        <h1 class="text-2xl md:text-4xl font-black text-slate-800 tracking-tight uppercase">Settings</h1>
-        <p class="text-text-muted mt-1.5 font-bold uppercase text-[10px] tracking-widest">Account configuration and security.</p>
-      </header>
+  <div class="app-surface-ui space-y-5 md:space-y-6">
+    <PortalPageHeader title="Settings" icon="pi-cog" description="Manage your account details and security." />
+    <div class="max-w-3xl space-y-5">
 
-      <div v-if="successMessage" class="rounded-card p-4 bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest">
+      <div v-if="successMessage" role="status" class="rounded-card border border-teal-200 bg-teal-50 p-4 text-sm font-medium text-teal-900">
         {{ successMessage }}
       </div>
-      <div v-if="errorMessage" class="rounded-card p-4 bg-rose-50 border border-rose-100 text-rose-700 text-[10px] font-black uppercase tracking-widest">
+      <div v-if="errorMessage" role="alert" class="rounded-card border border-rose-100 bg-rose-50 p-4 text-sm font-medium text-rose-700">
         {{ errorMessage }}
       </div>
 
       <article class="rounded-card bg-surface border border-surface-border shadow-sm">
-        <div class="px-6 md:px-10 py-6 border-b border-surface-border">
-          <h2 class="text-sm font-black text-slate-800 uppercase tracking-widest">Personal Information</h2>
-          <p class="text-text-muted text-[10px] font-bold uppercase tracking-wider mt-1">Update your profile details.</p>
+        <div class="border-b border-surface-border p-4 sm:p-6">
+          <PortalSectionHeading title="Personal Information" icon="pi-user" description="Update your profile details." />
         </div>
-        <div class="px-6 md:px-10 py-8 space-y-6">
+        <div class="space-y-5 p-4 sm:p-6">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="space-y-1.5">
-              <label class="text-[9px] font-black text-text-muted uppercase tracking-widest">Email Address</label>
-              <input :value="profile?.email" type="text" readonly class="rounded-control w-full bg-surface-muted text-text-muted cursor-not-allowed border border-surface-control px-5 py-4 text-xs font-black uppercase outline-none">
+              <label for="settings-email" class="portal-field-label">Email address</label>
+              <input id="settings-email" :value="profile?.email" type="text" readonly class="portal-field cursor-not-allowed text-text-muted">
             </div>
             <div class="space-y-1.5">
-              <label class="text-[9px] font-black text-text-muted uppercase tracking-widest">System Role</label>
-              <input :value="role" type="text" readonly class="rounded-control w-full bg-surface-muted text-text-muted cursor-not-allowed border border-surface-control px-5 py-4 text-xs font-black uppercase outline-none">
+              <label for="settings-role" class="portal-field-label">System role</label>
+              <input id="settings-role" :value="role" type="text" readonly class="portal-field cursor-not-allowed text-text-muted">
             </div>
           </div>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="space-y-1.5">
-              <label class="text-[9px] font-black text-text-muted uppercase tracking-widest">Full Name</label>
-              <input v-model="profileForm.fullName" type="text" class="rounded-control w-full bg-surface-muted border border-surface-control px-5 py-4 text-xs font-black uppercase focus:border-sky-700 focus:ring-1 focus:ring-sky-700 outline-none transition-all text-slate-800">
+              <label for="settings-name" class="portal-field-label">Full name</label>
+              <input id="settings-name" v-model="profileForm.fullName" type="text" autocomplete="name" class="portal-field">
             </div>
             <div class="space-y-1.5">
-              <label class="text-[9px] font-black text-text-muted uppercase tracking-widest">Phone Number</label>
-              <input v-model="profileForm.phone" type="text" placeholder="+60 12-345 6789" class="rounded-control w-full bg-surface-muted border border-surface-control px-5 py-4 text-xs font-black uppercase focus:border-sky-700 focus:ring-1 focus:ring-sky-700 outline-none transition-all text-slate-800">
+              <label for="settings-phone" class="portal-field-label">Phone number</label>
+              <input id="settings-phone" v-model="profileForm.phone" type="tel" autocomplete="tel" placeholder="+60 12-345 6789" class="portal-field">
             </div>
           </div>
           <div class="pt-2">
             <button
-              class="rounded-control bg-sky-700 text-white h-12 px-8 font-black text-[10px] uppercase tracking-[0.2em] hover:bg-sky-800 transition-all disabled:opacity-30"
+              class="portal-primary-action"
               :disabled="isSavingProfile"
               @click="saveProfile"
             >
@@ -52,31 +48,30 @@
       </article>
 
       <article class="rounded-card bg-surface border border-surface-border shadow-sm">
-        <div class="px-6 md:px-10 py-6 border-b border-surface-border">
-          <h2 class="text-sm font-black text-slate-800 uppercase tracking-widest">Security</h2>
-          <p class="text-text-muted text-[10px] font-bold uppercase tracking-wider mt-1">Change your account password.</p>
+        <div class="border-b border-surface-border p-4 sm:p-6">
+          <PortalSectionHeading title="Security" icon="pi-lock" tone="teal" description="Change your account password." />
         </div>
-        <div class="px-6 md:px-10 py-8 space-y-6">
+        <div class="space-y-5 p-4 sm:p-6">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="space-y-1.5">
-              <label class="text-[9px] font-black text-text-muted uppercase tracking-widest">Current Password</label>
-              <Password v-model="passwordForm.currentPassword" toggleMask :feedback="false" :pt="passwordPt" />
+              <label for="settings-current-password" class="portal-field-label">Current password</label>
+              <Password v-model="passwordForm.currentPassword" inputId="settings-current-password" autocomplete="current-password" toggleMask :feedback="false" :pt="passwordPt" />
             </div>
             <div class="space-y-1.5"></div>
           </div>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="space-y-1.5">
-              <label class="text-[9px] font-black text-text-muted uppercase tracking-widest">New Password</label>
-              <Password v-model="passwordForm.newPassword" toggleMask :feedback="true" :pt="passwordPt" />
+              <label for="settings-new-password" class="portal-field-label">New password</label>
+              <Password v-model="passwordForm.newPassword" inputId="settings-new-password" autocomplete="new-password" toggleMask :feedback="true" :pt="passwordPt" />
             </div>
             <div class="space-y-1.5">
-              <label class="text-[9px] font-black text-text-muted uppercase tracking-widest">Confirm Password</label>
-              <Password v-model="passwordForm.confirmPassword" toggleMask :feedback="false" :pt="passwordPt" />
+              <label for="settings-confirm-password" class="portal-field-label">Confirm password</label>
+              <Password v-model="passwordForm.confirmPassword" inputId="settings-confirm-password" autocomplete="new-password" toggleMask :feedback="false" :pt="passwordPt" />
             </div>
           </div>
           <div class="pt-2">
             <button
-              class="rounded-control bg-sky-700 text-white h-12 px-8 font-black text-[10px] uppercase tracking-[0.2em] hover:bg-sky-800 transition-all disabled:opacity-30"
+              class="portal-primary-action"
               :disabled="isUpdatingPassword"
               @click="updatePassword"
             >
@@ -190,12 +185,10 @@ const updatePassword = async () => {
   }
 }
 
-const inputClass = 'rounded-control w-full bg-surface-muted border border-surface-control px-5 py-4 text-xs font-black uppercase focus:border-sky-700 focus:ring-1 focus:ring-sky-700 outline-none transition-all text-slate-800'
-
 const passwordPt = {
   root: { class: 'relative w-full' },
   pcInputText: {
-    root: { class: [inputClass, 'pr-12'] }
+    root: { class: 'portal-field pr-12' }
   },
   maskIcon: { class: 'absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-text-muted hover:text-slate-800 transition-colors w-5 h-5' },
   unmaskIcon: { class: 'absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-text-muted hover:text-slate-800 transition-colors w-5 h-5' },

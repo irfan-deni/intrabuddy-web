@@ -60,12 +60,12 @@ export const MOCK_DASHBOARD = {
   reviewQueue: { count: 1 },
   logbookSummary: { weekStart: '2026-05-09', weekEnd: '2026-05-15', total: 2, submitted: 1, pending: 1 },
   logbookTrend: [
-    { weekEnd: '2026-04-10', submitted: 2, overdue: 0, pending: 0 },
-    { weekEnd: '2026-04-17', submitted: 1, overdue: 1, pending: 0 },
-    { weekEnd: '2026-04-24', submitted: 2, overdue: 0, pending: 0 },
-    { weekEnd: '2026-05-01', submitted: 0, overdue: 2, pending: 0 },
-    { weekEnd: '2026-05-08', submitted: 1, overdue: 0, pending: 0 },
-    { weekEnd: '2026-05-15', submitted: 1, overdue: 0, pending: 1 },
+    { weekEnd: '2026-04-10', weekNumber: 5, submitted: 2, overdue: 0, pending: 0 },
+    { weekEnd: '2026-04-17', weekNumber: 6, submitted: 1, overdue: 1, pending: 0 },
+    { weekEnd: '2026-04-24', weekNumber: null, submitted: 2, overdue: 0, pending: 0 },
+    { weekEnd: '2026-05-01', weekNumber: 8, submitted: 0, overdue: 2, pending: 0 },
+    { weekEnd: '2026-05-08', weekNumber: 9, submitted: 1, overdue: 0, pending: 0 },
+    { weekEnd: '2026-05-15', weekNumber: 10, submitted: 1, overdue: 0, pending: 1 },
   ],
 }
 

@@ -56,4 +56,11 @@ describe('semester registration update', () => {
     mocks.service.mockReturnValue({ from: () => ({ update: () => ({ eq: () => ({ select: () => ({ maybeSingle: mocks.result }) }) }) }) })
     await expect(handler()).rejects.toMatchObject({ statusCode: 404 })
   })
+
+  it('returns a conflict when the database rejects opening an ended semester', async () => {
+    const message = 'Registration cannot be opened for an ended semester'
+    mocks.result.mockResolvedValue({ data: null, error: { code: 'P0409', message } })
+    mocks.service.mockReturnValue({ from: () => ({ update: () => ({ eq: () => ({ select: () => ({ maybeSingle: mocks.result }) }) }) }) })
+    await expect(handler()).rejects.toMatchObject({ statusCode: 409, statusMessage: message })
+  })
 })

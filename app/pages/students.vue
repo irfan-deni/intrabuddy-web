@@ -1,14 +1,9 @@
 <template>
   <div class="app-surface-ui relative min-h-screen">
     <div class="space-y-6 md:space-y-8 pb-24">
-      <header class="space-y-4">
-        <div class="flex flex-wrap items-center justify-between gap-4">
-          <div class="min-w-0">
-            <h1 class="text-2xl md:text-4xl font-bold text-slate-800 tracking-tight">Student Directory</h1>
-            <p class="mt-2 text-sm font-normal leading-relaxed text-text-muted">Manage student placements, milestones, and records.</p>
-          </div>
-
-          <div class="flex flex-wrap items-center gap-2">
+      <div class="space-y-4">
+        <PortalPageHeader title="Student Directory" icon="pi-users" description="Manage student placements, milestones, and records.">
+          <template #actions>
             <button
               type="button"
               :disabled="isRefreshing"
@@ -37,8 +32,8 @@
               <i aria-hidden="true" class="pi pi-user-plus hidden sm:inline-block"></i>
               Enroll Student
             </button>
-          </div>
-        </div>
+          </template>
+        </PortalPageHeader>
 
         <div role="group" aria-label="Student directory filters" class="flex flex-wrap items-center gap-3">
           <div class="relative group min-w-0 basis-full xl:grow xl:basis-72">
@@ -71,14 +66,14 @@
             Missing required checklist items
           </label>
         </div>
-      </header>
+      </div>
 
       <!-- Mobile Cards -->
       <div class="block md:hidden space-y-3">
         <div v-if="isLoading" class="py-12 text-center">
           <i class="pi pi-spin pi-spinner text-2xl text-sky-600"></i>
         </div>
-        <div v-else-if="filteredStudents.length === 0" class="py-12 text-center text-[10px] font-black text-text-muted uppercase tracking-widest">No matching records found</div>
+        <div v-else-if="filteredStudents.length === 0" class="rounded-card border border-surface-border bg-surface py-12 text-center text-sm font-medium text-text-muted">No matching records found</div>
         <div v-for="student in filteredStudents" :key="student.id" class="rounded-card bg-surface border border-surface-border p-4 cursor-pointer hover:border-sky-700 transition-all" @click="selectStudent(student)">
           <div class="flex items-start justify-between mb-3">
             <div class="flex items-center gap-3 min-w-0 flex-1">
@@ -124,13 +119,13 @@
         <div class="overflow-x-auto">
           <table class="w-full text-left">
             <thead>
-              <tr class="text-[9px] font-black text-text-muted uppercase tracking-[0.2em] bg-surface-muted border-b border-surface-border">
-                <th class="w-14 px-4 py-6 text-center">#</th>
-                <th class="px-10 py-6">Identity</th>
-                <th class="px-10 py-6">Placement Status</th>
-                <th class="px-10 py-6">Milestone Progress</th>
-                <th class="px-10 py-6">Documents</th>
-                <th class="px-10 py-6 text-right">Records</th>
+              <tr class="app-table-header">
+                <th class="w-14 px-4 text-center">#</th>
+                <th class="px-10">Identity</th>
+                <th class="px-10">Placement Status</th>
+                <th class="px-10">Milestone Progress</th>
+                <th class="px-10">Documents</th>
+                <th class="px-10 text-right">Records</th>
               </tr>
             </thead>
             <tbody class="text-xs divide-y divide-surface-border">
@@ -199,13 +194,13 @@
         <button class="rounded-control absolute top-8 right-8 text-text-muted hover:text-slate-800 transition-colors" @click="closeModal">
           <i class="pi pi-times"></i>
         </button>
-        <h2 class="text-2xl font-black text-slate-800 uppercase tracking-widest mb-10">{{ editingId ? 'Update Record' : 'Enroll Student' }}</h2>
-        <form @submit.prevent="saveStudent" class="space-y-8">
+        <PortalSectionHeading :title="editingId ? 'Update Record' : 'Enroll Student'" icon="pi-user-plus" class="mb-6 pr-8" />
+        <form @submit.prevent="saveStudent" class="space-y-5">
           <div class="space-y-2">
             <label class="text-[9px] font-black text-text-muted uppercase tracking-widest">Full Name</label>
             <input v-model="form.full_name" type="text" required class="rounded-control w-full bg-surface-muted border border-surface-control px-5 py-4 text-text-primary text-xs font-black uppercase focus:border-sky-700 focus:ring-1 focus:ring-sky-700 outline-none transition-all">
           </div>
-          <div class="grid grid-cols-2 gap-6">
+          <div class="grid gap-5 sm:grid-cols-2">
             <div class="space-y-2">
               <label class="text-[9px] font-black text-text-muted uppercase tracking-widest">Matric Number</label>
               <input v-model="form.student_id" type="text" class="rounded-control w-full bg-surface-muted border border-surface-control px-5 py-4 text-text-primary text-xs font-black uppercase focus:border-sky-700 focus:ring-1 focus:ring-sky-700 outline-none transition-all tabular-nums">
@@ -222,7 +217,7 @@
           <label v-if="editingId" class="block text-sm font-medium text-text-muted">Correction reason
             <textarea v-model="editReason" required maxlength="2000" rows="2" class="rounded-control mt-2 w-full bg-surface-muted border border-surface-control text-text-primary p-3" />
           </label>
-          <button type="submit" :disabled="isSaving" class="rounded-control w-full bg-sky-700 text-white h-16 font-black text-[10px] uppercase tracking-[0.4em] hover:bg-sky-800 transition-all disabled:opacity-30">
+          <button type="submit" :disabled="isSaving" class="portal-primary-action w-full">
             {{ isSaving ? 'Syncing...' : 'Confirm Enrollment' }}
           </button>
         </form>

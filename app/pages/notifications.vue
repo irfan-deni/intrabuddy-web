@@ -1,30 +1,28 @@
 <template>
-  <div class="app-surface-ui space-y-8 md:space-y-10">
+  <div class="app-surface-ui space-y-5 md:space-y-6">
+    <PortalPageHeader v-if="!embedded" title="Notification Center" icon="pi-bell" description="Review notification history and send individual alerts." />
     <section>
-      <header v-if="!embedded" class="mb-6">
-        <h1 class="text-2xl md:text-3xl font-black text-slate-800 tracking-tight uppercase">Notification Center</h1>
-        <p class="text-text-muted mt-2 font-bold uppercase text-[10px] tracking-widest">View system notifications and send manual alerts.</p>
-      </header>
-
-      <div class="rounded-card max-w-3xl bg-surface border border-surface-border p-5 md:p-7 shadow-sm">
-        <h2 class="text-[11px] font-black text-slate-800 uppercase tracking-[0.2em] mb-6">Send an alert</h2>
-        <form @submit.prevent="sendAlert" class="space-y-6">
+      <div class="portal-composer rounded-card bg-surface">
+        <PortalSectionHeading title="Send an alert" icon="pi-bell" description="Send a message to one student." />
+        <form @submit.prevent="sendAlert" class="space-y-5">
           <div class="space-y-2 relative">
-            <label class="text-[9px] font-black text-text-muted uppercase tracking-widest">Recipient</label>
+            <label for="alert-recipient" class="portal-field-label">Recipient</label>
             <div class="relative">
               <input
+                id="alert-recipient"
                 ref="searchInputRef"
                 v-model="studentSearch"
                 type="text"
                 placeholder="Search for a student..."
                 required
-                class="w-full bg-surface-muted border border-surface-control rounded-control px-4 py-3 text-xs font-black uppercase tracking-widest focus:border-sky-700 focus:ring-1 focus:ring-sky-700 outline-none transition-all text-slate-800"
+                class="portal-field pr-12"
                 @focus="isDropdownOpen = true"
                 @input="isDropdownOpen = true"
               />
               <button
                 v-if="studentSearch"
                 type="button"
+                aria-label="Clear recipient"
                 class="rounded-control absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-slate-800 transition-colors"
                 @click="clearSelection"
               >
@@ -38,53 +36,53 @@
               <li
                 v-for="s in filteredStudents"
                 :key="s.id"
-                class="px-4 py-3 text-xs font-black uppercase tracking-widest cursor-pointer hover:bg-sky-700 hover:text-white transition-all text-slate-800"
-                @click="selectStudent(s)"
               >
-                {{ s.full_name }} ({{ s.student_id || 'N/A' }})
+                <button type="button" class="w-full px-4 py-3 text-left text-sm text-slate-800 hover:bg-sky-50" @click="selectStudent(s)">
+                  {{ s.full_name }} ({{ s.student_id || 'N/A' }})
+                </button>
               </li>
-              <li v-if="filteredStudents.length === 0" class="px-4 py-3 text-xs text-text-muted font-bold uppercase tracking-widest cursor-default">
+              <li v-if="filteredStudents.length === 0" class="px-4 py-3 text-sm text-text-muted">
                 No matches
               </li>
             </ul>
           </div>
           <div class="space-y-2">
-            <label class="text-[9px] font-black text-text-muted uppercase tracking-widest">Title</label>
-            <input v-model="alertForm.title" type="text" required placeholder="e.g., Urgent Reminder"
-              class="w-full bg-surface-muted border border-surface-control rounded-control px-4 py-3 text-xs font-black uppercase tracking-widest focus:border-sky-700 focus:ring-1 focus:ring-sky-700 outline-none transition-all text-slate-800">
+            <label for="alert-title" class="portal-field-label">Title</label>
+            <input id="alert-title" v-model="alertForm.title" type="text" required placeholder="e.g., Urgent reminder" class="portal-field">
           </div>
           <div class="space-y-2">
-            <label class="text-[9px] font-black text-text-muted uppercase tracking-widest">Message</label>
-            <textarea v-model="alertForm.body" rows="4" required placeholder="Enter alert message..."
-              class="w-full bg-surface-muted border border-surface-control rounded-control px-4 py-3 text-xs font-bold uppercase tracking-widest focus:border-sky-700 focus:ring-1 focus:ring-sky-700 outline-none transition-all resize-none text-slate-800"></textarea>
+            <label for="alert-message" class="portal-field-label">Message</label>
+            <textarea id="alert-message" v-model="alertForm.body" rows="5" required placeholder="Write your alert..." class="portal-field resize-y leading-relaxed"></textarea>
           </div>
-          <button type="submit" :disabled="isSending"
-            class="rounded-control bg-sky-700 text-white px-8 py-4 font-black text-[10px] uppercase tracking-[0.3em] hover:bg-sky-800 transition-all disabled:opacity-30">
-            {{ isSending ? 'Sending...' : 'Send Alert' }}
-          </button>
+          <div class="flex justify-end pt-1">
+            <button type="submit" :disabled="isSending" class="portal-primary-action w-full sm:w-auto">
+              <i aria-hidden="true" class="pi pi-send"></i>
+              {{ isSending ? 'Sending...' : 'Send Alert' }}
+            </button>
+          </div>
         </form>
       </div>
     </section>
 
-    <section class="space-y-6">
-      <div class="flex items-center justify-between">
-        <h2 class="text-[11px] font-black text-slate-800 uppercase tracking-[0.2em]">{{ embedded ? 'Individual Alert History' : 'Notification History' }}</h2>
-        <span class="text-[8px] font-black text-text-muted uppercase tracking-widest tabular-nums">{{ notifications.length }} Records</span>
+    <section class="space-y-3">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <PortalSectionHeading :title="embedded ? 'Individual Alert History' : 'Notification History'" icon="pi-history" tone="violet" />
+        <span class="text-sm font-medium text-text-muted tabular-nums">{{ notifications.length }} record{{ notifications.length === 1 ? '' : 's' }}</span>
       </div>
 
       <div class="rounded-card overflow-hidden bg-surface border border-surface-border">
         <div v-if="isLoading" class="py-12 md:py-16 text-center text-text-muted">
           <i class="pi pi-spin pi-spinner text-xl text-sky-600 mr-2" />
-          <span class="text-[10px] font-black uppercase tracking-widest">Loading...</span>
+          <span class="text-sm font-medium">Loading alerts...</span>
         </div>
 
-        <div v-else-if="notifications.length === 0" class="py-12 md:py-20 text-center text-text-muted font-black uppercase tracking-widest text-[10px]">No notifications recorded</div>
+        <div v-else-if="notifications.length === 0" class="py-12 md:py-20 text-center text-sm font-medium text-text-muted">No notifications recorded</div>
 
         <template v-else>
           <div class="block md:hidden space-y-3 p-4">
             <div v-for="n in notifications" :key="n.id" class="rounded-card border border-surface-border p-4 transition-all" :class="n.is_read ? 'bg-surface' : 'bg-amber-50/40'">
               <div class="flex items-start justify-between mb-2">
-                <div class="font-black text-slate-800 uppercase tracking-tight text-sm">{{ n.recipient_name || 'Unknown' }}</div>
+                <div class="min-w-0 break-words text-sm font-semibold text-slate-800">{{ n.recipient_name || 'Unknown' }}</div>
                 <div class="flex items-center gap-1.5 ml-2">
                   <button
                     v-if="!embedded && !n.is_read"
@@ -94,7 +92,7 @@
                   >
                     <i class="pi pi-check text-[9px]"></i>
                   </button>
-                  <span class="rounded-badge px-2 py-0.5 text-[9px] font-black whitespace-nowrap" :class="n.is_read ? 'bg-emerald-100 text-emerald-900' : 'bg-amber-400 text-slate-900'">{{ n.is_read ? 'Read' : 'Unread' }}</span>
+                  <span class="whitespace-nowrap rounded-badge px-2 py-0.5 text-xs font-semibold" :class="n.is_read ? 'bg-teal-100 text-teal-900' : 'bg-amber-100 text-amber-900'">{{ n.is_read ? 'Read' : 'Unread' }}</span>
                   <button
                     v-if="!embedded"
                     class="h-6 w-6 flex items-center justify-center border border-red-300 text-red-700 hover:bg-red-700 hover:text-white rounded-control transition-all"
@@ -105,11 +103,11 @@
                   </button>
                 </div>
               </div>
-              <div class="font-black text-slate-800 uppercase tracking-tight text-xs mb-1">{{ displayTitle(n) }}</div>
+              <div class="mb-1 break-words text-sm font-semibold text-slate-800">{{ displayTitle(n) }}</div>
               <AnnouncementBody :body="displayBody(n)" compact class="mb-2" />
-              <div class="flex items-center justify-between pt-2 border-t border-surface-border">
-                <span class="rounded-badge px-2 py-0.5 bg-slate-900 text-white text-[8px] font-black uppercase tracking-tighter">{{ n.type || 'general' }}</span>
-                <span class="text-[9px] font-black text-text-muted tabular-nums">{{ n.created_at ? new Date(n.created_at).toLocaleString() : '---' }}</span>
+              <div class="flex flex-wrap items-center justify-between gap-2 border-t border-surface-border pt-2">
+                <span class="rounded-badge bg-sky-100 px-2 py-0.5 text-xs font-semibold text-sky-800">{{ n.type || 'general' }}</span>
+                <span class="text-xs font-medium tabular-nums text-text-muted">{{ n.created_at ? new Date(n.created_at).toLocaleString() : '---' }}</span>
               </div>
             </div>
           </div>
@@ -117,7 +115,7 @@
           <div class="hidden md:block overflow-x-auto">
             <table class="w-full text-left">
               <thead>
-                <tr class="text-[9px] font-black text-text-muted uppercase tracking-[0.2em] bg-surface-muted">
+                <tr class="app-table-header">
                   <th class="px-8 py-6">Recipient</th>
                   <th class="px-8 py-6">Title</th>
                   <th class="px-8 py-6">Type</th>
@@ -127,13 +125,13 @@
               </thead>
               <tbody class="text-xs divide-y divide-surface-border">
                 <tr v-for="n in notifications" :key="n.id" class="transition-all group" :class="n.is_read ? 'bg-surface' : 'bg-amber-50/40'">
-                  <td class="px-8 py-6 font-black text-slate-800 uppercase tracking-tight text-xs whitespace-nowrap">{{ n.recipient_name || 'Unknown' }}</td>
+                  <td class="px-8 py-6 text-sm font-semibold text-slate-800">{{ n.recipient_name || 'Unknown' }}</td>
                   <td class="px-8 py-6">
-                    <div class="font-black text-slate-800 uppercase tracking-tight text-xs">{{ displayTitle(n) }}</div>
+                    <div class="break-words text-sm font-semibold text-slate-800">{{ displayTitle(n) }}</div>
                     <AnnouncementBody :body="displayBody(n)" compact class="mt-1" />
                   </td>
                   <td class="px-8 py-6">
-                    <span class="rounded-badge px-2 py-0.5 bg-slate-900 text-white text-[8px] font-black uppercase tracking-tighter">{{ n.type || 'general' }}</span>
+                    <span class="rounded-badge bg-sky-100 px-2 py-0.5 text-xs font-semibold text-sky-800">{{ n.type || 'general' }}</span>
                   </td>
                   <td class="px-8 py-6 text-right">
                     <div class="flex items-center justify-end gap-2">
@@ -145,7 +143,7 @@
                       >
                         <i class="pi pi-check text-[10px]"></i>
                       </button>
-                      <span class="rounded-badge px-2 py-0.5 text-[9px] font-black" :class="n.is_read ? 'bg-emerald-100 text-emerald-900' : 'bg-amber-400 text-slate-900'">{{ n.is_read ? 'Read' : 'Unread' }}</span>
+                      <span class="rounded-badge px-2 py-0.5 text-xs font-semibold" :class="n.is_read ? 'bg-teal-100 text-teal-900' : 'bg-amber-100 text-amber-900'">{{ n.is_read ? 'Read' : 'Unread' }}</span>
                       <button
                         v-if="!embedded"
                         class="h-7 w-7 flex items-center justify-center border border-red-300 text-red-700 hover:bg-red-700 hover:text-white rounded-control transition-all"
@@ -156,7 +154,7 @@
                       </button>
                     </div>
                   </td>
-                  <td class="px-8 py-6 text-right text-text-muted font-black tabular-nums text-[10px]">
+                  <td class="px-8 py-6 text-right text-xs font-medium tabular-nums text-text-muted">
                     {{ n.created_at ? new Date(n.created_at).toLocaleString() : '---' }}
                   </td>
                 </tr>

@@ -8,7 +8,7 @@
         <div v-show="!collapsed" class="sidebar-brand flex min-w-0 flex-1 items-center gap-3">
           <img src="/icons/icon-128.png" alt="" width="40" height="40" class="h-10 w-10 shrink-0 rounded-lg">
           <div class="sidebar-copy flex flex-col">
-            <span class="text-sm font-bold tracking-wide text-white whitespace-nowrap">IntraBuddy</span>
+            <span class="text-sm font-bold tracking-wide text-white whitespace-nowrap">INTRA Buddy</span>
             <span class="mt-0.5 text-xs font-medium text-slate-400 whitespace-nowrap">Coordinator portal</span>
           </div>
         </div>
@@ -79,7 +79,7 @@
         <div class="flex items-center gap-3">
           <img src="/icons/icon-128.png" alt="" width="40" height="40" class="h-10 w-10 shrink-0 rounded-lg">
           <div class="flex flex-col">
-            <span class="text-sm font-bold tracking-wide text-white whitespace-nowrap">IntraBuddy</span>
+            <span class="text-sm font-bold tracking-wide text-white whitespace-nowrap">INTRA Buddy</span>
             <span class="mt-0.5 text-xs font-medium text-slate-400">Coordinator portal</span>
           </div>
         </div>
@@ -220,11 +220,6 @@ const { unreadCount, fetchInitialCount, setupRealtimeListener, cleanup } = useNo
 const pageCache = usePageCache()
 const activeSemesterName = useState<string | null>('active-semester-name', () => null)
 
-const loadActiveSemester = async () => {
-  const { data, error } = await supabase.from('semesters').select('name').eq('is_active', true).maybeSingle()
-  if (!error) activeSemesterName.value = data?.name || ''
-}
-
 const collapsed = ref(false)
 const mobileOpen = ref(false)
 const accountMenuOpen = ref(false)
@@ -260,7 +255,6 @@ const prefetchRoute = (path: string) => {
 watch(route, () => {
   mobileOpen.value = false
   accountMenuOpen.value = false
-  void loadActiveSemester()
 })
 
 watch(mobileOpen, (val) => {
@@ -268,7 +262,15 @@ watch(mobileOpen, (val) => {
 })
 
 onMounted(async () => {
-  void loadActiveSemester()
+  // The dashboard provides the active semester in its summary. For other
+  // entry routes, look it up only until the signed-in layout has a value.
+  watch([() => route.path === '/', () => profile.value?.id], async ([onDashboard, userId], _, onCleanup) => {
+    if (onDashboard || !userId || activeSemesterName.value !== null) return
+    let cancelled = false
+    onCleanup(() => { cancelled = true })
+    const { data, error } = await supabase.from('semesters').select('name').eq('is_active', true).maybeSingle()
+    if (!cancelled && !error && activeSemesterName.value === null) activeSemesterName.value = data?.name || ''
+  }, { immediate: true })
   await fetchInitialCount()
   setupRealtimeListener()
   document.addEventListener('keydown', handleDocumentKeydown)

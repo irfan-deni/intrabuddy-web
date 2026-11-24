@@ -15,6 +15,33 @@ test.beforeEach(async ({ page }) => {
   await setupPage(page)
 })
 
+for (const { path, label, breakpoint } of [
+  { path: '/logbooks', label: 'Student', breakpoint: 768 },
+  { path: '/students', label: 'Identity', breakpoint: 768 },
+  { path: '/checklists', label: 'Requirement Title', breakpoint: 768 },
+  { path: '/semesters', label: 'Semester', breakpoint: 1280 },
+  { path: '/coordinators', label: 'Coordinator', breakpoint: 768 }
+]) {
+  test(`${path} uses the shared Logbooks table header`, async ({ page }) => {
+    await page.goto(path)
+    const header = page.getByRole('main').getByRole('columnheader', { name: label, exact: true })
+    await expect(header).toBeVisible()
+    await expect(header.locator('..')).toHaveCSS('background-color', muted)
+    await expect(header).toHaveCSS('font-size', '14px')
+    await expect(header).toHaveCSS('font-weight', '600')
+    await expect(header).toHaveCSS('text-transform', 'none')
+    await expect(header).toHaveCSS('padding-top', '24px')
+    await expect(header).toHaveCSS('padding-bottom', '24px')
+
+    await page.setViewportSize({ width: breakpoint, height: 843 })
+    await expect(header).toBeVisible()
+    await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+
+    await page.setViewportSize({ width: breakpoint - 1, height: 843 })
+    await expect(header).toBeHidden()
+  })
+}
+
 for (const path of routes) {
   test(`${path} uses shared soft surfaces and radii`, async ({ page }, testInfo) => {
     await page.goto(path)
@@ -87,10 +114,10 @@ test('recipient dropdown is rounded and not clipped by its form card', async ({ 
 test('login preserves dark branding while using soft cards and controls', async ({ page }) => {
   await page.goto('/login')
   const card = page.getByRole('heading', { name: 'Coordinator login' }).locator('..')
-  await expect(card).toHaveCSS('background-color', surface)
+  await expect(card).toHaveCSS('background-color', 'rgb(255, 255, 255)')
   await expect(card).toHaveCSS('border-radius', '12px')
-  await expect(page.locator('#email')).toHaveCSS('background-color', muted)
-  await expect(page.locator('#password')).toHaveCSS('background-color', muted)
+  await expect(page.locator('#email')).toHaveCSS('background-color', 'rgb(255, 255, 255)')
+  await expect(page.locator('#password')).toHaveCSS('background-color', 'rgb(255, 255, 255)')
   await expect(page.getByRole('button', { name: 'Log in', exact: true })).toHaveCSS('border-radius', '8px')
   await expect(page.locator('.bg-slate-900').first()).toHaveCSS('background-color', 'rgb(15, 23, 42)')
 })

@@ -4,7 +4,6 @@ import type { Database } from '~/types/supabase'
 type CurrentProfile = Database['public']['Tables']['users']['Row']
 
 export function useCurrentProfile() {
-  const supabase = useSupabaseClient<Database>()
   const user = useSupabaseUser()
 
   const profile = useState<CurrentProfile | null>('current-profile', () => null)
@@ -13,46 +12,32 @@ export function useCurrentProfile() {
   const superCoordinator = useState<boolean>('current-super-coordinator', () => false)
   const requestFetch = useRequestFetch()
   const pageCache = usePageCache()
+  const activeSemesterName = useState<string | null>('active-semester-name', () => null)
 
   const loadProfile = async (authenticatedUserId?: string, accessToken?: string) => {
     const userId = authenticatedUserId || (user.value ? getUserId(user.value) : null)
-    if (!userId) {
-      profile.value = null
-      role.value = null
-      superCoordinator.value = false
-      return null
-    }
-
     isLoading.value = true
-    superCoordinator.value = false
 
     try {
-      const { data, error } = await supabase
-        .from('users')
-        .select('id, email, full_name, role, student_id, phone_number, avatar_url, created_at, updated_at')
-        .eq('id', userId)
-        .maybeSingle()
+      const context = await requestFetch('/api/auth/session-context', {
+        headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
+        cache: 'no-store',
+        retry: 0
+      }).catch(() => {
+        throw new Error('Unable to verify coordinator access. Please try again or contact your administrator.')
+      })
 
-      if (error) {
-        throw new Error('Unable to load your account profile. Please try again or contact your administrator.')
-      }
-
-      if (!data) {
+      if (!context.profile || (userId && context.profile.id !== userId)) {
         throw new Error('Your account profile is missing or inaccessible. Please contact your administrator.')
       }
 
-      profile.value = data
-      role.value = data.role as UserRole
-      if (data.role === 'coordinator') {
-        try {
-          const privileges = await requestFetch('/api/auth/privileges', {
-            headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined
-          })
-          superCoordinator.value = privileges.isSuperCoordinator
-        } catch {
-          throw new Error('Unable to verify coordinator access. Please try again or contact your administrator.')
-        }
+      if (profile.value?.id !== context.profile.id) {
+        pageCache.clear()
+        activeSemesterName.value = null
       }
+      profile.value = context.profile
+      role.value = context.profile.role
+      superCoordinator.value = context.isSuperCoordinator
       return profile.value
     } catch (error) {
       clearProfile()
@@ -64,6 +49,7 @@ export function useCurrentProfile() {
 
   const clearProfile = () => {
     pageCache.clear()
+    activeSemesterName.value = null
     profile.value = null
     role.value = null
     superCoordinator.value = false

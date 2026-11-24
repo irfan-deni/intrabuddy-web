@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test'
 import { setupPage } from './helpers'
+import { MOCK_PROFILE } from './fixtures/data'
 import { managementFixture } from './fixtures/student-management'
 
 test.describe('Super Coordinator student management', () => {
@@ -27,7 +28,7 @@ test.describe('Super Coordinator student management', () => {
   test('ordinary coordinators remain read-only across semesters', async ({ page }) => {
     const data = managementFixture()
     data.capabilities = { editContact: false, correctRecords: false, reviewLogbooks: false }
-    await page.route('**/api/auth/privileges', route => route.fulfill({ json: { isSuperCoordinator: false } }))
+    await page.route('**/api/auth/session-context', route => route.fulfill({ json: { profile: MOCK_PROFILE, isSuperCoordinator: false } }))
     await page.route('**/api/students/student-1/management*', route => {
       const previous = new URL(route.request().url()).searchParams.get('semester_id') === '2'
       return route.fulfill({ json: previous ? { ...data, semesterId: 2, logbooks: [] } : data })

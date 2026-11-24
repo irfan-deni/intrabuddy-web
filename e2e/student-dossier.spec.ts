@@ -10,7 +10,8 @@ test.describe('Student Dossier', () => {
   })
 
   test('renders student dossier page', async ({ page }) => {
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Student Profile')
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Alice Johnson')
+    await expect(page.locator('main header').getByText('Student Profile', { exact: true })).toBeVisible()
     await expect(page.locator('text=Readiness Checklist')).toBeVisible()
     await expect(page.locator('text=Placement Applications')).toBeVisible()
     await expect(page.getByRole('heading', { name: 'Weekly Logbooks' })).toBeVisible()
@@ -25,7 +26,7 @@ test.describe('Student Dossier', () => {
     await expect(semester).toBeVisible()
     const semesterBox = await semester.boundingBox()
     const downloadBox = await header.getByRole('button', { name: 'Download PDF' }).boundingBox()
-    const titleBox = await header.getByRole('heading', { name: 'Student Profile' }).boundingBox()
+    const titleBox = await header.getByRole('heading', { name: 'Alice Johnson' }).boundingBox()
     expect(semesterBox).not.toBeNull()
     expect(downloadBox).not.toBeNull()
     expect(titleBox).not.toBeNull()
@@ -35,7 +36,7 @@ test.describe('Student Dossier', () => {
 
   test('places management below documents and logbooks beside the sidebar on desktop', async ({ page }) => {
     await page.setViewportSize({ width: 1469, height: 843 })
-    const documents = await page.getByRole('heading', { name: 'Student Documents' }).locator('..').boundingBox()
+    const documents = await page.getByRole('heading', { name: 'Student Documents' }).locator('xpath=ancestor::article[1]').boundingBox()
     const management = await page.locator('#student-management').boundingBox()
     const logbooks = await page.locator('#weekly-logbooks').boundingBox()
     expect(documents).not.toBeNull()

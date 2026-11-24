@@ -20,6 +20,9 @@ export default defineEventHandler(async (event) => {
     .maybeSingle()
 
   if (error) {
+    if (error.code === 'P0409') {
+      throw createError({ statusCode: 409, statusMessage: error.message })
+    }
     console.error('[Semester Registration Error]:', error)
     throw createError({ statusCode: 500, statusMessage: 'Failed to update semester registration' })
   }

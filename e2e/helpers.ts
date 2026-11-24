@@ -84,11 +84,14 @@ export async function mockSupabaseRest(page: Page, profile = MOCK_PROFILE) {
           { id: 1, name: 'Jan-Jun 2026', start_date: '2026-01-15', end_date: '2026-06-30', is_active: true, created_at: '2025-12-01T00:00:00Z' },
           { id: 2, name: 'Jul-Dec 2025', start_date: '2025-07-01', end_date: '2025-12-31', is_active: false, created_at: '2025-06-01T00:00:00Z' }
         ]
+        const rows = new URL(url).searchParams.get('is_active') === 'eq.true'
+          ? semesters.filter(semester => semester.is_active)
+          : semesters
         const isSingle = route.request().headers()['accept']?.includes('application/vnd.pgrst.object+json')
         return route.fulfill({
           status: 200,
           contentType: 'application/json',
-          body: JSON.stringify(isSingle ? semesters[0] : semesters),
+          body: JSON.stringify(isSingle ? rows[0] : rows),
         })
       }
       if (table === 'student_checklists') {
@@ -174,12 +177,16 @@ export async function mockSupabaseRest(page: Page, profile = MOCK_PROFILE) {
 }
 
 export async function mockApiRoutes(page: Page) {
-  await page.route(/^http:\/\/localhost:3100\/api\//, async (route) => {
+  await page.route(/^http:\/\/localhost:\d+\/api\//, async (route) => {
     const url = route.request().url()
     const method = route.request().method()
 
-    if (url.includes('/api/auth/privileges') && method === 'GET') {
-      return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ isSuperCoordinator: true }) })
+    if (url.includes('/api/auth/session-context') && method === 'GET') {
+      const headers = await route.request().allHeaders()
+      if (!headers.authorization && !headers.cookie?.includes(`sb-${PROJECT_REF}-auth-token`)) {
+        return route.fulfill({ status: 401, json: { message: 'Unauthorized' } })
+      }
+      return route.fulfill({ json: { profile: MOCK_PROFILE, isSuperCoordinator: true } })
     }
 
     if (url.includes('/api/semesters') && method === 'GET') {

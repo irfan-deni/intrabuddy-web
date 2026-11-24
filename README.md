@@ -88,7 +88,9 @@ which updates the coordinator-only `get_coordinator_dashboard()` RPC with active
 semester details, confirmed placements, checklist follow-up, and reporting-week
 totals. The function uses invoker permissions and preserves table RLS policies.
 Apply `supabase/migrations/20261121051944_dashboard_logbook_trend.sql` to enable
-the dashboard's six-week logbook chart.
+the dashboard's six-week logbook chart and
+`supabase/migrations/20261122004555_dashboard_logbook_week_numbers.sql` to show
+reporting week numbers alongside the dates.
 
 Also apply `supabase/migrations/20261104090000_checklist_phase_due_date.sql`
 so the Submission Requirements editor can persist each template's `phase` and
@@ -106,6 +108,12 @@ and application counts for every semester. Active semesters cannot be deleted,
 and semesters with historical records are blocked from deletion so their data is
 preserved; the confirmation dialog explains the reason and warns when checklist
 templates will be removed with an otherwise empty semester.
+Registration can be opened for current and upcoming semesters, regardless of
+which semester is active. It is effectively closed after the end date in
+Malaysia time, or if no end date is set. Apply the `semester_registration_deadline`
+migration before deploying to enforce this when changing the switch and enrolling
+students. Automatic enrollment and the web Add Student flow target the newest
+semester accepting registration.
 
 ```bash
 npm run dev
@@ -214,7 +222,7 @@ For detailed system architecture, database schema, and functional requirements, 
 
 ## 🎨 Branding Assets
 
-The source icon is `public/intra_buddy_icons/intra_buddy_icon.png`. To regenerate the web icon sizes and favicon from it, run:
+The source icon is `design/branding/intra_buddy_icon.png`. That directory also holds the archived logo and mobile artwork, which the web app does not serve. To regenerate the web icons and favicon, run:
 
 ```bash
 # install dev deps if needed
@@ -222,4 +230,4 @@ npm install
 npm run generate:icons
 ```
 
-The generated icons will be written to `public/icons/icon-<size>.png` and `public/favicon.ico`. The app already references these files in `nuxt.config.ts`.
+The script writes `public/favicon.ico` and the 32×32, 128×128, and 180×180 PNGs in `public/icons/`. The 32×32 and 180×180 icons are linked in `nuxt.config.ts`; the 128×128 icon is used in the app layout and login page.

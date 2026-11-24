@@ -8,6 +8,7 @@ export type LogbookSummary = {
 
 export type LogbookTrendWeek = {
   weekEnd: string
+  weekNumber?: number | null
   submitted: number
   overdue: number
   pending: number

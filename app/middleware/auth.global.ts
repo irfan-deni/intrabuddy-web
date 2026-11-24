@@ -6,20 +6,14 @@ export default defineNuxtRouteMiddleware(async (to) => {
 
   const user = useSupabaseUser()
   const { profile, role, loadProfile, clearProfile } = useCurrentProfile()
-  // The reactive user can lag behind a successful password sign-in.
-  let userId = user.value ? getUserId(user.value) : null
-  if (!userId) {
-    const { data, error } = await useSupabaseClient().auth.getUser()
-    if (!error) userId = data.user?.id || null
-  }
-  if (!userId) {
-    clearProfile()
-    return navigateTo('/login')
-  }
+  const pageCache = usePageCache()
+  const session = useSupabaseSession()
+  // Session state can be ready before the reactive user updates after sign-in.
+  const userId = (import.meta.client ? session.value?.user?.id : undefined) || (user.value && getUserId(user.value))
 
-  if (!role.value || profile.value?.id !== userId) {
+  if (!userId || !role.value || profile.value?.id !== userId) {
     try {
-      await loadProfile(userId)
+      await loadProfile(userId || undefined)
     } catch {
       clearProfile()
       return navigateTo('/login')
@@ -36,5 +30,10 @@ export default defineNuxtRouteMiddleware(async (to) => {
   if (to.meta.superCoordinatorOnly) {
     const { isSuperCoordinator } = useCoordinatorPrivileges()
     if (!isSuperCoordinator.value) return navigateTo('/')
+  }
+
+  // The page shares this in-flight request. Don't block navigation or fetch on SSR.
+  if (import.meta.client && to.path === '/') {
+    void pageCache.fetch('/api/dashboard').catch(() => {})
   }
 })

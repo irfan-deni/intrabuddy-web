@@ -25,17 +25,22 @@ test('shows semester context, placement, follow-up and weekly submissions once',
   await expect(placement.locator('.placement-progress')).toHaveCount(1)
 
   const attention = page.getByRole('region', { name: 'Needs attention' })
-  await expect(attention.getByRole('link', { name: /3 Overdue logbooks/ })).toHaveAttribute('href', '/logbooks?status=Late')
-  await expect(attention.getByRole('link', { name: /1 Logbooks awaiting review/ })).toHaveAttribute('href', '/logbooks?review=awaiting')
-  await expect(attention.getByRole('link', { name: /1 Students missing required checklist items/ })).toHaveAttribute('href', '/students?checklist=missing')
+  await expect(attention.getByRole('heading', { name: 'Logbooks', exact: true })).toBeVisible()
+  await expect(attention.getByRole('link').first()).toHaveAccessibleName('Overdue: 3 logbooks')
+  await expect(attention.getByRole('link', { name: 'Overdue: 3 logbooks' })).toHaveAttribute('href', '/logbooks?status=Late')
+  await expect(attention.getByRole('link', { name: 'Awaiting review: 1 logbook' })).toHaveAttribute('href', '/logbooks?review=awaiting')
+  await expect(attention.getByRole('link', { name: 'Incomplete checklists 1 student' })).toHaveAttribute('href', '/students?checklist=missing')
 
   const weekly = page.getByRole('region', { name: 'Weekly logbooks' })
   await expect(weekly.getByRole('progressbar')).toHaveCount(0)
   const trend = weekly.getByRole('figure')
   await expect(trend.getByRole('link')).toHaveCount(6)
-  await expect(trend.getByRole('link', { name: 'Week ending 1 May 2026: 0 submitted, 2 overdue, 0 not yet due' }))
+  await expect(trend.getByText('Week 5', { exact: true })).toBeVisible()
+  await expect(trend.getByText('Week 1', { exact: true })).toHaveCount(0)
+  await expect(trend.getByRole('link', { name: 'Week ending 24 April 2026: 2 submitted, 0 overdue, 0 not yet due' })).toBeVisible()
+  await expect(trend.getByRole('link', { name: 'Week 8, ending 1 May 2026: 0 submitted, 2 overdue, 0 not yet due' }))
     .toHaveAttribute('href', '/logbooks?week_end=2026-05-01')
-  await expect(trend.getByRole('link', { name: 'Current week, ending 15 May 2026: 1 submitted, 0 overdue, 1 not yet due' })).toBeVisible()
+  await expect(trend.getByRole('link', { name: 'Week 10 (current), ending 15 May 2026: 1 submitted, 0 overdue, 1 not yet due' })).toBeVisible()
 })
 
 test('links placement follow-up to students without an accepted placement, including interviews', async ({ page }) => {
@@ -55,13 +60,13 @@ test('opens the filtered checklist and review queues', async ({ page }) => {
   await page.route('**/api/logbooks?review=awaiting', route => route.fulfill({ json: [MOCK_LOGBOOKS[0]] }))
 
   await page.goto('/')
-  await page.getByRole('link', { name: /Students missing required checklist items/ }).click()
+  await page.getByRole('link', { name: /Incomplete checklists/ }).click()
   await expect(page.getByRole('checkbox', { name: 'Missing required checklist items' })).toBeChecked()
   await expect(page.getByRole('table').getByText('Bob Smith')).toBeVisible()
   await expect(page.getByRole('table').getByText('Alice Johnson')).toHaveCount(0)
 
   await page.goBack()
-  await page.getByRole('link', { name: /Logbooks awaiting review/ }).click()
+  await page.getByRole('link', { name: /Awaiting review:.*logbook/ }).click()
   await expect(page.getByRole('combobox', { name: 'Filter by status' })).toHaveValue('awaiting')
   await expect(page.getByRole('table').getByText('Alice Johnson')).toBeVisible()
   await expect(page.getByRole('table').getByText('Bob Smith')).toHaveCount(0)
@@ -73,7 +78,7 @@ test('opens only the reporting week and allows returning to all weeks', async ({
     json: [MOCK_LOGBOOKS[0], { ...MOCK_LOGBOOKS[1], weekEndDate: '2026-05-08', weekNumber: 5 }]
   }))
   await page.goto('/')
-  await page.getByRole('figure').getByRole('link', { name: /Current week, ending 15 May 2026/ }).click()
+  await page.getByRole('figure').getByRole('link', { name: /Week 10 \(current\), ending 15 May 2026/ }).click()
   await expect(page).toHaveURL(/\/logbooks\?week_end=2026-05-15$/)
   await expect(page.getByRole('table').getByText('Alice Johnson')).toBeVisible()
   await expect(page.getByRole('table').getByText('Bob Smith')).toHaveCount(0)
@@ -89,7 +94,7 @@ test('keeps the overview and first follow-up visible at desktop sizes, without m
     await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
     if (width >= 1366) {
       await expect(page.getByRole('heading', { name: 'Placement overview' })).toBeInViewport({ ratio: 1 })
-      await expect(page.getByRole('link', { name: /Overdue logbooks from earlier weeks/ })).toBeInViewport({ ratio: 1 })
+      await expect(page.getByRole('link', { name: /Overdue:.*logbooks/ })).toBeInViewport({ ratio: 1 })
       await expect(page.getByRole('heading', { name: 'Weekly logbooks' })).toBeInViewport({ ratio: 1 })
     }
   }
@@ -103,15 +108,18 @@ test('simplifies the phone header, attention rows, and logbook chart', async ({ 
   await expect(semester.locator('..')).toHaveCSS('flex-direction', 'column')
   await expect(header.getByRole('button', { name: 'Refresh' })).toHaveCSS('min-height', '44px')
 
-  const followUp = page.getByRole('region', { name: 'Needs attention' }).getByRole('link', { name: /Overdue logbooks/ })
+  const attention = page.getByRole('region', { name: 'Needs attention' })
+  const followUp = attention.getByRole('link', { name: /Overdue:.*logbooks/ })
   await expect(followUp).toHaveCSS('border-top-width', '0px')
-  await expect(followUp.getByText('3')).toHaveCSS('order', '1')
+  await expect(followUp.getByText('3')).toHaveCSS('background-color', 'rgb(254, 243, 199)')
+  await expect(attention.getByText('1', { exact: true })).toHaveCSS('background-color', 'rgb(241, 245, 249)')
+  await expect(attention.getByText('1 student', { exact: true })).toHaveCSS('background-color', 'rgb(241, 245, 249)')
 
   const chart = page.getByRole('figure')
   await expect(chart.getByRole('list', { name: 'Logbook statuses' }).locator('..')).toHaveCSS('order', '9999')
   const scroller = chart.locator('.chart-scroll')
   await expect.poll(() => scroller.evaluate(el => el.scrollWidth > el.clientWidth)).toBe(true)
-  const lastWeek = chart.getByRole('link', { name: /Current week, ending/ })
+  const lastWeek = chart.getByRole('link', { name: /Week 10 \(current\), ending/ })
   await lastWeek.scrollIntoViewIfNeeded()
   await expect(lastWeek).toBeInViewport()
 })
@@ -159,8 +167,8 @@ test('handles loading, an empty reporting week, a failed refresh, and no active 
   releaseResponse()
   await expect(page.getByText('No logbooks due this week.')).toBeVisible()
   await expect(page.getByRole('region', { name: 'Weekly logbooks' }).getByRole('figure')).toHaveCount(0)
-  await expect(page.getByText('No follow-up items right now.')).toBeVisible()
-  await expect(page.getByText('Logbooks awaiting review')).toHaveCount(0)
+  await expect(page.getByText('You’re all caught up.')).toBeVisible()
+  await expect(page.getByRole('region', { name: 'Needs attention' }).getByRole('link')).toHaveCount(0)
 
   await page.route('**/api/dashboard', route => route.fulfill({ status: 500, json: { message: 'Unavailable' } }))
   await page.getByRole('button', { name: 'Refresh' }).click()
@@ -169,7 +177,8 @@ test('handles loading, an empty reporting week, a failed refresh, and no active 
 
   await page.route('**/api/dashboard', route => route.fulfill({ json: { ...MOCK_DASHBOARD, semester: null } }))
   await page.getByRole('button', { name: 'Refresh' }).click()
-  await expect(page.getByText('No active semester', { exact: true })).toBeVisible()
+  await expect(page.getByRole('main').getByText('No active semester', { exact: true })).toBeVisible()
+  await expect(page.getByRole('banner').getByText('No active semester', { exact: true })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Placement overview' })).toHaveCount(0)
   await expect(page.getByRole('button', { name: 'Export Semester Report' })).toBeDisabled()
 })

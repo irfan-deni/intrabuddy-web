@@ -1,25 +1,23 @@
 <template>
   <div class="app-surface-ui space-y-6 md:space-y-8">
-    <header class="flex flex-wrap items-center justify-between gap-4">
-      <div>
-        <h1 class="text-2xl md:text-4xl font-bold text-slate-800 tracking-tight">Checklists</h1>
-        <p class="mt-2 text-sm font-normal leading-relaxed text-text-muted">Manage the requirement template and track every student's completion.</p>
-      </div>
-      <div class="grid w-full gap-1.5 sm:w-56">
-        <label for="checklist-semester" class="text-sm font-semibold text-text-muted">Semester</label>
-        <select
-          id="checklist-semester"
-          v-model.number="selectedSemesterId"
-          class="rounded-control h-11 w-full min-w-0 cursor-pointer border border-surface-control bg-surface-muted px-3 text-sm font-normal text-text-primary focus:border-sky-700 focus:ring-1 focus:ring-sky-700 disabled:opacity-50"
-          :disabled="!semesters.length || isLoading"
-          @change="onSemesterChange"
-        >
-          <option v-for="semester in semesters" :key="semester.id" :value="semester.id">
-            {{ semester.name }}{{ semester.is_active ? ' (Active)' : '' }}
-          </option>
-        </select>
-      </div>
-    </header>
+    <PortalPageHeader title="Checklists" icon="pi-check-square" description="Manage the requirement template and track every student's completion.">
+      <template #actions>
+        <div class="grid w-full gap-1.5 sm:w-56">
+          <label for="checklist-semester" class="text-sm font-semibold text-text-muted">Semester</label>
+          <select
+            id="checklist-semester"
+            v-model.number="selectedSemesterId"
+            class="rounded-control h-11 w-full min-w-0 cursor-pointer border border-surface-control bg-surface-muted px-3 text-sm font-normal text-text-primary focus:border-sky-700 focus:ring-1 focus:ring-sky-700 disabled:opacity-50"
+            :disabled="!semesters.length || isLoading"
+            @change="onSemesterChange"
+          >
+            <option v-for="semester in semesters" :key="semester.id" :value="semester.id">
+              {{ semester.name }}{{ semester.is_active ? ' (Active)' : '' }}
+            </option>
+          </select>
+        </div>
+      </template>
+    </PortalPageHeader>
 
     <div class="flex flex-wrap items-center justify-between gap-3 border-b border-surface-border pb-3">
       <div class="rounded-control grid w-full grid-cols-2 gap-1 border border-surface-border bg-surface-muted p-1 sm:w-auto" role="tablist" aria-label="Checklist view">
@@ -215,8 +213,8 @@
           <div class="hidden md:block overflow-x-auto">
             <table class="w-full text-left">
               <thead>
-                <tr class="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] bg-surface-muted border-b border-surface-border">
-                  <th v-if="isSuperCoordinator" class="px-4 py-6 w-10">
+                <tr class="app-table-header">
+                  <th v-if="isSuperCoordinator" class="px-4 w-10">
                     <input
                       type="checkbox"
                       class="rounded border-surface-control text-sky-700 focus:ring-sky-700"
@@ -226,13 +224,13 @@
                       @change="toggleSelectAll"
                     >
                   </th>
-                  <th v-if="isSuperCoordinator" class="px-4 py-6 w-12"></th>
-                  <th class="px-8 py-6">Order</th>
-                  <th class="px-8 py-6">Requirement Title</th>
-                  <th class="px-8 py-6">Phase</th>
-                  <th class="px-8 py-6">Mandatory</th>
-                  <th class="px-8 py-6">Due</th>
-                  <th v-if="isSuperCoordinator" class="px-8 py-6 text-right">Actions</th>
+                  <th v-if="isSuperCoordinator" class="px-4 w-12"></th>
+                  <th class="px-8">Order</th>
+                  <th class="px-8">Requirement Title</th>
+                  <th class="px-8">Phase</th>
+                  <th class="px-8">Mandatory</th>
+                  <th class="px-8">Due</th>
+                  <th v-if="isSuperCoordinator" class="px-8 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-surface-border text-xs">
@@ -361,17 +359,14 @@
             <div class="p-4 md:p-6 border-b border-surface-border space-y-4">
               <div class="flex flex-wrap items-start justify-between gap-3">
                 <div>
-                  <h2 class="text-lg md:text-xl font-black text-slate-800 uppercase tracking-tight">{{ studentDetail.student.full_name }}</h2>
-                  <p class="text-[10px] font-bold text-text-muted uppercase tracking-widest mt-1">
-                    {{ studentDetail.student.student_id || 'NOT_ASSIGNED' }} · {{ studentDetail.semester.name }}
-                  </p>
+                  <PortalSectionHeading :title="studentDetail.student.full_name" icon="pi-user" tone="teal" :description="`${studentDetail.student.student_id || 'No ID assigned'} · ${studentDetail.semester.name}`" />
                 </div>
-                <span class="rounded-badge bg-sky-100 text-sky-900 border border-sky-200 px-3 py-1 text-[10px] font-black uppercase tracking-widest tabular-nums">
+                <span class="rounded-badge border border-teal-200 bg-teal-100 px-3 py-1 text-xs font-semibold tabular-nums text-teal-900">
                   {{ studentProgress }}% complete
                 </span>
               </div>
               <div class="h-2 bg-surface-border overflow-hidden rounded-full" role="progressbar" :aria-valuenow="studentProgress" aria-valuemin="0" aria-valuemax="100">
-                <div class="h-full bg-sky-600 transition-all duration-500" :style="{ width: studentProgress + '%' }"></div>
+                <div class="h-full bg-teal-600 transition-all duration-500" :style="{ width: studentProgress + '%' }"></div>
               </div>
               <p v-if="!studentDetail.capabilities.correctRecords" class="text-[9px] font-black uppercase tracking-widest text-text-muted">
                 Read-only: only Super Coordinators can change completion.
@@ -418,104 +413,106 @@
       </div>
     </template>
 
-    <!-- Template editor -->
-    <div v-if="showForm" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-4 sm:p-6">
-      <div class="rounded-dialog max-h-[calc(100dvh-2rem)] sm:max-h-[calc(100dvh-3rem)] overflow-y-auto bg-surface w-full max-w-lg p-6 sm:p-10 border border-surface-border shadow-2xl relative mx-4 sm:mx-0">
-        <button class="rounded-control absolute top-6 right-6 text-text-muted hover:text-slate-800 transition-colors" @click="showForm = false">
-          <i class="pi pi-times"></i>
-        </button>
-
-        <h2 class="text-xl font-black text-slate-800 uppercase tracking-widest mb-8">{{ editingId ? 'Edit Requirement' : 'New Requirement' }}</h2>
-
-        <form @submit.prevent="saveTemplate" class="space-y-6">
-          <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div class="md:col-span-3 space-y-2">
-              <label class="text-[9px] font-black text-text-muted uppercase tracking-widest">Title</label>
-              <input v-model="form.title" type="text" required class="w-full bg-surface-muted border border-surface-control rounded-control px-4 py-3 text-xs font-black uppercase tracking-widest focus:border-sky-700 focus:ring-1 focus:ring-sky-700 outline-none transition-all text-slate-800">
-            </div>
-            <div class="space-y-2">
-              <label class="text-[9px] font-black text-text-muted uppercase tracking-widest">Order</label>
-              <input v-model.number="form.display_order" type="number" required min="1" class="w-full bg-surface-muted border border-surface-control rounded-control px-4 py-3 text-xs font-black uppercase tracking-widest focus:border-sky-700 focus:ring-1 focus:ring-sky-700 outline-none transition-all tabular-nums text-slate-800">
-            </div>
-          </div>
-
-          <div class="space-y-2">
-            <label class="text-[9px] font-black text-text-muted uppercase tracking-widest">Description</label>
-            <textarea v-model="form.description" rows="3" class="w-full bg-surface-muted border border-surface-control rounded-control px-4 py-3 text-xs font-bold uppercase tracking-widest focus:border-sky-700 focus:ring-1 focus:ring-sky-700 outline-none transition-all resize-none text-slate-800"></textarea>
-          </div>
-
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="space-y-2">
-              <label for="template-phase" class="text-[9px] font-black text-text-muted uppercase tracking-widest">Phase</label>
-              <select
-                id="template-phase"
-                v-model="form.phase"
-                class="w-full bg-surface-muted border border-surface-control rounded-control px-4 py-3 text-xs font-black uppercase tracking-widest focus:border-sky-700 focus:ring-1 focus:ring-sky-700 outline-none transition-all text-slate-800 cursor-pointer"
-              >
-                <option value="">Not set</option>
-                <option value="before">Before internship</option>
-                <option value="during">During internship</option>
-                <option value="after">After internship</option>
-              </select>
-            </div>
-            <div class="space-y-2">
-              <label for="template-due-date" class="text-[9px] font-black text-text-muted uppercase tracking-widest">Due date</label>
-              <input
-                id="template-due-date"
-                v-model="form.due_date"
-                type="date"
-                class="w-full bg-surface-muted border border-surface-control rounded-control px-4 py-3 text-xs font-black uppercase tracking-widest focus:border-sky-700 focus:ring-1 focus:ring-sky-700 outline-none transition-all text-slate-800"
-              >
-              <p class="text-[9px] font-bold text-text-muted uppercase tracking-tighter">Leave blank for no due date.</p>
-            </div>
-          </div>
-
-          <div class="flex items-center gap-3 group cursor-pointer" @click="form.required = !form.required">
-            <div class="rounded-badge h-5 w-5 border-2 border-slate-500 flex items-center justify-center transition-all" :class="form.required ? 'bg-slate-900 border-slate-900' : 'bg-surface-muted'">
-              <i v-if="form.required" class="pi pi-check text-[10px] text-white"></i>
-            </div>
-            <span class="text-[10px] font-black uppercase tracking-widest text-slate-800">Mandatory for all students</span>
-          </div>
-
-          <button type="submit" :disabled="isSaving" class="rounded-control w-full bg-sky-700 text-white h-14 font-black text-[10px] uppercase tracking-[0.3em] hover:bg-sky-800 transition-all disabled:opacity-30 mt-4">
-            {{ isSaving ? 'Processing...' : 'Save Template' }}
+    <Teleport to="body">
+      <!-- Template editor -->
+      <div v-if="showForm" class="app-surface-ui fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-4 sm:p-6">
+        <div class="rounded-dialog max-h-[calc(100dvh-2rem)] sm:max-h-[calc(100dvh-3rem)] overflow-y-auto bg-surface w-full max-w-lg p-6 sm:p-10 border border-surface-border shadow-2xl relative mx-4 sm:mx-0">
+          <button class="rounded-control absolute top-6 right-6 text-text-muted hover:text-slate-800 transition-colors" @click="showForm = false">
+            <i class="pi pi-times"></i>
           </button>
-        </form>
-      </div>
-    </div>
 
-    <!-- Checklist override reason -->
-    <div v-if="showOverride" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-4 sm:p-6">
-      <div class="rounded-dialog max-h-[calc(100dvh-2rem)] sm:max-h-[calc(100dvh-3rem)] overflow-y-auto bg-surface w-full max-w-lg p-6 sm:p-10 border border-surface-border shadow-2xl relative mx-4 sm:mx-0">
-        <button class="rounded-control absolute top-6 right-6 text-text-muted hover:text-slate-800 transition-colors" @click="showOverride = false">
-          <i class="pi pi-times"></i>
-        </button>
+          <h2 class="text-xl font-black text-slate-800 uppercase tracking-widest mb-8">{{ editingId ? 'Edit Requirement' : 'New Requirement' }}</h2>
 
-        <h2 class="text-lg font-black text-slate-800 uppercase tracking-widest mb-2">{{ overrideTarget?.isCompleted ? 'Revert Requirement' : 'Mark Requirement Complete' }}</h2>
-        <p class="text-xs font-bold text-text-muted uppercase tracking-wider mb-6">{{ overrideTarget?.title }}</p>
+          <form @submit.prevent="saveTemplate" class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <div class="md:col-span-3 space-y-2">
+                <label class="text-[9px] font-black text-text-muted uppercase tracking-widest">Title</label>
+                <input v-model="form.title" type="text" required class="w-full bg-surface-muted border border-surface-control rounded-control px-4 py-3 text-xs font-black uppercase tracking-widest focus:border-sky-700 focus:ring-1 focus:ring-sky-700 outline-none transition-all text-slate-800">
+              </div>
+              <div class="space-y-2">
+                <label class="text-[9px] font-black text-text-muted uppercase tracking-widest">Order</label>
+                <input v-model.number="form.display_order" type="number" required min="1" class="w-full bg-surface-muted border border-surface-control rounded-control px-4 py-3 text-xs font-black uppercase tracking-widest focus:border-sky-700 focus:ring-1 focus:ring-sky-700 outline-none transition-all tabular-nums text-slate-800">
+              </div>
+            </div>
 
-        <form @submit.prevent="confirmOverride" class="space-y-6">
-          <div class="space-y-2">
-            <label for="checklist-override-reason" class="text-[9px] font-black text-text-muted uppercase tracking-widest">Reason</label>
-            <textarea
-              id="checklist-override-reason"
-              v-model="overrideReason"
-              rows="3"
-              required
-              maxlength="2000"
-              placeholder="Explain why this requirement is being manually changed..."
-              class="w-full bg-surface-muted border border-surface-control rounded-control px-4 py-3 text-xs font-bold uppercase tracking-widest focus:border-sky-700 focus:ring-1 focus:ring-sky-700 outline-none transition-all resize-none text-slate-800"
-            ></textarea>
-          </div>
-          <div class="flex gap-3">
-            <button type="button" class="rounded-control flex-1 h-12 border border-surface-control text-text-muted font-black text-[10px] uppercase tracking-widest hover:bg-surface-hover transition-all" @click="showOverride = false">Cancel</button>
-            <button type="submit" :disabled="isSavingOverride || !overrideReason.trim()" class="rounded-control flex-1 h-12 bg-sky-700 text-white font-black text-[10px] uppercase tracking-widest hover:bg-sky-800 transition-all disabled:opacity-30">
-              {{ isSavingOverride ? 'Saving...' : 'Confirm' }}
+            <div class="space-y-2">
+              <label class="text-[9px] font-black text-text-muted uppercase tracking-widest">Description</label>
+              <textarea v-model="form.description" rows="3" class="w-full bg-surface-muted border border-surface-control rounded-control px-4 py-3 text-xs font-bold uppercase tracking-widest focus:border-sky-700 focus:ring-1 focus:ring-sky-700 outline-none transition-all resize-none text-slate-800"></textarea>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div class="space-y-2">
+                <label for="template-phase" class="text-[9px] font-black text-text-muted uppercase tracking-widest">Phase</label>
+                <select
+                  id="template-phase"
+                  v-model="form.phase"
+                  class="w-full bg-surface-muted border border-surface-control rounded-control px-4 py-3 text-xs font-black uppercase tracking-widest focus:border-sky-700 focus:ring-1 focus:ring-sky-700 outline-none transition-all text-slate-800 cursor-pointer"
+                >
+                  <option value="">Not set</option>
+                  <option value="before">Before internship</option>
+                  <option value="during">During internship</option>
+                  <option value="after">After internship</option>
+                </select>
+              </div>
+              <div class="space-y-2">
+                <label for="template-due-date" class="text-[9px] font-black text-text-muted uppercase tracking-widest">Due date</label>
+                <input
+                  id="template-due-date"
+                  v-model="form.due_date"
+                  type="date"
+                  class="w-full bg-surface-muted border border-surface-control rounded-control px-4 py-3 text-xs font-black uppercase tracking-widest focus:border-sky-700 focus:ring-1 focus:ring-sky-700 outline-none transition-all text-slate-800"
+                >
+                <p class="text-[9px] font-bold text-text-muted uppercase tracking-tighter">Leave blank for no due date.</p>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3 group cursor-pointer" @click="form.required = !form.required">
+              <div class="rounded-badge h-5 w-5 border-2 border-slate-500 flex items-center justify-center transition-all" :class="form.required ? 'bg-slate-900 border-slate-900' : 'bg-surface-muted'">
+                <i v-if="form.required" class="pi pi-check text-[10px] text-white"></i>
+              </div>
+              <span class="text-[10px] font-black uppercase tracking-widest text-slate-800">Mandatory for all students</span>
+            </div>
+
+            <button type="submit" :disabled="isSaving" class="rounded-control w-full bg-sky-700 text-white h-14 font-black text-[10px] uppercase tracking-[0.3em] hover:bg-sky-800 transition-all disabled:opacity-30 mt-4">
+              {{ isSaving ? 'Processing...' : 'Save Template' }}
             </button>
-          </div>
-        </form>
+          </form>
+        </div>
       </div>
-    </div>
+
+      <!-- Checklist override reason -->
+      <div v-if="showOverride" class="app-surface-ui fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-4 sm:p-6">
+        <div class="rounded-dialog max-h-[calc(100dvh-2rem)] sm:max-h-[calc(100dvh-3rem)] overflow-y-auto bg-surface w-full max-w-lg p-6 sm:p-10 border border-surface-border shadow-2xl relative mx-4 sm:mx-0">
+          <button class="rounded-control absolute top-6 right-6 text-text-muted hover:text-slate-800 transition-colors" @click="showOverride = false">
+            <i class="pi pi-times"></i>
+          </button>
+
+          <h2 class="text-lg font-black text-slate-800 uppercase tracking-widest mb-2">{{ overrideTarget?.isCompleted ? 'Revert Requirement' : 'Mark Requirement Complete' }}</h2>
+          <p class="text-xs font-bold text-text-muted uppercase tracking-wider mb-6">{{ overrideTarget?.title }}</p>
+
+          <form @submit.prevent="confirmOverride" class="space-y-6">
+            <div class="space-y-2">
+              <label for="checklist-override-reason" class="text-[9px] font-black text-text-muted uppercase tracking-widest">Reason</label>
+              <textarea
+                id="checklist-override-reason"
+                v-model="overrideReason"
+                rows="3"
+                required
+                maxlength="2000"
+                placeholder="Explain why this requirement is being manually changed..."
+                class="w-full bg-surface-muted border border-surface-control rounded-control px-4 py-3 text-xs font-bold uppercase tracking-widest focus:border-sky-700 focus:ring-1 focus:ring-sky-700 outline-none transition-all resize-none text-slate-800"
+              ></textarea>
+            </div>
+            <div class="flex gap-3">
+              <button type="button" class="rounded-control flex-1 h-12 border border-surface-control text-text-muted font-black text-[10px] uppercase tracking-widest hover:bg-surface-hover transition-all" @click="showOverride = false">Cancel</button>
+              <button type="submit" :disabled="isSavingOverride || !overrideReason.trim()" class="rounded-control flex-1 h-12 bg-sky-700 text-white font-black text-[10px] uppercase tracking-widest hover:bg-sky-800 transition-all disabled:opacity-30">
+                {{ isSavingOverride ? 'Saving...' : 'Confirm' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 

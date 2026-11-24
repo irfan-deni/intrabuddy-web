@@ -26,8 +26,9 @@
                 <span v-for="status in statuses" :key="status.key" :class="status.color" :style="{ flexGrow: week[status.key] }"></span>
               </span>
             </span>
-            <span aria-hidden="true" class="block px-0.5 pb-1 pt-2 text-xs font-semibold leading-tight text-slate-600">
-              <span class="block sm:inline">{{ shortDate(week.weekEnd, dayFormat) }}</span>{{ ' ' }}<span>{{ shortDate(week.weekEnd, monthFormat) }}</span>
+            <span aria-hidden="true" class="block px-0.5 pb-1 pt-2 text-xs leading-tight text-slate-600">
+              <span v-if="week.weekNumber != null" class="mb-0.5 block font-semibold text-slate-800">Week {{ week.weekNumber }}</span>
+              <span :class="week.weekNumber == null ? 'font-semibold' : 'text-[11px]'">{{ compact.format(new Date(week.weekEnd)) }}</span>
             </span>
             <span v-if="week.weekEnd === currentWeek" aria-hidden="true" class="block pb-1 text-[10px] font-bold text-teal-800">Current</span>
           </NuxtLink>
@@ -52,12 +53,15 @@ const ceiling = computed(() => {
   const scale = Math.max(2, 10 ** Math.floor(Math.log10(peak)))
   return Math.ceil(peak / scale) * scale
 })
-const dayFormat = new Intl.DateTimeFormat('en-GB', { day: 'numeric', timeZone: 'UTC' })
-const monthFormat = new Intl.DateTimeFormat('en-GB', { month: 'short', timeZone: 'UTC' })
+const compact = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' })
 const full = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })
-const shortDate = (date: string, format: Intl.DateTimeFormat) => format.format(new Date(date))
-const weekLabel = (week: LogbookTrendWeek) =>
-  `${week.weekEnd === props.currentWeek ? 'Current week, ending' : 'Week ending'} ${full.format(new Date(week.weekEnd))}: ${week.submitted} submitted, ${week.overdue} overdue, ${week.pending} not yet due`
+const weekLabel = (week: LogbookTrendWeek) => {
+  const current = week.weekEnd === props.currentWeek
+  const label = week.weekNumber != null
+    ? `Week ${week.weekNumber}${current ? ' (current)' : ''}, ending`
+    : current ? 'Current week, ending' : 'Week ending'
+  return `${label} ${full.format(new Date(week.weekEnd))}: ${week.submitted} submitted, ${week.overdue} overdue, ${week.pending} not yet due`
+}
 </script>
 
 <style scoped>

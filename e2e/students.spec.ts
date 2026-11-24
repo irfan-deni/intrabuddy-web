@@ -14,8 +14,9 @@ test.describe('Students Directory', () => {
   })
 
   test('separates directory actions from filters and wraps filters on mobile', async ({ page }) => {
-    const header = page.getByRole('main').locator('header').first()
-    const filters = header.getByRole('group', { name: 'Student directory filters' })
+    const main = page.getByRole('main')
+    const header = main.locator('header').first()
+    const filters = main.getByRole('group', { name: 'Student directory filters' })
     const search = filters.getByRole('searchbox', { name: 'Search students' })
     const semester = filters.getByRole('combobox', { name: 'Filter by semester' })
     const status = filters.getByRole('combobox', { name: 'Filter by placement status' })
@@ -74,21 +75,20 @@ test.describe('Students Directory', () => {
   test('opens the selected student profile on click', async ({ page }) => {
     await page.getByRole('table').getByText('Alice Johnson').click()
     await expect(page).toHaveURL(/\/student\?id=student-1/)
-    await expect(page.getByRole('heading', { name: 'Student Profile', exact: true })).toBeVisible()
-    await expect(page.getByText('Alice Johnson', { exact: true })).toBeVisible()
+    await expect(page.getByRole('heading', { level: 1, name: 'Alice Johnson' })).toBeVisible()
   })
 
   test('opens the correct profile for a different student', async ({ page }) => {
     await page.getByRole('table').getByText('Bob Smith').click()
     await expect(page).toHaveURL(/\/student\?id=student-2/)
-    await expect(page.getByRole('heading', { name: 'Student Profile', exact: true })).toBeVisible()
+    await expect(page.getByRole('heading', { level: 1, name: 'Bob Smith' })).toBeVisible()
   })
 
   test('returns to the directory from the profile', async ({ page }) => {
     await page.getByRole('table').getByText('Alice Johnson').click()
-    await expect(page.getByRole('heading', { name: 'Student Profile', exact: true })).toBeVisible()
+    await expect(page.getByRole('heading', { level: 1, name: 'Alice Johnson' })).toBeVisible()
     await page.getByRole('link', { name: 'Back to students' }).click()
     await expect(page).toHaveURL(/\/students$/)
-    await expect(page.getByRole('heading', { name: 'Student Profile', exact: true })).toHaveCount(0)
+    await expect(page.getByRole('heading', { level: 1, name: 'Student Directory' })).toBeVisible()
   })
 })

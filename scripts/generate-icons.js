@@ -2,11 +2,11 @@ import sharp from 'sharp'
 import fs from 'fs'
 import path from 'path'
 
-const sourcePath = 'public/intra_buddy_icons/intra_buddy_icon.png'
+const sourcePath = 'design/branding/intra_buddy_icon.png'
 const src = path.join(process.cwd(), sourcePath)
 const outDir = path.join(process.cwd(), 'public', 'icons')
 
-const sizes = [16, 32, 48, 72, 96, 128, 180, 192, 256, 512]
+const sizes = [32, 128, 180]
 
 if (!fs.existsSync(src)) {
   console.error('Source logo not found at', src)

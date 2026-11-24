@@ -1,22 +1,21 @@
 <template>
-  <div class="app-surface-ui space-y-8 md:space-y-10">
-    <header>
-      <h1 class="text-2xl md:text-4xl font-bold text-slate-800 tracking-tight">Announcements &amp; Alerts</h1>
-      <p class="mt-2 text-sm font-normal leading-relaxed text-text-muted">Send announcements and individual alerts.</p>
-    </header>
+  <div class="app-surface-ui space-y-5 md:space-y-6">
+    <PortalPageHeader title="Announcements &amp; Alerts" icon="pi-megaphone" description="Send announcements and individual alerts." />
 
-    <nav class="flex border-b border-surface-border" aria-label="Communication type">
+    <nav class="inline-flex max-w-full flex-wrap gap-1 rounded-control border border-surface-border bg-surface-muted p-1" aria-label="Communication type">
       <NuxtLink
         :to="{ path: '/communications', query: { tab: 'broadcasts' } }"
-        class="px-4 py-3 text-sm font-semibold border-b-2 -mb-px transition-colors"
-        :class="tab === 'broadcasts' ? 'border-sky-600 text-sky-700' : 'border-transparent text-text-muted hover:text-slate-800'"
+        :aria-current="tab === 'broadcasts' ? 'page' : undefined"
+        class="rounded-control px-3 py-2 text-sm font-semibold transition-colors sm:px-4"
+        :class="tab === 'broadcasts' ? 'bg-sky-100 text-sky-900' : 'text-text-muted hover:bg-surface-hover hover:text-slate-800'"
       >
         Announcements
       </NuxtLink>
       <NuxtLink
         :to="{ path: '/communications', query: { tab: 'alerts' } }"
-        class="px-4 py-3 text-sm font-semibold border-b-2 -mb-px transition-colors"
-        :class="tab === 'alerts' ? 'border-sky-600 text-sky-700' : 'border-transparent text-text-muted hover:text-slate-800'"
+        :aria-current="tab === 'alerts' ? 'page' : undefined"
+        class="rounded-control px-3 py-2 text-sm font-semibold transition-colors sm:px-4"
+        :class="tab === 'alerts' ? 'bg-sky-100 text-sky-900' : 'text-text-muted hover:bg-surface-hover hover:text-slate-800'"
       >
         Individual alerts
       </NuxtLink>

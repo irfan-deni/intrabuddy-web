@@ -1,4 +1,5 @@
 import { serverSupabaseServiceRole } from '~~/server/utils/supabase-server'
+import { campusDate } from '~~/shared/utils/semester-registration'
 import type { Database } from '~/types/supabase'
 
 function generateTempPassword(): string {
@@ -29,15 +30,23 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: 'Invalid student ID' })
   }
 
-  // 1. Find active semester
-  const { data: activeSemester } = await serviceRole
+  // 1. Match Auth signup: choose the newest semester accepting registration.
+  const { data: registrationSemester, error: semesterLookupError } = await serviceRole
     .from('semesters')
     .select('id')
-    .eq('is_active', true)
-    .single()
+    .eq('registration_open', true)
+    .gte('end_date', campusDate())
+    .order('start_date', { ascending: false })
+    .order('id', { ascending: false })
+    .limit(1)
+    .maybeSingle()
 
-  if (!activeSemester) {
-    throw createError({ statusCode: 400, statusMessage: 'No active semester found' })
+  if (semesterLookupError) {
+    console.error('[Student Registration Semester]', semesterLookupError)
+    throw createError({ statusCode: 500, statusMessage: 'Unable to check semester registration' })
+  }
+  if (!registrationSemester) {
+    throw createError({ statusCode: 409, statusMessage: 'No semester is open for registration' })
   }
 
   // 2. Create auth user first (required for FK constraint users.id -> auth.users)
@@ -75,17 +84,24 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 500, statusMessage: `Profile creation failed: ${userError?.message}` })
   }
 
-  // 4. Enroll in active semester via student_semesters
-  const { error: semesterError } = await serviceRole
+  // 4. The Auth trigger may already have enrolled this user.
+  const { data: existingEnrollment, error: lookupError } = await serviceRole
     .from('student_semesters')
-    .insert({
-      student_id: newUser.id,
-      semester_id: activeSemester.id
-    })
+    .select('semester_id')
+    .eq('student_id', newUser.id)
+    .limit(1)
+    .maybeSingle()
+  const semesterId = existingEnrollment?.semester_id ?? registrationSemester.id
+  const semesterError = lookupError ?? (existingEnrollment?.semester_id != null ? null : (await serviceRole
+    .from('student_semesters')
+    .insert({ student_id: newUser.id, semester_id: semesterId })).error)
 
   if (semesterError) {
     await serviceRole.from('users').delete().eq('id', newUser.id)
     await serviceRole.auth.admin.deleteUser(authId).catch(() => {})
+    if (semesterError.code === 'P0409') {
+      throw createError({ statusCode: 409, statusMessage: 'Registration is closed for this semester' })
+    }
     throw createError({ statusCode: 500, statusMessage: 'Semester enrollment failed' })
   }
 
@@ -93,7 +109,7 @@ export default defineEventHandler(async (event) => {
   const { data: templates } = await serviceRole
     .from('checklist_templates')
     .select('id, required')
-    .eq('semester_id', activeSemester.id)
+    .eq('semester_id', semesterId)
 
   if (templates && templates.length > 0) {
     const checklists = templates.map(t => ({

@@ -73,27 +73,38 @@
             <span aria-hidden="true" class="grid h-9 w-9 place-items-center rounded-lg bg-violet-100 text-violet-800"><i class="pi pi-inbox" /></span>
             <h2 id="attention-heading" class="dashboard-section-heading">Needs attention</h2>
           </div>
-          <p class="mt-2 text-sm text-text-muted">Follow-up for the active semester.</p>
-          <ul v-if="attentionItems.length" class="mt-2 divide-y divide-surface-border sm:mt-3 sm:space-y-2 sm:divide-y-0">
-            <li v-for="item in attentionItems" :key="item.label">
-              <NuxtLink :to="item.to" class="dashboard-action group flex min-h-12 items-center gap-2 rounded-control px-1 py-2.5 text-sm hover:bg-white sm:border sm:border-slate-200 sm:bg-white/80 sm:px-2.5 sm:py-2 sm:hover:border-sky-300">
-                <span class="order-1 min-w-8 shrink-0 rounded-md px-1.5 py-1 text-center font-semibold tabular-nums sm:order-none" :class="item.tint">{{ item.count }}</span>
-                <span class="flex-1 font-medium text-slate-800 group-hover:underline">{{ item.label }}</span>
-                <i aria-hidden="true" class="pi pi-arrow-right order-2 shrink-0 text-xs text-sky-700 sm:order-none" />
-              </NuxtLink>
-            </li>
-          </ul>
-          <p v-else-if="dashboard.reviewQueue?.count !== null" class="mt-4 text-sm text-emerald-800">No follow-up items right now.</p>
+          <div v-if="attentionGroups.length" class="mt-3 divide-y divide-surface-border border-t border-surface-border">
+            <div v-for="group in attentionGroups" :key="group.id">
+              <h3 v-if="group.heading" class="px-2 pt-2 text-xs font-semibold text-text-muted">{{ group.heading }}</h3>
+              <ul class="divide-y divide-surface-border">
+                <li v-for="item in group.items" :key="item.to">
+                  <NuxtLink :to="item.to" :aria-label="item.unit === 'logbook' ? `${item.label}: ${item.count} ${item.count === 1 ? 'logbook' : 'logbooks'}` : undefined"
+                    class="dashboard-action group flex min-h-12 items-center gap-2.5 rounded-control px-2 py-2 text-sm hover:bg-white">
+                    <span class="flex-1 font-medium text-slate-800 group-hover:underline">{{ item.label }}</span>
+                    <span class="min-w-8 shrink-0 whitespace-nowrap rounded-md px-1.5 py-1 text-center font-semibold tabular-nums" :class="item.urgent ? 'bg-amber-100 text-amber-900' : 'bg-slate-100 text-slate-700'">{{ item.count }}{{ item.unit === 'student' ? (item.count === 1 ? ' student' : ' students') : '' }}</span>
+                    <i aria-hidden="true" class="pi pi-arrow-right shrink-0 text-xs text-sky-700" />
+                  </NuxtLink>
+                </li>
+              </ul>
+            </div>
+          </div>
+          <p v-else-if="dashboard.reviewQueue?.count !== null" class="mt-4 flex items-center gap-2 border-t border-surface-border pt-3 text-sm font-medium text-emerald-800">
+            <i aria-hidden="true" class="pi pi-check-circle" />
+            You’re all caught up.
+          </p>
           <p v-if="dashboard.reviewQueue?.count === null" class="mt-3 text-sm text-rose-800">Logbook review count is unavailable.</p>
         </section>
 
         <section aria-labelledby="logbooks-heading" class="dashboard-panel rounded-card lg:col-start-1 lg:row-start-1">
-          <div class="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-            <div>
-              <h2 id="logbooks-heading" class="dashboard-section-heading">Weekly logbooks</h2>
-              <p v-if="!trend.length && weekly?.weekEnd" class="mt-0.5 text-sm text-text-muted">
-                {{ dateRange(weekly.weekStart, weekly.weekEnd) }}
-              </p>
+          <div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+            <div class="flex min-w-0 items-center gap-3">
+              <span aria-hidden="true" class="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-teal-100 text-teal-800"><i class="pi pi-chart-bar" /></span>
+              <div>
+                <h2 id="logbooks-heading" class="dashboard-section-heading">Weekly logbooks</h2>
+                <p v-if="!trend.length && weekly?.weekEnd" class="mt-0.5 text-sm text-text-muted">
+                  {{ dateRange(weekly.weekStart, weekly.weekEnd) }}
+                </p>
+              </div>
             </div>
             <NuxtLink :to="weeklyLogbooksLink" class="dashboard-link">
               {{ weekly?.weekEnd ? 'View this week' : 'View logbooks' }}
@@ -137,6 +148,10 @@ definePageMeta({ requiredRole: 'coordinator' })
 const pageCache = usePageCache()
 const url = '/api/dashboard'
 const dashboard = ref(pageCache.read<DashboardResponse>(url))
+const activeSemesterName = useState<string | null>('active-semester-name', () => null)
+watch(dashboard, (data) => {
+  if (data) activeSemesterName.value = data.semester ? data.semesterName : ''
+}, { immediate: true })
 const loading = ref(!dashboard.value)
 const refreshing = ref(false)
 const exporting = ref(false)
@@ -166,14 +181,24 @@ const placementStats = computed(() => {
   ]
 })
 
-const attentionItems = computed(() => {
+const attentionGroups = computed(() => {
   const data = dashboard.value
   if (!data) return []
   return [
-    { label: 'Overdue logbooks from earlier weeks', count: data.overdueLogbooks, to: '/logbooks?status=Late', tint: 'bg-amber-100 text-amber-900' },
-    { label: 'Logbooks awaiting review', count: data.reviewQueue?.count ?? 0, to: '/logbooks?review=awaiting', tint: 'bg-violet-100 text-violet-800' },
-    { label: 'Students missing required checklist items', count: data.studentsMissingChecklists, to: '/students?checklist=missing', tint: 'bg-sky-100 text-sky-900' }
-  ].filter(item => item.count > 0)
+    {
+      id: 'logbooks', heading: 'Logbooks',
+      items: [
+        { label: 'Overdue', count: data.overdueLogbooks, to: '/logbooks?status=Late', urgent: true, unit: 'logbook' },
+        { label: 'Awaiting review', count: data.reviewQueue?.count ?? 0, to: '/logbooks?review=awaiting', urgent: false, unit: 'logbook' }
+      ].filter(item => item.count > 0)
+    },
+    {
+      id: 'checklists',
+      items: [
+        { label: 'Incomplete checklists', count: data.studentsMissingChecklists, to: '/students?checklist=missing', urgent: false, unit: 'student' }
+      ].filter(item => item.count > 0)
+    }
+  ].filter(group => group.items.length > 0)
 })
 
 const weekly = computed(() => dashboard.value?.logbookSummary)

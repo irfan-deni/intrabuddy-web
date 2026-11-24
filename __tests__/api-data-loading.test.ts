@@ -103,7 +103,7 @@ describe('joined student directory', () => {
 })
 
 describe('combined dashboard aggregate', () => {
-  const summary = { semesterName: 'Active Semester', semester: { id: 7 }, totalStudents: 3, placedStudents: 2,
+  const summary = { semesterName: 'Active Semester', semester: { id: 7, endDate: '2099-12-31', registrationOpen: true }, totalStudents: 3, placedStudents: 2,
     unplacedStudents: 1, placementPercentage: 67, studentsMissingChecklists: 1, overdueLogbooks: 3,
     logbookSummary: { weekStart: '2026-05-09', weekEnd: '2026-05-15', total: 10, submitted: 4, pending: 6 } }
 
@@ -114,6 +114,12 @@ describe('combined dashboard aggregate', () => {
     expect(requests).toHaveLength(1)
     expect(requests[0]!.url.pathname).toBe('/rest/v1/rpc/get_coordinator_dashboard')
     expect(mocks.service).not.toHaveBeenCalled()
+  })
+
+  it('reports registration as closed when the active semester has ended', async () => {
+    respond = () => json({ ...summary, semester: { ...summary.semester, endDate: '2000-01-01' } })
+    const { default: handler } = await import('../server/api/dashboard.get')
+    expect((await handler({} as H3Event)).semester?.registrationOpen).toBe(false)
   })
 
   it('only adds review counts for a Super Coordinator and counts submitted records without a review', async () => {
@@ -147,6 +153,21 @@ describe('combined dashboard aggregate', () => {
     respond = () => new Response(JSON.stringify({ message: 'Database unavailable' }), { status: 500 })
     const { default: handler } = await import('../server/api/dashboard.get')
     await expect(handler({} as H3Event)).rejects.toMatchObject({ statusCode: 500 })
+  })
+})
+
+describe('student enrollment registration gate', () => {
+  it('requires an open, unexpired semester before creating an account', async () => {
+    vi.stubGlobal('requireSuperCoordinator', vi.fn().mockResolvedValue({ id: 'coordinator' }))
+    vi.stubGlobal('readBody', () => ({ full_name: 'New Student', email: 'student@example.test' }))
+    respond = () => json([])
+
+    const { default: handler } = await import('../server/api/students.post')
+    await expect(handler({} as H3Event)).rejects.toMatchObject({ statusCode: 409 })
+    expect(requests.map(request => request.url.pathname)).toEqual(['/rest/v1/semesters'])
+    expect(requests[0]!.url.searchParams.get('registration_open')).toBe('eq.true')
+    expect(requests[0]!.url.searchParams.get('end_date')).toMatch(/^gte\.\d{4}-\d{2}-\d{2}$/)
+    expect(requests[0]!.url.searchParams.get('order')).toBe('start_date.desc,id.desc')
   })
 })
 

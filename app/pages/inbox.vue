@@ -1,9 +1,6 @@
 <template>
   <section class="app-surface-ui space-y-6 md:space-y-8">
-    <header>
-      <h1 class="text-2xl md:text-4xl font-bold text-slate-800 tracking-tight">Notifications</h1>
-      <p class="mt-2 text-sm font-normal leading-relaxed text-text-muted">Notifications sent directly to you.</p>
-    </header>
+    <PortalPageHeader title="Notifications" icon="pi-inbox" eyebrow="Inbox" description="Notifications sent directly to you." />
 
     <div v-if="isLoading" class="rounded-card py-12 md:py-16 text-center text-text-muted bg-surface border border-surface-border">
       <i class="pi pi-spin pi-spinner text-xl text-sky-600 mr-2" />
@@ -15,11 +12,15 @@
       <button type="button" class="rounded-control shrink-0 border border-rose-300 px-3 py-2 text-xs font-semibold hover:bg-rose-100 transition-colors" @click="loadInbox(true)">Retry</button>
     </div>
 
-    <div v-else-if="notifications.length === 0" class="rounded-card py-12 md:py-20 text-center text-sm font-medium text-text-muted bg-surface border border-surface-border">Your inbox is clear.</div>
+    <div v-else-if="notifications.length === 0" class="rounded-card border border-surface-border bg-surface px-4 py-10 text-center">
+      <span aria-hidden="true" class="mx-auto mb-3 grid h-10 w-10 place-items-center rounded-control bg-teal-100 text-teal-800"><i class="pi pi-check-circle" /></span>
+      <h2 class="font-semibold text-slate-800">You’re all caught up.</h2>
+      <p class="mt-1 text-sm text-text-muted">Your inbox is clear.</p>
+    </div>
 
     <div v-else class="rounded-card overflow-hidden bg-surface border border-surface-border divide-y divide-surface-border">
       <article v-for="notification in notifications" :key="notification.id" class="p-4 md:p-6 flex items-start gap-4" :class="notification.is_read ? '' : 'bg-sky-50/40'">
-        <div class="rounded-control h-9 w-9 shrink-0 flex items-center justify-center bg-slate-900 text-white">
+        <div aria-hidden="true" class="grid h-9 w-9 shrink-0 place-items-center rounded-control" :class="notification.is_read ? 'bg-surface-muted text-text-muted' : 'bg-sky-100 text-sky-800'">
           <i class="pi pi-bell text-sm" />
         </div>
         <div class="min-w-0 flex-1">

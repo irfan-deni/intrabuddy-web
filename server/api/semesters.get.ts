@@ -1,6 +1,7 @@
 import type { Database } from '~/types/supabase'
 import { serverSupabaseServiceRole } from '~~/server/utils/supabase-server'
 import { getSemesterCounts, getSemesterDeletionRule } from '~~/server/utils/semester-management'
+import { campusDate, registrationBlockReason } from '~~/shared/utils/semester-registration'
 
 export default defineEventHandler(async (event) => {
   await requireCoordinator(event)
@@ -14,10 +15,12 @@ export default defineEventHandler(async (event) => {
 
     if (error) throw error
 
+    const today = campusDate()
     const overview = await Promise.all((semesters || []).map(async semester => {
       const counts = await getSemesterCounts(db, semester.id)
       return {
         ...semester,
+        registration_open: semester.registration_open && !registrationBlockReason(semester.end_date, today),
         counts,
         deletion: getSemesterDeletionRule(semester, counts)
       }

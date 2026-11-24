@@ -1,19 +1,16 @@
 <template>
-  <div class="app-surface-ui space-y-8 md:space-y-10">
+  <div class="app-surface-ui space-y-5 md:space-y-6">
+    <PortalPageHeader v-if="!embedded" title="Broadcasts" icon="pi-megaphone" description="Send announcements to students or coordinators." />
     <section>
-      <header v-if="!embedded" class="mb-6">
-        <h1 class="text-2xl md:text-3xl font-black text-slate-800 tracking-tight uppercase">Broadcasts</h1>
-        <p class="text-text-muted mt-2 font-bold uppercase text-[10px] tracking-widest">Send announcements to students or coordinators.</p>
-      </header>
-
-      <form @submit.prevent="sendBroadcast" class="rounded-card max-w-3xl space-y-6 bg-surface border border-surface-border p-5 md:p-7 shadow-sm">
+      <form @submit.prevent="sendBroadcast" class="portal-composer rounded-card bg-surface">
+        <PortalSectionHeading title="New announcement" icon="pi-megaphone" description="Send a message to an entire audience." />
         <div class="flex flex-col gap-2">
-          <label for="announcement-audience" class="text-[10px] font-black text-text-muted uppercase tracking-widest">Audience</label>
+          <label for="announcement-audience" class="portal-field-label">Audience</label>
           <select
             id="announcement-audience"
             v-model="form.target_audience"
             :disabled="isSending"
-            class="rounded-control w-full sm:w-72 bg-surface-muted border border-surface-control px-4 py-3 text-sm font-semibold outline-none focus:border-sky-700 focus:ring-1 focus:ring-sky-700 cursor-pointer"
+            class="portal-field cursor-pointer sm:max-w-72"
           >
             <option value="students_all">All students</option>
             <option value="coordinators_all">All coordinators</option>
@@ -21,7 +18,7 @@
         </div>
 
         <div class="flex flex-col gap-2">
-          <label for="announcement-title" class="text-[10px] font-black text-text-muted uppercase tracking-widest">Title</label>
+          <label for="announcement-title" class="portal-field-label">Title</label>
           <input 
             id="announcement-title"
             v-model="form.title" 
@@ -30,12 +27,12 @@
             type="text" 
             placeholder="e.g., Industry briefing"
             required 
-            class="w-full bg-surface-muted border border-surface-control rounded-control px-4 py-3 text-sm font-semibold focus:border-sky-700 focus:ring-1 focus:ring-sky-700 outline-none transition-all text-slate-800 placeholder:text-text-muted"
+            class="portal-field"
           >
         </div>
 
         <div class="flex flex-col gap-2">
-          <label for="announcement-message" class="text-[10px] font-black text-text-muted uppercase tracking-widest">Message</label>
+          <label for="announcement-message" class="portal-field-label">Message</label>
           <textarea 
             id="announcement-message"
             v-model="form.body" 
@@ -44,7 +41,7 @@
             rows="5" 
             placeholder="Write your announcement..."
             required 
-            class="w-full bg-surface-muted border border-surface-control rounded-control px-4 py-3 text-sm font-medium focus:border-sky-700 focus:ring-1 focus:ring-sky-700 outline-none transition-all resize-none leading-relaxed text-slate-800 placeholder:text-text-muted"
+            class="portal-field resize-y leading-relaxed"
           ></textarea>
 
           <p id="announcement-image-help" class="text-xs text-text-muted">Up to 3 images, 5 MB each. PNG, JPEG, GIF, or WebP. Images upload only when you send.</p>
@@ -76,27 +73,27 @@
           <button
             type="submit"
             :disabled="isSending || isAddingImages || attachments.some(image => image.status !== 'ready')"
-            class="rounded-control w-full sm:w-auto bg-sky-700 text-white px-6 py-3 font-black text-xs uppercase tracking-widest hover:bg-sky-800 transition-all flex items-center justify-center gap-2 disabled:opacity-30 whitespace-nowrap"
+            class="portal-primary-action w-full sm:w-auto"
           >
-            <i class="pi pi-send"></i>
+            <i aria-hidden="true" class="pi pi-send"></i>
             {{ isSending ? 'Sending...' : 'Send broadcast' }}
           </button>
         </div>
       </form>
     </section>
 
-    <section class="space-y-6">
-      <div class="flex items-center justify-between">
-        <h2 class="text-[11px] font-black text-slate-800 uppercase tracking-[0.2em]">Broadcast History</h2>
-        <div class="flex items-center gap-3">
+    <section class="space-y-3">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <PortalSectionHeading title="Broadcast History" icon="pi-history" tone="violet" />
+        <div class="flex flex-wrap items-center gap-3">
           <button
-            class="rounded-control h-8 px-3 bg-sky-700 hover:bg-sky-800 text-white text-[9px] font-black uppercase tracking-widest transition-all flex items-center gap-1.5"
+            class="rounded-control inline-flex min-h-10 items-center gap-2 border border-surface-control bg-surface px-3 text-sm font-semibold text-sky-800 hover:bg-sky-50"
             @click="downloadAuditTrail"
           >
             <i class="pi pi-file-pdf"></i>
             Export PDF
           </button>
-          <span class="text-[10px] font-black text-text-muted uppercase tracking-widest tabular-nums">{{ broadcasts.length }} broadcast{{ broadcasts.length === 1 ? '' : 's' }}</span>
+          <span class="text-sm font-medium text-text-muted tabular-nums">{{ broadcasts.length }} broadcast{{ broadcasts.length === 1 ? '' : 's' }}</span>
         </div>
       </div>
 
@@ -117,16 +114,16 @@
         <div v-for="msg in broadcasts" :key="msg.id" class="rounded-card bg-surface border border-surface-border p-4">
           <div class="flex items-start justify-between mb-3">
             <div class="min-w-0 flex-1">
-              <div class="font-black text-slate-800 uppercase tracking-tight text-sm">{{ msg.title }}</div>
+              <div class="break-words text-sm font-semibold text-slate-800">{{ msg.title }}</div>
               <AnnouncementBody :body="msg.body" :image-paths="msg.image_paths" compact class="mt-1" />
             </div>
             <button class="rounded-control h-8 w-8 border border-red-400 text-red-700 hover:bg-red-700 hover:text-white flex items-center justify-center flex-shrink-0 ml-2" @click="deleteBroadcast(msg.id)">
               <i class="pi pi-trash text-[10px]"></i>
             </button>
           </div>
-          <div class="flex items-center justify-between pt-3 border-t border-surface-border">
-            <div class="flex gap-2">
-              <span v-for="role in msg.target_roles" :key="role" class="rounded-badge px-2 py-0.5 bg-slate-900 text-white text-[8px] font-black uppercase tracking-tighter">{{ audienceLabels[role] || role }}</span>
+          <div class="flex flex-wrap items-center justify-between gap-2 border-t border-surface-border pt-3">
+            <div class="flex flex-wrap gap-2">
+              <span v-for="role in msg.target_roles" :key="role" class="rounded-badge bg-sky-100 px-2 py-0.5 text-xs font-semibold text-sky-800">{{ audienceLabels[role] || role }}</span>
             </div>
             <span class="text-xs font-medium text-text-muted tabular-nums">{{ formatDateTime(msg.sent_at) }}</span>
           </div>
@@ -136,7 +133,7 @@
       <div class="rounded-card hidden md:block bg-surface border border-surface-border overflow-x-auto">
         <table class="w-full text-left">
           <thead>
-            <tr class="text-[9px] font-black text-text-muted uppercase tracking-[0.2em] bg-surface-muted">
+            <tr class="app-table-header">
               <th class="px-8 py-5">Announcement</th>
               <th class="px-8 py-5">Audience</th>
               <th class="px-8 py-5 text-right">Sent at</th>
@@ -147,13 +144,13 @@
             <tr v-for="msg in broadcasts" :key="msg.id" class="hover:bg-surface-hover transition-colors group">
               <td class="px-8 py-5">
                 <div class="flex flex-col gap-1">
-                  <span class="font-black text-slate-800 uppercase tracking-tight text-xs">{{ msg.title }}</span>
+                  <span class="break-words text-sm font-semibold text-slate-800">{{ msg.title }}</span>
                   <AnnouncementBody :body="msg.body" :image-paths="msg.image_paths" compact />
                 </div>
               </td>
               <td class="px-8 py-5">
-                <div class="flex gap-2">
-                  <span v-for="role in msg.target_roles" :key="role" class="rounded-badge px-2 py-0.5 bg-slate-900 text-white text-[8px] font-black uppercase tracking-tighter">{{ audienceLabels[role] || role }}</span>
+                <div class="flex flex-wrap gap-2">
+                  <span v-for="role in msg.target_roles" :key="role" class="rounded-badge bg-sky-100 px-2 py-0.5 text-xs font-semibold text-sky-800">{{ audienceLabels[role] || role }}</span>
                 </div>
               </td>
               <td class="px-8 py-5 text-right text-text-muted font-medium tabular-nums group-hover:text-slate-800 transition-colors text-xs">

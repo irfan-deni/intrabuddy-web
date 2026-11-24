@@ -29,7 +29,9 @@ test.describe('Authentication & Authorization', () => {
 
   test('direct student access returns to login with mobile guidance', async ({ page }) => {
     await setupPage(page)
-    await mockSupabaseRest(page, { ...MOCK_PROFILE, role: 'student' })
+    await page.route('**/api/auth/session-context', route => route.fulfill({
+      json: { profile: { ...MOCK_PROFILE, role: 'student' }, isSuperCoordinator: false }
+    }))
     await page.goto('/student?id=student-1')
     await expect(page).toHaveURL(/\/login\?reason=mobile-only$/)
     await expect(page.getByText('This portal is for coordinators. Students should use the INTRA Buddy mobile app.')).toBeVisible()
@@ -38,7 +40,9 @@ test.describe('Authentication & Authorization', () => {
   test('student password login stays on login with mobile guidance', async ({ page }) => {
     await mockSupabaseAuth(page)
     await mockApiRoutes(page)
-    await mockSupabaseRest(page, { ...MOCK_PROFILE, role: 'student' })
+    await page.route('**/api/auth/session-context', route => route.fulfill({
+      json: { profile: { ...MOCK_PROFILE, role: 'student' }, isSuperCoordinator: false }
+    }))
     await page.goto('/login')
     await page.locator('input[type="email"]').fill('student@example.com')
     await page.locator('input[type="password"]').fill('test-password')
@@ -52,21 +56,26 @@ test.describe('Authentication & Authorization', () => {
     await mockSupabaseRest(page)
     await mockApiRoutes(page)
     let authorization: string | undefined
-    await page.route('**/api/auth/privileges', async (route) => {
+    let calls = 0
+    await page.route('**/api/auth/session-context', async (route) => {
+      calls++
       authorization = route.request().headers().authorization
-      await route.fulfill({ json: { isSuperCoordinator: false } })
+      await route.fulfill({ json: { profile: MOCK_PROFILE, isSuperCoordinator: false } })
     })
     await page.goto('/login')
     await page.locator('input[type="email"]').fill(MOCK_PROFILE.email)
     await page.locator('input[type="password"]').fill('test-password')
     await page.locator('button[type="submit"]').click()
-    await expect(page.locator('h1').first()).toContainText('Dashboard')
+    await expect(page.getByText('Enrolled students')).toBeVisible()
     expect(authorization).toMatch(/^Bearer /)
+    expect(calls).toBe(1)
   })
 
   test('missing profile shows a profile error rather than student guidance', async ({ page }) => {
     await mockSupabaseAuth(page)
-    await page.route('**/rest/v1/users?*', (route) => route.fulfill({ json: null }))
+    await page.route('**/api/auth/session-context', route => route.fulfill({
+      json: { profile: null, isSuperCoordinator: false }
+    }))
     await page.goto('/login')
     await page.locator('input[type="email"]').fill(MOCK_PROFILE.email)
     await page.locator('input[type="password"]').fill('test-password')
@@ -75,10 +84,10 @@ test.describe('Authentication & Authorization', () => {
     await expect(page).toHaveURL(/\/login$/)
   })
 
-  test('privilege API failure shows an access verification error', async ({ page }) => {
+  test('session context API failure shows an access verification error', async ({ page }) => {
     await mockSupabaseAuth(page)
     await mockSupabaseRest(page)
-    await page.route('**/api/auth/privileges', (route) => route.fulfill({ status: 403, json: { message: 'Forbidden' } }))
+    await page.route('**/api/auth/session-context', (route) => route.fulfill({ status: 403, json: { message: 'Forbidden' } }))
     await page.goto('/login')
     await page.locator('input[type="email"]').fill(MOCK_PROFILE.email)
     await page.locator('input[type="password"]').fill('test-password')

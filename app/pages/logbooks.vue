@@ -1,12 +1,7 @@
 <template>
   <section class="app-surface-ui space-y-6 md:space-y-8">
-    <header class="flex flex-wrap items-center justify-between gap-4">
-      <div class="min-w-0">
-        <h1 class="text-2xl md:text-4xl font-bold text-slate-800 tracking-tight">Logbooks</h1>
-        <p class="mt-2 text-sm font-normal leading-relaxed text-text-muted">Monitor semester logbook compliance and send reminders.</p>
-      </div>
-
-      <div class="flex flex-wrap items-center gap-2">
+    <PortalPageHeader title="Logbooks" icon="pi-file" description="Monitor semester logbook compliance and send reminders.">
+      <template #actions>
         <button
           type="button"
           :disabled="isRefreshing"
@@ -37,8 +32,8 @@
           <i aria-hidden="true" class="pi pi-bell hidden sm:inline-block"></i>
           {{ isRemindingAll ? 'Sending reminders…' : 'Remind All' }}
         </button>
-      </div>
-    </header>
+      </template>
+    </PortalPageHeader>
 
     <p v-if="errorMessage" class="rounded-card p-4 bg-rose-50 border border-rose-100 text-rose-700 text-sm font-medium">
       {{ errorMessage }}
@@ -115,12 +110,12 @@
         <div class="hidden md:block overflow-x-auto">
           <table class="w-full text-left">
             <thead>
-              <tr class="text-sm font-semibold text-text-muted bg-surface-muted border-b border-surface-border">
-                <th class="w-14 px-4 py-6 text-center">#</th>
-                <th class="px-8 py-6">Student</th>
-                <th class="px-8 py-6">{{ statusFilter === 'awaiting' ? 'Awaiting review' : 'Progress' }}</th>
-                <th v-if="statusFilter !== 'awaiting'" class="px-8 py-6">Not submitted</th>
-                <th class="px-8 py-6 text-right w-32">Actions</th>
+              <tr class="app-table-header">
+                <th class="w-14 px-4 text-center">#</th>
+                <th class="px-8">Student</th>
+                <th class="px-8">{{ statusFilter === 'awaiting' ? 'Awaiting review' : 'Progress' }}</th>
+                <th v-if="statusFilter !== 'awaiting'" class="px-8">Not submitted</th>
+                <th class="px-8 text-right w-32">Actions</th>
               </tr>
             </thead>
             <tbody class="text-sm divide-y divide-surface-border">
@@ -193,8 +188,8 @@
       :pt="{
         mask: { class: 'logbook-drawer-mask bg-slate-900/50' },
         root: { class: 'logbook-drawer h-full flex flex-col bg-surface shadow-2xl' },
-        header: { class: 'shrink-0 border-b border-surface-border px-5 py-5 sm:px-6' },
-        content: { class: 'flex-1 min-h-0 overflow-y-auto px-5 py-5 sm:px-6' }
+        header: { class: 'shrink-0 border-b border-sky-200 bg-sky-100 bg-gradient-to-r from-sky-200 to-blue-100 px-4 py-5 sm:px-6' },
+        content: { class: 'flex-1 min-h-0 overflow-y-auto px-4 py-5 sm:px-6' }
       }"
       aria-label="Student weekly logbooks"
       @after-hide="drawerTrigger?.focus()"
@@ -202,55 +197,138 @@
       <template #header>
         <div class="flex w-full items-start justify-between gap-4">
           <div v-if="selectedStudent" class="min-w-0">
-            <p class="text-xs font-semibold uppercase tracking-wide text-text-muted">Student logbooks</p>
-            <h2 class="mt-1 text-xl font-bold text-slate-800 break-words">{{ selectedStudent.name }}</h2>
-            <p class="mt-1 text-sm text-text-muted">{{ selectedStudent.matric || 'No ID' }}</p>
+            <p class="text-xs font-semibold uppercase tracking-wider text-sky-800">Student logbooks</p>
+            <h2 class="mt-1 break-words text-2xl font-bold tracking-tight text-text-primary">{{ selectedStudent.name }}</h2>
+            <p class="mt-1 break-words text-sm text-text-muted">{{ selectedStudent.matric || 'No ID' }}</p>
           </div>
-          <button type="button" autofocus aria-label="Close student logbooks" class="rounded-control shrink-0 flex h-9 w-9 items-center justify-center text-text-muted hover:bg-surface-hover focus:outline-none focus:ring-2 focus:ring-sky-700" @click="drawerVisible = false">
+          <button type="button" autofocus aria-label="Close student logbooks" class="rounded-control flex h-11 w-11 shrink-0 items-center justify-center border border-surface-control bg-surface text-text-muted hover:bg-surface-hover hover:text-text-primary focus-visible:ring-2 focus-visible:ring-sky-700" @click="drawerVisible = false">
             <i class="pi pi-times" aria-hidden="true" />
           </button>
         </div>
       </template>
       <template v-if="selectedStudent">
-        <div class="rounded-card border border-surface-border bg-surface-muted p-4">
-          <div class="flex items-center justify-between gap-4">
-            <div>
-              <p class="text-xs font-semibold text-text-muted">Submission progress</p>
-              <p class="mt-1 text-lg font-bold text-slate-800 tabular-nums">{{ selectedStudent.submitted }} / {{ selectedStudent.entries.length }} <span class="text-sm font-medium text-text-muted">weeks submitted</span></p>
-            </div>
-            <div class="text-right">
-              <p class="text-xs font-semibold text-text-muted">Not submitted</p>
-              <p class="mt-1 text-lg font-bold text-amber-700 tabular-nums">{{ selectedStudent.outstanding }}</p>
-            </div>
+        <section aria-labelledby="logbook-submission-progress" class="rounded-card border border-sky-200 bg-sky-50 p-4">
+          <div class="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+            <h3 id="logbook-submission-progress" class="text-sm font-semibold text-sky-900">Submission progress</h3>
+            <p class="text-sm text-text-muted tabular-nums">
+              <span class="font-semibold text-text-primary">{{ selectedStudent.submitted }} / {{ selectedStudent.entries.length }}</span> weeks submitted
+            </p>
           </div>
-          <button v-if="selectedStudent.outstanding > 0" type="button" class="rounded-control mt-4 h-9 px-3 bg-amber-400 text-slate-900 text-sm font-semibold hover:brightness-110 transition-all disabled:opacity-50" :disabled="isRemindingStudent" @click="sendStudentReminder(selectedStudent.id)">
-            <i class="pi pi-bell mr-1" /> {{ isRemindingStudent ? 'Sending...' : 'Remind student' }}
-          </button>
+          <div
+            role="progressbar"
+            aria-labelledby="logbook-submission-progress"
+            aria-valuemin="0"
+            :aria-valuenow="selectedStudent.submitted"
+            :aria-valuemax="selectedStudent.entries.length"
+            :aria-valuetext="`${selectedStudent.submitted} of ${selectedStudent.entries.length} weeks submitted`"
+            class="mt-3 h-2 overflow-hidden rounded-full bg-sky-200"
+          >
+            <div
+              class="h-full rounded-full"
+               :class="selectedStudent.submitted === selectedStudent.entries.length ? 'bg-emerald-600' : 'bg-teal-600'"
+              :style="{ width: `${(selectedStudent.submitted / selectedStudent.entries.length) * 100}%` }"
+            ></div>
+          </div>
+          <div class="mt-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+            <p class="text-sm text-text-muted tabular-nums">
+              <span class="font-semibold text-text-primary">{{ selectedStudent.outstanding }}</span> not submitted
+            </p>
+            <button v-if="selectedStudent.outstanding > 0" type="button" class="rounded-control inline-flex min-h-9 items-center gap-2 border border-amber-300 bg-amber-50 px-3 text-sm font-semibold text-amber-900 hover:bg-amber-100 disabled:opacity-50" :disabled="isRemindingStudent" @click="sendStudentReminder(selectedStudent.id)">
+              <i class="pi pi-bell" aria-hidden="true" /> {{ isRemindingStudent ? 'Sending...' : 'Remind student' }}
+            </button>
+          </div>
           <p v-if="studentReminderMessage" class="mt-2 text-sm" :class="studentReminderError ? 'text-rose-700' : 'text-emerald-700'" role="status">{{ studentReminderMessage }}</p>
-        </div>
+        </section>
         <div class="mt-6 mb-3 flex items-center justify-between gap-3">
-          <h3 class="font-bold text-slate-800">Weekly logbooks</h3>
-          <NuxtLink :to="{ path: '/student', query: { id: selectedStudent.id }, hash: '#student-management' }" class="text-sm font-medium text-sky-700 underline underline-offset-2">View reviews</NuxtLink>
+          <h3 id="logbook-weekly-heading" tabindex="-1" class="font-semibold text-text-primary">Weekly logbooks</h3>
+          <NuxtLink :to="{ path: '/student', query: { id: selectedStudent.id }, hash: '#student-management' }" class="inline-flex shrink-0 items-center gap-2 text-sm font-semibold text-sky-700 underline-offset-4 hover:underline">
+            View reviews <i class="pi pi-arrow-right text-xs" aria-hidden="true" />
+          </NuxtLink>
         </div>
-        <div class="overflow-hidden rounded-card border border-surface-border divide-y divide-surface-border">
-          <div v-for="entry in selectedStudent.entries" :key="entry.id" class="bg-surface px-4 py-4">
-            <div class="flex items-start justify-between gap-4">
-              <div>
-                <div class="font-semibold text-slate-800">Week {{ entry.weekNumber }}</div>
-                <div class="mt-1 text-sm text-text-muted">Ends {{ entry.weekEndDate }}</div>
-                <p class="mt-1 text-sm text-text-muted">{{ entry.submittedAt ? `Submitted ${formatDate(entry.submittedAt)}` : 'Not submitted' }}</p>
-              </div>
-              <span class="inline-flex shrink-0" :title="entry.isStale ? 'Stale: no submission more than 7 days after the week ended.' : undefined">
-                <StatusBadge :status="entry.statusLabel === 'Late' ? 'Overdue' : entry.statusLabel" />
-                <span v-if="entry.isStale" class="sr-only">Stale record</span>
-              </span>
-            </div>
-            <div v-if="!entry.isSubmitted && isSuperCoordinator" class="mt-3 flex flex-wrap gap-2">
-              <button v-if="isSuperCoordinator" type="button" class="rounded-control h-9 px-3 bg-slate-900 text-white text-xs font-semibold hover:brightness-150 transition-all disabled:opacity-50" :disabled="entry.isSubmitting" @click="markSubmitted(entry)">
-                <i class="pi pi-check mr-1" /> {{ entry.isSubmitting ? 'Saving...' : 'Mark Done' }}
+        <div role="tablist" aria-labelledby="logbook-weekly-heading" class="mb-3 flex flex-wrap gap-1">
+          <button
+            v-for="group in weeklyLogbookGroups"
+            :id="`logbook-tab-${group.key}`"
+            :key="group.key"
+            type="button"
+            role="tab"
+            :aria-controls="`logbook-panel-${group.key}`"
+            :aria-selected="activeWeekGroup?.key === group.key"
+            :tabindex="activeWeekGroup?.key === group.key ? 0 : -1"
+            class="rounded-control inline-flex min-h-9 items-center gap-1.5 border px-2.5 text-xs font-semibold focus-visible:ring-2 focus-visible:ring-sky-700"
+            :class="activeWeekGroup?.key === group.key ? group.tabTone : 'border-transparent text-text-muted hover:bg-surface-hover hover:text-text-primary'"
+            @click="selectWeekGroup(group.key)"
+            @keydown="handleWeekTabKey($event, group.key)"
+          >
+            {{ group.label }}
+            <span
+              class="min-w-5 rounded-full px-1 py-0.5 text-center text-[10px] leading-none tabular-nums"
+              :class="activeWeekGroup?.key === group.key ? group.countTone : 'bg-surface-muted'"
+            >{{ group.entries.length }}</span>
+          </button>
+        </div>
+        <p role="status" aria-label="Week updates" :class="weekUpdateMessage ? 'mb-2 rounded-control bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-900' : 'sr-only'">
+          {{ weekUpdateMessage }}
+        </p>
+        <div
+          v-for="group in weeklyLogbookGroups"
+          v-show="activeWeekGroup?.key === group.key"
+          :id="`logbook-panel-${group.key}`"
+          :key="group.key"
+          role="tabpanel"
+          :aria-labelledby="`logbook-tab-${group.key}`"
+          tabindex="0"
+          class="rounded-card overflow-hidden border border-surface-border focus-visible:ring-2 focus-visible:ring-sky-700"
+        >
+          <template v-if="activeWeekGroup?.key === group.key">
+            <ul role="list" class="divide-y divide-surface-border">
+              <li
+                v-for="entry in visibleWeeks"
+                :id="`logbook-week-${entry.id}`"
+                :key="entry.id"
+                tabindex="-1"
+                :title="entry.isStale ? 'Stale: no submission more than 7 days after the week ended.' : undefined"
+                class="flex items-center justify-between gap-2 bg-surface px-3 py-3 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-sky-700 sm:px-4"
+              >
+                <div class="min-w-0">
+                  <p class="text-sm font-semibold text-text-primary">Week {{ entry.weekNumber }}</p>
+                  <p class="mt-1 text-xs leading-relaxed text-text-muted">Ends {{ entry.weekEndDate }}</p>
+                  <p v-if="entry.submittedAt" class="text-xs leading-relaxed text-text-muted">Submitted {{ formatDate(entry.submittedAt) }}</p>
+                  <span v-if="entry.isStale" class="sr-only">Stale record</span>
+                </div>
+                <template v-if="!entry.isSubmitted && isSuperCoordinator">
+                  <button
+                    type="button"
+                    :popovertarget="`logbook-week-actions-${entry.id}`"
+                    :aria-label="entry.isSubmitting ? `Saving week ${entry.weekNumber}` : `Actions for week ${entry.weekNumber}`"
+                    :disabled="entry.isSubmitting"
+                    class="rounded-control inline-flex h-9 w-9 shrink-0 items-center justify-center text-text-muted hover:bg-surface-hover hover:text-text-primary focus-visible:ring-2 focus-visible:ring-sky-700 disabled:opacity-50"
+                  >
+                    <i class="pi pi-ellipsis-h text-sm" aria-hidden="true" />
+                  </button>
+                  <div
+                    :id="`logbook-week-actions-${entry.id}`"
+                    popover
+                    class="logbook-week-actions rounded-control border border-surface-border bg-surface p-1 shadow-lg"
+                    @keydown.esc.stop.prevent="closeWeekActions($event)"
+                  >
+                    <button type="button" autofocus class="rounded-control flex min-h-9 w-full items-center gap-2 px-3 text-sm font-medium text-text-primary hover:bg-surface-hover focus-visible:bg-surface-hover" @click="submitFromWeekActions(entry, $event)">
+                      <i class="pi pi-check text-xs" aria-hidden="true" /> Mark done
+                    </button>
+                  </div>
+                </template>
+              </li>
+            </ul>
+            <div v-if="weekPageCount > 1" role="group" aria-label="Weekly logbook pages" class="flex flex-wrap items-center justify-between gap-1 border-t border-surface-border bg-surface-muted px-2 py-1.5 sm:px-3">
+              <button type="button" class="rounded-control min-h-9 px-2 text-xs font-semibold text-text-primary hover:bg-surface-hover disabled:opacity-40" :disabled="currentWeekPage === 1" @click="goToWeekPage(currentWeekPage - 1)">
+                Previous
+              </button>
+              <p class="text-xs text-text-muted tabular-nums" aria-live="polite">Page {{ currentWeekPage }} of {{ weekPageCount }}</p>
+              <button type="button" class="rounded-control min-h-9 px-2 text-xs font-semibold text-text-primary hover:bg-surface-hover disabled:opacity-40" :disabled="currentWeekPage === weekPageCount" @click="goToWeekPage(currentWeekPage + 1)">
+                Next
               </button>
             </div>
-          </div>
+          </template>
         </div>
       </template>
       <p v-else class="text-sm text-text-muted">This student's logbooks are no longer available.</p>
@@ -263,7 +341,6 @@ definePageMeta({
   requiredRole: 'coordinator'
 })
 
-import StatusBadge from '~/components/StatusBadge.vue'
 import Drawer from 'primevue/drawer'
 
 import { useCoordinatorPrivileges } from '~/composables/useCoordinatorPrivileges'
@@ -315,12 +392,19 @@ const drawerTrigger = ref<HTMLElement | null>(null)
 const isRemindingStudent = ref(false)
 const studentReminderMessage = ref('')
 const studentReminderError = ref(false)
+const weekUpdateMessage = ref('')
+const selectedWeekGroupKey = ref<string | null>(null)
+const weekPageSize = 5
+const weekPage = ref(1)
 
 const openStudent = (id: string, event: MouseEvent) => {
   drawerTrigger.value = event.currentTarget as HTMLElement
   selectedStudentId.value = id
   studentReminderMessage.value = ''
   studentReminderError.value = false
+  weekUpdateMessage.value = ''
+  selectedWeekGroupKey.value = null
+  weekPage.value = 1
   drawerVisible.value = true
 }
 
@@ -390,6 +474,37 @@ const markSubmitted = async (entry: LogbookEntry) => {
   }
 }
 
+const closeWeekActions = (event: KeyboardEvent) => {
+  const popover = event.currentTarget as HTMLElement
+  const trigger = popover.previousElementSibling as HTMLButtonElement | null
+  popover.hidePopover()
+  trigger?.focus()
+}
+
+const submitFromWeekActions = async (entry: LogbookEntry, event: MouseEvent) => {
+  const button = event.currentTarget as HTMLButtonElement
+  const row = button.closest('li')
+  const group = activeWeekGroup.value
+  const index = group?.entries.findIndex(week => week.id === entry.id) ?? 0
+  button.closest<HTMLElement>('[popover]')?.hidePopover()
+  row?.focus({ preventScroll: true })
+  await markSubmitted(entry)
+  if (!entry.isSubmitted || !drawerVisible.value || selectedStudentId.value !== entry.studentId) return
+
+  weekUpdateMessage.value = `Week ${entry.weekNumber} marked as submitted.`
+  await nextTick()
+  if (row && !row.isConnected && document.activeElement === document.body) {
+    const active = activeWeekGroup.value
+    const neighbor = active && active.key === group?.key
+      ? active.entries[Math.min(index, active.entries.length - 1)]
+      : undefined
+    const target = (neighbor && document.getElementById(`logbook-week-${neighbor.id}`))
+      || document.getElementById(active ? `logbook-tab-${active.key}` : 'logbook-weekly-heading')
+    target?.focus({ preventScroll: true })
+    target?.scrollIntoView({ block: 'nearest' })
+  }
+}
+
 const remindAll = async () => {
   isRemindingAll.value = true
   try {
@@ -437,6 +552,63 @@ const filteredStudents = computed(() => {
   return students.value.filter(student => matchingIds.has(student.id))
 })
 const selectedStudent = computed(() => students.value.find(student => student.id === selectedStudentId.value))
+const weeklyLogbookGroups = computed(() => {
+  const entries = selectedStudent.value?.entries ?? []
+  return [
+    { key: 'overdue', status: 'Late', label: 'Overdue', tabTone: 'border-amber-300 bg-amber-100 text-amber-900', countTone: 'bg-amber-300' },
+    { key: 'outstanding', status: 'Not Submitted', label: 'Not submitted', tabTone: 'border-blue-300 bg-blue-100 text-blue-900', countTone: 'bg-blue-200' },
+    { key: 'submitted', status: 'Submitted', label: 'Submitted', tabTone: 'border-emerald-300 bg-emerald-100 text-emerald-900', countTone: 'bg-emerald-200' }
+  ].map(group => ({
+    ...group,
+    entries: entries.filter(entry => entry.statusLabel === group.status)
+  })).filter(group => group.entries.length > 0)
+})
+
+const activeWeekGroup = computed(() => {
+  const groups = weeklyLogbookGroups.value
+  return groups.find(group => group.key === selectedWeekGroupKey.value) ?? groups[0]
+})
+const weekPageCount = computed(() => Math.max(1, Math.ceil((activeWeekGroup.value?.entries.length ?? 0) / weekPageSize)))
+const currentWeekPage = computed(() => Math.min(weekPage.value, weekPageCount.value))
+const visibleWeeks = computed(() => {
+  const start = (currentWeekPage.value - 1) * weekPageSize
+  return activeWeekGroup.value?.entries.slice(start, start + weekPageSize) ?? []
+})
+
+watch(() => activeWeekGroup.value?.key, () => { weekPage.value = 1 })
+watch(weekPageCount, count => { weekPage.value = Math.min(weekPage.value, count) })
+
+const selectWeekGroup = (key: string) => {
+  selectedWeekGroupKey.value = key
+}
+
+const handleWeekTabKey = (event: KeyboardEvent, key: string) => {
+  const groups = weeklyLogbookGroups.value
+  const index = groups.findIndex(group => group.key === key)
+  let next: number
+  switch (event.key) {
+    case 'ArrowRight': next = (index + 1) % groups.length; break
+    case 'ArrowLeft': next = (index + groups.length - 1) % groups.length; break
+    case 'Home': next = 0; break
+    case 'End': next = groups.length - 1; break
+    default: return
+  }
+  event.preventDefault()
+  const group = groups[next]
+  if (!group) return
+  selectWeekGroup(group.key)
+  document.getElementById(`logbook-tab-${group.key}`)?.focus()
+}
+
+const goToWeekPage = async (page: number) => {
+  const key = activeWeekGroup.value?.key
+  if (!key || page < 1 || page > weekPageCount.value) return
+  weekPage.value = page
+  await nextTick()
+  const panel = document.getElementById(`logbook-panel-${key}`)
+  panel?.focus({ preventScroll: true })
+  panel?.scrollIntoView({ block: 'start' })
+}
 
 const totalPages = computed(() => Math.max(1, Math.ceil(filteredStudents.value.length / pageSize.value)))
 const visibleStart = computed(() =>
@@ -493,6 +665,16 @@ onMounted(async () => {
 </script>
 
 <style>
+@supports (position-area: block-end span-inline-start) {
+  .logbook-week-actions {
+    inset: auto;
+    margin: 0;
+    position-area: block-end span-inline-start;
+    position-try-fallbacks: flip-block;
+    justify-self: end;
+  }
+}
+
 .logbook-drawer.p-drawer-enter-active,
 .logbook-drawer.p-drawer-leave-active {
   transition: transform 250ms ease;

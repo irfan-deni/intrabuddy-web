@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test'
 import { setupPage } from './helpers'
+import { MOCK_PROFILE } from './fixtures/data'
 
 test.describe('Layout & Navigation', () => {
   test.beforeEach(async ({ page }) => {
@@ -83,7 +84,7 @@ test.describe('Layout & Navigation', () => {
   })
 
   test('regular coordinators do not see coordinator administration', async ({ page }) => {
-    await page.route('**/api/auth/privileges', route => route.fulfill({ json: { isSuperCoordinator: false } }))
+    await page.route('**/api/auth/session-context', route => route.fulfill({ json: { profile: MOCK_PROFILE, isSuperCoordinator: false } }))
     await page.reload()
     const navigation = page.getByRole('complementary').getByRole('navigation', { name: 'Primary navigation' })
     await expect(navigation.getByRole('link', { name: 'Semesters', exact: true })).toBeVisible()
